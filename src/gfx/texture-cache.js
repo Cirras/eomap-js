@@ -205,7 +205,6 @@ export class TextureCache {
 
         if (!newBin) {
           if (isLastPage) {
-            // console.log('Added page during rebuild.');
             this.addPage();
           }
 
@@ -302,8 +301,6 @@ export class TextureCache {
   }
 
   uploadChanges() {
-    // var start = performance.now();
-
     for (let page of this.pages) {
       if (page.dirty) {
         page.canvasTexturePage.update();
@@ -311,9 +308,6 @@ export class TextureCache {
         page.dirty = false;
       }
     }
-
-    // var end = performance.now();
-    // console.log('Upload took ' + (end - start) + ' milliseconds.');
   }
 
   refCountSort(childA, childB) {

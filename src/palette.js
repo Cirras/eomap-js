@@ -376,7 +376,7 @@ class PaletteLayer {
     );
     this.assetsHeight = 0;
     this.assetsDirty = true;
-    this.assetAnchor;
+    this.assetAnchor = undefined;
     this.assetAnchorOffset = 0;
     this.manualScrolling = false;
 
@@ -705,15 +705,6 @@ class PaletteLayer {
 
     for (let entryKey in this.entries) {
       let entry = this.entries[entryKey];
-
-      /*
-            if (!entry.data.textureFrame)
-            {
-                console.log(this.file.key + '/' + entryKey + ' is missing!');
-                continue;
-            }
-            */
-
       let width = 64;
       let height = 32;
 

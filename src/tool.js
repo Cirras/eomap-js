@@ -122,11 +122,17 @@ export class EyeDropper extends Tool {
 }
 
 export class Hand extends Tool {
-  handlePointerMove(mapEditor, pointer) {}
+  handlePointerMove(mapEditor, pointer) {
+    // TODO: Implement
+  }
 
-  handleLeftPointerDown(mapEditor, pointer) {}
+  handleLeftPointerDown(mapEditor, pointer) {
+    // TODO: Implement
+  }
 
-  handleRightPointerDown(mapEditor, pointer) {}
+  handleRightPointerDown(mapEditor, pointer) {
+    // TODO: Implement
+  }
 
   shouldMoveTileCursor(mapEditor, pointer) {
     return !pointer.isDown;
@@ -138,11 +144,17 @@ export class Hand extends Tool {
 }
 
 export class Selection extends Tool {
-  handlePointerMove(mapEditor, pointer) {}
+  handlePointerMove(mapEditor, pointer) {
+    // TODO: Implement
+  }
 
-  handleLeftPointerDown(mapEditor, pointer) {}
+  handleLeftPointerDown(mapEditor, pointer) {
+    // TODO: Implement
+  }
 
-  handleRightPointerDown(mapEditor, pointer) {}
+  handleRightPointerDown(mapEditor, pointer) {
+    // TODO: Implement
+  }
 
   shouldMoveTileCursor(mapEditor, pointer) {
     return !pointer.isDown;
@@ -154,9 +166,15 @@ export class Selection extends Tool {
 }
 
 export class Fill extends Tool {
-  handlePointerMove(mapEditor, pointer) {}
+  handlePointerMove(mapEditor, pointer) {
+    // TODO: Implement
+  }
 
-  handleLeftPointerDown(mapEditor, pointer) {}
+  handleLeftPointerDown(mapEditor, pointer) {
+    // TODO: Implement
+  }
 
-  handleRightPointerDown(mapEditor, pointer) {}
+  handleRightPointerDown(mapEditor, pointer) {
+    // TODO: Implement
+  }
 }

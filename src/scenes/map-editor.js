@@ -306,8 +306,7 @@ export class MapEditor extends Phaser.Scene {
 
     const getAsset = (displayGfx) => {
       let frameKey = (displayGfx + 100).toString();
-      let asset = this.textureCache.get(info.file, frameKey);
-      return asset;
+      return this.textureCache.get(info.file, frameKey);
     };
 
     const getDisplayGfx = (gfx) => {

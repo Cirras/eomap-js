@@ -135,9 +135,9 @@ export class EMF_Tile {
     this.gfx = [0, 0, 0, 0, 0, 0, 0, 0, 0];
     this.sprites = [];
 
-    this.spec;
-    this.warp;
-    this.sign;
+    this.spec = undefined;
+    this.warp = undefined;
+    this.sign = undefined;
   }
 
   static from_json(json) {
