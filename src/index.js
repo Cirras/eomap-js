@@ -7,6 +7,7 @@ import { patchPhaser } from "./patch-phaser";
 
 import "./components/menubar.js";
 import "./components/sidebar.js";
+import "./components/infobar.js";
 
 import UIPlugin from "phaser3-rex-plugins/templates/ui/ui-plugin.js";
 import ScrollerPlugin from "phaser3-rex-plugins/plugins/scroller-plugin";

@@ -21,6 +21,16 @@ eomap-menubar {
   grid-column-end: 4;
 }
 
+eomap-sidebar {
+  grid-row-start: 2;
+  grid-row-end: 4;
+}
+
+eomap-infobar {
+  grid-column-start: 2;
+  grid-column-end: 4;
+}
+
 sp-popover {
   --spectrum-popover-background-color: var(--spectrum-global-color-gray-200);
   --spectrum-overlay-animation-distance: 0px;
