@@ -1,6 +1,7 @@
 const webpack = require("webpack");
 const path = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const { CleanWebpackPlugin } = require("clean-webpack-plugin");
 const PrettierPlugin = require("prettier-webpack-plugin");
 
@@ -13,8 +14,19 @@ module.exports = {
         test: /\.js$/,
         exclude: /node_modules/,
         use: {
-          loader: "babel-loader"
+          loader: "babel-loader",
+          options: {
+            plugins: [
+              ['@babel/plugin-proposal-decorators', {decoratorsBeforeExport: true}],
+              ["@babel/plugin-proposal-class-properties", { "loose": true }]
+            ],
+            presets: ["@babel/preset-env"]
+          }
         }
+      },
+      {
+        test: /\.css$/i,
+        use: [MiniCssExtractPlugin.loader, "css-loader"]
       },
       {
         test: [/\.vert$/, /\.frag$/],
@@ -37,6 +49,7 @@ module.exports = {
     new HtmlWebpackPlugin({
       template: "./index.html"
     }),
+    new MiniCssExtractPlugin(),
     new PrettierPlugin()
   ]
 };
