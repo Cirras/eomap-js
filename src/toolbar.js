@@ -7,8 +7,8 @@ export class ToolBar {
     this.eraser = new Tool.Eraser();
     this.eyeDropper = new Tool.EyeDropper();
     this.hand = new Tool.Hand();
-    this.selection = new Tool.Selection();
     this.fill = new Tool.Fill();
+    this.entity = new Tool.Entity();
 
     this._selectedTool = this.pencil;
   }

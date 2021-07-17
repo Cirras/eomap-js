@@ -143,7 +143,7 @@ export class Hand extends Tool {
   }
 }
 
-export class Selection extends Tool {
+export class Fill extends Tool {
   handlePointerMove(mapEditor, pointer) {
     // TODO: Implement
   }
@@ -155,17 +155,9 @@ export class Selection extends Tool {
   handleRightPointerDown(mapEditor, pointer) {
     // TODO: Implement
   }
-
-  shouldMoveTileCursor(mapEditor, pointer) {
-    return !pointer.isDown;
-  }
-
-  get pointerDownOnMove() {
-    return false;
-  }
 }
 
-export class Fill extends Tool {
+export class Entity extends Tool {
   handlePointerMove(mapEditor, pointer) {
     // TODO: Implement
   }

@@ -3,10 +3,29 @@ import "phaser";
 import { Boot } from "./scenes/boot";
 import { Preloader } from "./scenes/preloader";
 import { Controller } from "./scenes/controller";
+import { patchPhaser } from "./patch-phaser";
+
+import "./components/menubar.js";
+import "./components/sidebar.js";
+
 import UIPlugin from "phaser3-rex-plugins/templates/ui/ui-plugin.js";
 import ScrollerPlugin from "phaser3-rex-plugins/plugins/scroller-plugin";
 import SliderPlugin from "phaser3-rex-plugins/plugins/slider-plugin";
-import { patchPhaser } from "./patch-phaser";
+
+import "@spectrum-web-components/theme/theme-darkest.js";
+import "@spectrum-web-components/theme/scale-medium.js";
+import "@spectrum-web-components/theme/sp-theme.js";
+import "@spectrum-web-components/icons-workflow/icons/sp-icon-draw";
+import "@spectrum-web-components/icons-workflow/icons/sp-icon-erase";
+import "@spectrum-web-components/icons-workflow/icons/sp-icon-sampler";
+import "@spectrum-web-components/icons-workflow/icons/sp-icon-pan";
+import "@spectrum-web-components/icons-workflow/icons/sp-icon-color-fill";
+import "@spectrum-web-components/icons-workflow/icons/sp-icon-star";
+
+import "@spectrum-web-components/action-button/sp-action-button.js";
+import "@spectrum-web-components/action-group/sp-action-group.js";
+
+import "./styles/style.css";
 
 function startMapper() {
   patchPhaser();
