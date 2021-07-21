@@ -10,6 +10,7 @@ import {
   RedoIcon,
 } from "@spectrum-web-components/icons-workflow";
 import { css, customElement, html, LitElement, property } from "lit-element";
+
 import "./sidebar-button";
 
 @customElement("eomap-sidebar")
@@ -41,87 +42,75 @@ export class Sidebar extends LitElement {
     `;
   }
 
-  @property({ attribute: false })
-  state = {
-    tool: "draw",
-  };
+  @property({ type: String })
+  tool;
 
   render() {
-    const tool = this.state.tool;
     return html`
       <sp-action-group vertical>
         <eomap-sidebar-button
           value="draw"
           label="Draw"
           .icon=${DrawIcon}
-          placement="right"
-          ?selected=${"draw" === tool}
-          @click=${this.onValue("tool-select")}
+          ?selected=${"draw" === this.tool}
+          @click=${this.onToolClick}
         >
         </eomap-sidebar-button>
         <eomap-sidebar-button
           value="erase"
           label="Erase"
           .icon=${EraseIcon}
-          placement="right"
-          ?selected=${"erase" === tool}
-          @click=${this.onValue("tool-select")}
+          ?selected=${"erase" === this.tool}
+          @click=${this.onToolClick}
         >
         </eomap-sidebar-button>
         <eomap-sidebar-button
           value="eyedropper"
           label="Eyedropper"
           .icon=${SamplerIcon}
-          placement="right"
-          ?selected=${"eyedropper" === tool}
-          @click=${this.onValue("tool-select")}
+          ?selected=${"eyedropper" === this.tool}
+          @click=${this.onToolClick}
         >
         </eomap-sidebar-button>
         <eomap-sidebar-button
           value="move"
           label="Move"
           .icon=${HandIcon}
-          placement="right"
-          ?selected=${"move" === tool}
-          @click=${this.onValue("tool-select")}
+          ?selected=${"move" === this.tool}
+          @click=${this.onToolClick}
         >
         </eomap-sidebar-button>
         <eomap-sidebar-button
           value="fill"
           label="Fill"
           .icon=${ColorFillIcon}
-          placement="right"
-          ?selected=${"fill" === tool}
-          @click=${this.onValue("tool-select")}
+          ?selected=${"fill" === this.tool}
+          @click=${this.onToolClick}
         >
         </eomap-sidebar-button>
         <eomap-sidebar-button
           value="entity"
           label="Entity"
           .icon=${StarIcon}
-          placement="right"
-          ?selected=${"entity" === tool}
-          @click=${this.onValue("tool-select")}
+          ?selected=${"entity" === this.tool}
+          @click=${this.onToolClick}
         >
         </eomap-sidebar-button>
       </sp-action-group>
       <sp-action-group vertical>
-        <eomap-sidebar-button label="Undo" .icon=${UndoIcon} placement="right">
+        <eomap-sidebar-button label="Undo" .icon=${UndoIcon}>
         </eomap-sidebar-button>
-        <eomap-sidebar-button label="Redo" .icon=${RedoIcon} placement="right">
+        <eomap-sidebar-button label="Redo" .icon=${RedoIcon}>
         </eomap-sidebar-button>
       </sp-action-group>
     `;
   }
 
-  onValue(eventName) {
-    return (event) => {
-      const value = event.target.value;
-      if (value) {
-        this.state.tool = value;
-        event.preventDefault();
-        this.dispatchEvent(new CustomEvent(eventName, { detail: value }));
-      }
-    };
+  onToolClick(event) {
+    const value = event.target.value;
+    if (value) {
+      event.preventDefault();
+      this.dispatchEvent(new CustomEvent("tool-selected", { detail: value }));
+    }
   }
 }

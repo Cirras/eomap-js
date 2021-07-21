@@ -54,6 +54,9 @@ export class Application extends LitElement {
     `;
   }
 
+  @state({ type: String })
+  tool = "draw";
+
   @state({ type: Object })
   currentPos = new TilePos();
 
@@ -61,12 +64,21 @@ export class Application extends LitElement {
     return html`
       <sp-theme color="darkest" scale="medium">
         <eomap-menubar></eomap-menubar>
+        <eomap-sidebar
+          @tool-selected=${this.onToolSelected}
+          .tool="${this.tool}"
+        ></eomap-sidebar>
         <eomap-editor
+          .tool=${this.tool}
           @changedata-currentPos=${this.onCurrentPosChanged}
         ></eomap-editor>
         <eomap-infobar .tilePos=${this.currentPos}></eomap-infobar>
       </sp-theme>
     `;
+  }
+
+  onToolSelected(event) {
+    this.tool = event.detail;
   }
 
   onCurrentPosChanged(event) {

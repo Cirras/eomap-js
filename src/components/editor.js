@@ -1,4 +1,4 @@
-import { css, customElement, html, LitElement } from "lit-element";
+import { css, customElement, html, LitElement, property } from "lit-element";
 
 import "phaser";
 
@@ -17,6 +17,8 @@ export class Editor extends LitElement {
 
   static PHASER_DATA_KEYS = ["currentPos"];
 
+  static COMPONENT_DATA_KEYS = ["tool"];
+
   static get styles() {
     return css`
       .editor {
@@ -26,6 +28,11 @@ export class Editor extends LitElement {
       }
     `;
   }
+
+  @property({ type: String })
+  tool;
+
+  componentDataForwarders = new Map();
 
   firstUpdated(_changedProperties) {
     patchPhaser();
@@ -79,6 +86,7 @@ export class Editor extends LitElement {
   onPostBoot(game) {
     let scene = game.scene.getScene("controller");
     this.setupPhaserChangeDataEvents(scene);
+    this.setupComponentDataForwardingToPhaser(scene);
   }
 
   setupPhaserChangeDataEvents(scene) {
@@ -87,6 +95,24 @@ export class Editor extends LitElement {
       scene.data.events.on(eventName, (_parent, value, _previousValue) => {
         this.dispatchEvent(new CustomEvent(eventName, { detail: value }));
       });
+    }
+  }
+
+  setupComponentDataForwardingToPhaser(scene) {
+    for (let key of Editor.COMPONENT_DATA_KEYS) {
+      scene.data.set(key, this[key]);
+      this.componentDataForwarders.set(key, () => {
+        scene.data.set(key, this[key]);
+      });
+    }
+  }
+
+  updated(changedProperties) {
+    for (let changed of changedProperties.keys()) {
+      let dataForwarder = this.componentDataForwarders.get(changed);
+      if (dataForwarder) {
+        dataForwarder();
+      }
     }
   }
 

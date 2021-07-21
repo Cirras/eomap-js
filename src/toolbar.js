@@ -3,21 +3,29 @@ import * as Tool from "./tool";
 export class ToolBar {
   constructor(controller) {
     this.controller = controller;
-    this.pencil = new Tool.Pencil();
-    this.eraser = new Tool.Eraser();
-    this.eyeDropper = new Tool.EyeDropper();
-    this.hand = new Tool.Hand();
-    this.fill = new Tool.Fill();
-    this.entity = new Tool.Entity();
+    this._currentTool = null;
+    this.tools = new Map([
+      ["draw", new Tool.Pencil()],
+      ["erase", new Tool.Eraser()],
+      ["eyedropper", new Tool.EyeDropper()],
+      ["move", new Tool.Hand()],
+      ["fill", new Tool.Fill()],
+      ["entity", new Tool.Entity()],
+    ]);
 
-    this._selectedTool = this.pencil;
+    controller.data.events.on("changedata-tool", () => {
+      this.updateCurrentTool();
+    });
+  }
+
+  updateCurrentTool() {
+    this._currentTool = this.tools.get(this.controller.data.get("tool"));
   }
 
   get currentTool() {
-    if (this.controller.ctrlKeyDown) {
-      return this.eyeDropper;
+    if (!this._currentTool) {
+      this.updateCurrentTool();
     }
-
-    return this._selectedTool;
+    return this._currentTool;
   }
 }

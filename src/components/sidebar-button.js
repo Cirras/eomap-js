@@ -3,18 +3,15 @@ import "@spectrum-web-components/icon/sp-icon";
 import "@spectrum-web-components/overlay/overlay-trigger";
 import "@spectrum-web-components/overlay/src/popper";
 import "@spectrum-web-components/tooltip/sp-tooltip";
-import { css, customElement, html, LitElement, property } from "lit-element";
+import { customElement, html, LitElement, property } from "lit-element";
 
 @customElement("eomap-sidebar-button")
-export class ActionButton extends LitElement {
+export class SidebarButton extends LitElement {
   @property()
   label = "";
 
   @property({ attribute: false })
   icon = undefined;
-
-  @property()
-  placement = "auto";
 
   @property({ type: Boolean })
   selected = false;
@@ -22,14 +19,11 @@ export class ActionButton extends LitElement {
   @property()
   value = "";
 
-  @property({ type: Boolean })
-  loud = false;
-
   render() {
     return html`
-      <overlay-trigger placement=${this.placement}>
+      <overlay-trigger placement="right"">
         <sp-action-button
-          ?quiet=${!this.loud}
+          quiet=true
           label=${this.label}
           slot="trigger"
           ?selected=${this.selected}
