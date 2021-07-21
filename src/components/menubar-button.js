@@ -22,8 +22,16 @@ export class MenuBarButton extends PickerBase {
     `;
   }
 
-  listRole = "menu";
-  itemRole = "menuitem";
+  constructor() {
+    super();
+    this.onKeydown = () => {
+      // Do nothing.
+      // If this component is focused and closed, it swallows arrow inputs.
+      // We want these to be handled by phaser instead.
+    };
+    this.listRole = "menu";
+    this.itemRole = "menuitem";
+  }
 
   get renderButton() {
     return html`

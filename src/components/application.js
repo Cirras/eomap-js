@@ -63,6 +63,22 @@ export class Application extends LitElement {
   @state({ type: Array })
   layerVisibility = Array(11).fill(true);
 
+  constructor() {
+    super();
+    this.addEventListener("keydown", (event) => {
+      switch (event.key) {
+        case "ArrowDown":
+        case "ArrowUp":
+        case "ArrowLeft":
+        case "ArrowRight":
+          document.activeElement.blur();
+          break;
+        default:
+          return;
+      }
+    });
+  }
+
   render() {
     return html`
       <sp-theme color="darkest" scale="medium">
