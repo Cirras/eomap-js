@@ -10,4 +10,5 @@ kbd {
   font-size: 13px;
   padding-left: 15px;
   color: var(--spectrum-global-color-gray-600);
+  pointer-events: none;
 }

@@ -60,21 +60,36 @@ export class Application extends LitElement {
   @state({ type: Object })
   currentPos = new TilePos();
 
+  @state({ type: Array })
+  layerVisibility = Array(11).fill(true);
+
   render() {
     return html`
       <sp-theme color="darkest" scale="medium">
-        <eomap-menubar></eomap-menubar>
+        <eomap-menubar
+          .layerVisibility=${this.layerVisibility}
+          @layer-toggle=${this.onLayerToggle}
+        ></eomap-menubar>
         <eomap-sidebar
           @tool-selected=${this.onToolSelected}
           .tool="${this.tool}"
         ></eomap-sidebar>
         <eomap-editor
+          .layerVisibility=${this.layerVisibility}
           .tool=${this.tool}
           @changedata-currentPos=${this.onCurrentPosChanged}
         ></eomap-editor>
         <eomap-infobar .tilePos=${this.currentPos}></eomap-infobar>
       </sp-theme>
     `;
+  }
+
+  onLayerToggle(event) {
+    let layer = event.detail;
+    let newLayerVisibility = [...this.layerVisibility];
+    newLayerVisibility[layer] = !newLayerVisibility[layer];
+
+    this.layerVisibility = newLayerVisibility;
   }
 
   onToolSelected(event) {

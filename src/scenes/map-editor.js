@@ -84,6 +84,10 @@ export class MapEditor extends Phaser.Scene {
       }
     });
 
+    this.controller.data.events.on("changedata-layerVisibility", () => {
+      this.cull();
+    });
+
     this.scene.sendToBack();
   }
 
@@ -170,10 +174,12 @@ export class MapEditor extends Phaser.Scene {
     var cameraH = camera.height;
 
     let depthSortRequired = false;
+    let layerVisibility = this.controller.data.values.layerVisibility;
 
     for (let row of this.emf.rows) {
       for (let tile of row) {
-        for (let object of tile.sprites) {
+        for (let layer = 0; layer < 9; ++layer) {
+          let object = tile.sprites[layer];
           if (!object) {
             continue;
           }
@@ -198,22 +204,22 @@ export class MapEditor extends Phaser.Scene {
           let cullLeft = camera.x;
           let cullRight = cullLeft + cameraW;
 
-          if (
+          let layerIsVisible = layerVisibility[layer];
+
+          let isVisible =
+            layerIsVisible &&
             tw > cullLeft &&
             tx < cullRight &&
             th > cullTop &&
-            ty < cullBottom
-          ) {
+            ty < cullBottom;
+
+          if (isVisible) {
             if (!object.visible) {
               this.addSpriteToScene(object);
               object.visible = true;
               depthSortRequired = true;
             }
-
-            continue;
-          }
-
-          if (object.visible) {
+          } else if (object.visible) {
             this.removeSpriteFromScene(object);
             object.visible = false;
           }

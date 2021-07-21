@@ -17,7 +17,7 @@ export class Editor extends LitElement {
 
   static PHASER_DATA_KEYS = ["currentPos"];
 
-  static COMPONENT_DATA_KEYS = ["tool"];
+  static COMPONENT_DATA_KEYS = ["tool", "layerVisibility"];
 
   static get styles() {
     return css`
@@ -31,6 +31,9 @@ export class Editor extends LitElement {
 
   @property({ type: String })
   tool;
+
+  @property({ type: Array })
+  layerVisibility;
 
   componentDataForwarders = new Map();
 

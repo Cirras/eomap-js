@@ -1,4 +1,4 @@
-import { css, customElement, html, LitElement } from "lit-element";
+import { css, customElement, html, LitElement, property } from "lit-element";
 
 import "@spectrum-web-components/action-button/sp-action-button.js";
 import "@spectrum-web-components/overlay/overlay-trigger.js";
@@ -29,6 +29,43 @@ export class MenuBar extends LitElement {
     `;
   }
 
+  @property({ type: Array })
+  layerVisibility;
+
+  renderViewMenu() {
+    // prettier-ignore
+    const MENU_ITEM_DATA = [
+      { label: "Ground",     kbd: "Alt+1" },
+      { label: "Objects",    kbd: "Alt+2" },
+      { label: "Overlay",    kbd: "Alt+3" },
+      { label: "Down Wall",  kbd: "Alt+4" },
+      { label: "Right Wall", kbd: "Alt+5" },
+      { label: "Roof",       kbd: "Alt+6" },
+      { label: "Top",        kbd: "Alt+7" },
+      { label: "Shadow",     kbd: "Alt+8" },
+      { label: "Overlay 2",  kbd: "Alt+9" },
+      { label: "Special",    kbd: "Alt+0" },
+      { label: "Entities",   kbd: "Alt+E" },
+    ];
+
+    let menuItems = MENU_ITEM_DATA.map(
+      (info, i) =>
+        html`
+          <sp-menu-item ?selected=${this.layerVisibility[i]} value=${i} @click=${this.onViewItemClick}">
+            ${info.label}
+            <kbd slot="value">${info.kbd}</kbd>
+          </sp-menu-item>
+        `
+    );
+
+    return html`
+      <eomap-menubar-button>
+        <span slot="label">View</span>
+        ${menuItems}
+      </eomap-menubar-button>
+    `;
+  }
+
   render() {
     return html`
       <header>
@@ -38,53 +75,17 @@ export class MenuBar extends LitElement {
         <eomap-menubar-button>
           <span slot="label">Edit</span>
         </eomap-menubar-button>
-        <eomap-menubar-button>
-          <span slot="label">View</span>
-          <sp-menu-item selected value="ground-layer">
-            Ground
-            <kbd slot="value">Alt+1</kbd>
-          </sp-menu-item>
-          <sp-menu-item selected value="objects-layer">
-            Objects
-            <kbd slot="value">Alt+2</kbd>
-          </sp-menu-item>
-          <sp-menu-item selected value="overlay-layer">
-            Overlay
-            <kbd slot="value">Alt+3</kbd>
-          </sp-menu-item>
-          <sp-menu-item selected value="down-wall-layer">
-            Down Wall
-            <kbd slot="value">Alt+4</kbd>
-          </sp-menu-item>
-          <sp-menu-item selected value="right-wall-layer">
-            Right Wall
-            <kbd slot="value">Alt+5</kbd>
-          </sp-menu-item>
-          <sp-menu-item selected value="roof-layer">
-            Roof
-            <kbd slot="value">Alt+6</kbd>
-          </sp-menu-item>
-          <sp-menu-item selected value="top-layer">
-            Top
-            <kbd slot="value">Alt+7</kbd>
-          </sp-menu-item>
-          <sp-menu-item selected value="shadow-layer">
-            Shadow
-            <kbd slot="value">Alt+8</kbd>
-          </sp-menu-item>
-          <sp-menu-item selected value="overlay-2-layer">
-            Overlay 2
-            <kbd slot="value">Alt+9</kbd>
-          </sp-menu-item>
-          <sp-menu-item selected value="special-layer">
-            Special
-            <kbd slot="value">Alt+0</kbd>
-          </sp-menu-item>
-        </eomap-menubar-button>
+        ${this.renderViewMenu()}
         <eomap-menubar-button>
           <span slot="label">Help</span>
         </eomap-menubar-button>
       </header>
     `;
+  }
+
+  onViewItemClick(event) {
+    this.dispatchEvent(
+      new CustomEvent("layer-toggle", { detail: parseInt(event.target.value) })
+    );
   }
 }
