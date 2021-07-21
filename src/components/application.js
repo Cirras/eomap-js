@@ -1,12 +1,15 @@
-import { css, customElement, html, LitElement, property } from "lit-element";
+import { css, customElement, html, LitElement, state } from "lit-element";
+
+import "@spectrum-web-components/theme/theme-darkest.js";
+import "@spectrum-web-components/theme/scale-medium.js";
+import "@spectrum-web-components/theme/sp-theme.js";
+
 import "./menubar";
 import "./sidebar";
 import "./editor";
 import "./infobar";
 
-import "@spectrum-web-components/theme/theme-darkest.js";
-import "@spectrum-web-components/theme/scale-medium.js";
-import "@spectrum-web-components/theme/sp-theme.js";
+import { TilePos } from "../tilepos";
 
 @customElement("eomap-application")
 export class Application extends LitElement {
@@ -51,14 +54,22 @@ export class Application extends LitElement {
     `;
   }
 
+  @state({ type: Object })
+  currentPos = new TilePos();
+
   render() {
     return html`
       <sp-theme color="darkest" scale="medium">
         <eomap-menubar></eomap-menubar>
-        <eomap-sidebar></eomap-sidebar>
-        <eomap-editor></eomap-editor>
-        <eomap-infobar></eomap-infobar>
+        <eomap-editor
+          @changedata-currentPos=${this.onCurrentPosChanged}
+        ></eomap-editor>
+        <eomap-infobar .tilePos=${this.currentPos}></eomap-infobar>
       </sp-theme>
     `;
+  }
+
+  onCurrentPosChanged(event) {
+    this.currentPos = event.detail;
   }
 }

@@ -1,4 +1,5 @@
 import { EMF } from "../map";
+import { TilePos } from "../tilepos";
 import { CommandInvoker } from "../command/command";
 import { SetGraphicCommand } from "../command/map-editor-command";
 import { TextureCache } from "../gfx/texture-cache";
@@ -22,14 +23,6 @@ const layerInfo = [
 const calcDepth = (x, y, layer) => {
   return layerInfo[layer].depth + y * RDG + x * layerInfo.length * TDG;
 };
-
-class TilePos {
-  constructor() {
-    this.x = 0;
-    this.y = 0;
-    this.valid = false;
-  }
-}
 
 export class MapEditor extends Phaser.Scene {
   constructor(controller) {
@@ -243,8 +236,11 @@ export class MapEditor extends Phaser.Scene {
 
   updateCurrentPos(pointerPos) {
     let worldPos = this.cameras.main.getWorldPoint(pointerPos.x, pointerPos.y);
+    let newPos = this.getTilePosFromWorldPos(worldPos);
 
-    return this.getTilePosFromWorldPos(worldPos, this.currentPos);
+    if (this.currentPos.x !== newPos.x || this.currentPos.y !== newPos.y) {
+      this.currentPos = newPos;
+    }
   }
 
   getTilePosFromPointerPos(pointerPos) {
@@ -253,11 +249,8 @@ export class MapEditor extends Phaser.Scene {
     return this.getTilePosFromWorldPos(worldPos);
   }
 
-  getTilePosFromWorldPos(worldPos, tilePos) {
-    if (tilePos === undefined) {
-      tilePos = new TilePos();
-    }
-
+  getTilePosFromWorldPos(worldPos) {
+    let tilePos = new TilePos();
     tilePos.x = this.getTileXFromWorldPos(worldPos);
     tilePos.y = this.getTileYFromWorldPos(worldPos);
 
@@ -389,5 +382,13 @@ export class MapEditor extends Phaser.Scene {
   removeSpriteFromScene(sprite) {
     this.sys.updateList.remove(sprite);
     this.children.remove(sprite);
+  }
+
+  get currentPos() {
+    return this.controller.data.get("currentPos");
+  }
+
+  set currentPos(value) {
+    this.controller.data.set("currentPos", value);
   }
 }

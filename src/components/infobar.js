@@ -1,4 +1,4 @@
-import { css, customElement, html, LitElement } from "lit-element";
+import { css, customElement, html, LitElement, property } from "lit-element";
 
 import "@spectrum-web-components/divider/sp-divider.js";
 
@@ -15,15 +15,25 @@ export class InfoBar extends LitElement {
         position: relative;
         box-sizing: border-box;
         width: 100%;
+        height: 18px;
+        contain: strict style;
+        overflow: hidden;
       }
       .filler {
         flex-grow: 1;
       }
       .loc {
-        width: 55px;
         background-color: var(--spectrum-global-color-gray-300);
+        width: 110px;
+        height: 18px;
+        display: flex;
+        contain: strict style;
+        overflow: hidden;
+      }
+      .loc-box {
+        width: 55px;
+        height: 18px;
         white-space: nowrap;
-        overflow: auto;
       }
       .loc-axis {
         font-weight: var(--spectrum-global-font-weight-semi-bold);
@@ -38,24 +48,32 @@ export class InfoBar extends LitElement {
         display: inline-block;
       }
       .loc-value {
-        padding-right: var(--spectrum-global-dimension-size-25);
-        padding-bottom: var(--spectrum-global-dimension-size-25);
+        padding-right: var(--spectrum-global-dimension-size-75);
         display: inline-block;
       }
     `;
   }
+
+  @property({ type: Object })
+  tilePos;
 
   render() {
     return html`
       <footer>
         <div class="filler"></div>
         <div class="loc">
-          <div class="loc-axis">X</div>
-          <div class="loc-value">0</div>
-        </div>
-        <div class="loc">
-          <div class="loc-axis">Y</div>
-          <div class="loc-value">0</div>
+          <div class="loc-box">
+            <div class="loc-axis">X</div>
+            <div class="loc-value">
+              ${this.tilePos.valid ? this.tilePos.x : ""}
+            </div>
+          </div>
+          <div class="loc-box">
+            <div class="loc-axis">Y</div>
+            <div class="loc-value">
+              ${this.tilePos.valid ? this.tilePos.y : ""}
+            </div>
+          </div>
         </div>
       </footer>
     `;

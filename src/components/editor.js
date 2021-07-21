@@ -15,6 +15,8 @@ import SliderPlugin from "phaser3-rex-plugins/plugins/slider-plugin";
 export class Editor extends LitElement {
   static EDITOR_ID = "phaser-container";
 
+  static PHASER_DATA_KEYS = ["currentPos"];
+
   static get styles() {
     return css`
       .editor {
@@ -47,6 +49,9 @@ export class Editor extends LitElement {
         powerPreference: "high-performance",
       },
       scene: [Boot, Preloader, Controller],
+      callbacks: {
+        postBoot: this.onPostBoot.bind(this),
+      },
       plugins: {
         scene: [
           {
@@ -69,6 +74,20 @@ export class Editor extends LitElement {
         ],
       },
     });
+  }
+
+  onPostBoot(game) {
+    let scene = game.scene.getScene("controller");
+    this.setupPhaserChangeDataEvents(scene);
+  }
+
+  setupPhaserChangeDataEvents(scene) {
+    for (let key of Editor.PHASER_DATA_KEYS) {
+      let eventName = "changedata-" + key;
+      scene.data.events.on(eventName, (_parent, value, _previousValue) => {
+        this.dispatchEvent(new CustomEvent(eventName, { detail: value }));
+      });
+    }
   }
 
   render() {
