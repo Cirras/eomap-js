@@ -1,7 +1,7 @@
 import { EMF } from "../map";
 import { TilePos } from "../tilepos";
 import { CommandInvoker } from "../command/command";
-import { SetGraphicCommand } from "../command/map-editor-command";
+import { SetGraphicCommand, FillCommand } from "../command/map-editor-command";
 import { TextureCache } from "../gfx/texture-cache";
 
 const TDG = 0.00000001; // gap between depth of each tile on a layer
@@ -133,6 +133,17 @@ export class MapEditor extends Phaser.Scene {
       new SetGraphicCommand(this, x, y, layer, oldGfx, newGfx),
       true
     );
+  }
+
+  doFillCommand(x, y, newGfx) {
+    let layer = this.controller.palette.selectedLayer;
+    let oldGfx = this.emf.getTile(x, y).gfx[layer];
+
+    if (newGfx === oldGfx) {
+      return;
+    }
+
+    this.commandInvoker.add(new FillCommand(this, x, y, layer, oldGfx, newGfx));
   }
 
   doEyeDropper(x, y) {

@@ -71,7 +71,7 @@ class Tool {
   }
 
   get pointerDownOnMove() {
-    return true;
+    return false;
   }
 }
 
@@ -99,6 +99,10 @@ export class Pencil extends Tool {
       0
     );
   }
+
+  get pointerDownOnMove() {
+    return true;
+  }
 }
 
 export class Eraser extends Tool {
@@ -117,6 +121,10 @@ export class Eraser extends Tool {
       0
     );
   }
+
+  get pointerDownOnMove() {
+    return true;
+  }
 }
 
 export class EyeDropper extends Tool {
@@ -130,10 +138,6 @@ export class EyeDropper extends Tool {
 
   shouldMoveTileCursor(_mapEditor, pointer) {
     return !pointer.isDown;
-  }
-
-  get pointerDownOnMove() {
-    return false;
   }
 }
 
@@ -172,23 +176,23 @@ export class Hand extends Tool {
   shouldMoveTileCursor(_mapEditor, _pointer) {
     return !this.dragging;
   }
-
-  get pointerDownOnMove() {
-    return false;
-  }
 }
 
 export class Fill extends Tool {
-  handlePointerMove(mapEditor, pointer) {
-    // TODO: Implement
-  }
+  handleLeftPointerDown(mapEditor) {
+    let newGfx = parseInt(
+      mapEditor.controller.palette.currentLayer.selectedEntryKey
+    );
 
-  handleLeftPointerDown(mapEditor, pointer) {
-    // TODO: Implement
-  }
+    if (newGfx > 0) {
+      newGfx -= 100;
+    }
 
-  handleRightPointerDown(mapEditor, pointer) {
-    // TODO: Implement
+    mapEditor.doFillCommand(
+      mapEditor.currentPos.x,
+      mapEditor.currentPos.y,
+      newGfx
+    );
   }
 }
 
