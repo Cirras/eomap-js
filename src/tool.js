@@ -38,16 +38,32 @@ class Tool {
     }
   }
 
+  pointerUp(mapEditor, pointer) {
+    if (pointer.leftButtonReleased()) {
+      this.handleLeftPointerUp(mapEditor, pointer);
+    } else if (pointer.rightButtonReleased()) {
+      this.handleRightPointerUp(mapEditor, pointer);
+    }
+  }
+
   handlePointerMove(_mapEditor, _pointer) {
     return;
   }
 
   handleLeftPointerDown(_mapEditor, _pointer) {
-    throw new Error("Method not implemented.");
+    return;
   }
 
   handleRightPointerDown(_mapEditor, _pointer) {
-    throw new Error("Method not implemented.");
+    return;
+  }
+
+  handleLeftPointerUp(_mapEditor, _pointer) {
+    return;
+  }
+
+  handleRightPointerUp(_mapEditor, _pointer) {
+    return;
   }
 
   shouldMoveTileCursor(_mapEditor, _pointer) {
@@ -112,7 +128,7 @@ export class EyeDropper extends Tool {
     mapEditor.doEyeDropper(mapEditor.currentPos.x, mapEditor.currentPos.y);
   }
 
-  shouldMoveTileCursor(mapEditor, pointer) {
+  shouldMoveTileCursor(_mapEditor, pointer) {
     return !pointer.isDown;
   }
 
@@ -122,20 +138,39 @@ export class EyeDropper extends Tool {
 }
 
 export class Hand extends Tool {
+  constructor() {
+    super();
+    this.startX = 0;
+    this.startY = 0;
+  }
+
   handlePointerMove(mapEditor, pointer) {
-    // TODO: Implement
+    if (this.dragging) {
+      let camera = mapEditor.cameras.main;
+      camera.scrollX = this.startX + (pointer.downX - pointer.x);
+      camera.scrollY = this.startY + (pointer.downY - pointer.y);
+    }
   }
 
-  handleLeftPointerDown(mapEditor, pointer) {
-    // TODO: Implement
+  handleLeftPointerDown(mapEditor, _pointer) {
+    if (!this.dragging) {
+      let camera = mapEditor.cameras.main;
+      this.startX = camera.scrollX;
+      this.startY = camera.scrollY;
+      this.dragging = true;
+      mapEditor.cursorSprite.setFrame(1);
+    }
   }
 
-  handleRightPointerDown(mapEditor, pointer) {
-    // TODO: Implement
+  handleLeftPointerUp(mapEditor, _pointer) {
+    if (this.dragging) {
+      this.dragging = false;
+      mapEditor.cursorSprite.setFrame(0);
+    }
   }
 
-  shouldMoveTileCursor(mapEditor, pointer) {
-    return !pointer.isDown;
+  shouldMoveTileCursor(_mapEditor, _pointer) {
+    return !this.dragging;
   }
 
   get pointerDownOnMove() {

@@ -62,8 +62,10 @@ export class MapEditor extends Phaser.Scene {
 
     this.input.on("pointermove", (pointer) => this.handlePointerMove(pointer));
     this.input.on("pointerdown", (pointer) => this.handlePointerDown(pointer));
-    this.input.on("pointerup", () => this.handlePointerUp());
-    this.input.on("pointerupoutside", () => this.handlePointerUp());
+    this.input.on("pointerup", (pointer) => this.handlePointerUp(pointer));
+    this.input.on("pointerupoutside", (pointer) =>
+      this.handlePointerUp(pointer)
+    );
 
     this.zKey.emitOnRepeat = true;
     this.yKey.emitOnRepeat = true;
@@ -114,7 +116,8 @@ export class MapEditor extends Phaser.Scene {
     this.controller.toolBar.currentTool.pointerDown(this, pointer);
   }
 
-  handlePointerUp() {
+  handlePointerUp(pointer) {
+    this.controller.toolBar.currentTool.pointerUp(this, pointer);
     this.commandInvoker.finalizeAggregate();
   }
 
