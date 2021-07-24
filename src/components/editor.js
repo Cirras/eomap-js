@@ -37,7 +37,8 @@ export class Editor extends LitElement {
 
   componentDataForwarders = new Map();
 
-  firstUpdated(_changedProperties) {
+  firstUpdated(changes) {
+    super.firstUpdated(changes);
     patchPhaser();
     return new Phaser.Game({
       type: Phaser.AUTO,

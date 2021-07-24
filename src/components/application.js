@@ -7,6 +7,7 @@ import "@spectrum-web-components/theme/sp-theme.js";
 import "./menubar";
 import "./sidebar";
 import "./editor";
+import "./palette";
 import "./infobar";
 
 import { TilePos } from "../tilepos";
@@ -26,7 +27,7 @@ export class Application extends LitElement {
         height: 100%;
         display: grid;
         grid-template-rows: min-content 1fr;
-        grid-template-columns: min-content 1fr min-content;
+        grid-template-columns: min-content minmax(0, 1fr) min-content;
         grid-row-gap: var(--spectrum-divider-size);
         grid-column-gap: var(--spectrum-divider-size);
         overflow: hidden;
@@ -34,22 +35,27 @@ export class Application extends LitElement {
 
       eomap-menubar {
         grow-row: 1 / 2;
-        grid-column: 1 / 4;
+        grid-column: 1 / 3;
       }
 
       eomap-sidebar {
         grid-row: 2 / 5;
-        grid-column: 1 / 1;
+        grid-column: 1;
       }
 
       eomap-editor {
         grid-row: 2 / 4;
-        grid-column: 2 / 4;
+        grid-column: 2;
+      }
+
+      eomap-palette {
+        grid-row: 2 / 5;
+        grid-column: 3;
       }
 
       eomap-infobar {
         grid-row: 4 / 5;
-        grid-column: 2 / 4;
+        grid-column: 2;
       }
     `;
   }
@@ -95,6 +101,7 @@ export class Application extends LitElement {
           .tool=${this.tool}
           @changedata-currentPos=${this.onCurrentPosChanged}
         ></eomap-editor>
+        <eomap-palette></eomap-palette>
         <eomap-infobar .tilePos=${this.currentPos}></eomap-infobar>
       </sp-theme>
     `;
