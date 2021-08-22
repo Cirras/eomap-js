@@ -1,9 +1,19 @@
-import { css, customElement, html, LitElement, property } from "lit-element";
+import {
+  css,
+  customElement,
+  html,
+  LitElement,
+  property,
+  state,
+} from "lit-element";
+
+import "@spectrum-web-components/banner/sp-banner.js";
+import "@spectrum-web-components/progress-bar/sp-progress-bar.js";
 
 import "phaser";
 
-import { Boot } from "../scenes/boot";
-import { Preloader } from "../scenes/preloader";
+import icon from "../assets/icon.svg";
+
 import { Controller } from "../scenes/controller";
 import { patchPhaser } from "../patch-phaser";
 
@@ -22,10 +32,58 @@ export class Editor extends LitElement {
 
   static get styles() {
     return css`
-      .editor {
+      :host {
         overflow: hidden;
-        width: 100%;
-        height: 100%;
+        display: grid;
+        grid-template-rows: min-content 1fr;
+        grid-template-columns: min-content minmax(0, 1fr) min-content;
+      }
+      .loading {
+        background-color: var(--spectrum-global-color-gray-75);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        grid-column: 2;
+        grid-row: 2;
+        z-index: 100;
+      }
+      .editor {
+        grid-column: 2;
+        grid-row: 2;
+      }
+      .icon-container {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding-bottom: 64px;
+      }
+      .icon {
+        width: 150px;
+        height: 150px;
+        padding-bottom: 30px;
+      }
+      .positive-progress-bar {
+        --spectrum-fieldlabel-m-text-color: var(
+          --spectrum-global-color-gray-700
+        );
+        --spectrum-progressbar-m-over-background-track-fill-color: var(
+          --spectrum-global-color-gray-700
+        );
+      }
+      .negative-progress-bar {
+        --spectrum-fieldlabel-m-text-color: var(
+          --spectrum-semantic-negative-color-status
+        );
+        --spectrum-progressbar-m-over-background-track-color: var(
+          --spectrum-semantic-negative-color-status
+        );
+        --spectrum-progressbar-m-over-background-track-fill-color: var(
+          --spectrum-semantic-negative-color-status
+        );
+        --spectrum-progressbar-m-over-background-track-fill-color: var(
+          --spectrum-semantic-negative-color-status
+        );
       }
     `;
   }
@@ -39,7 +97,9 @@ export class Editor extends LitElement {
   @property({ type: Array })
   layerVisibility;
 
-  game = null;
+  @state({ type: Phaser.Game })
+  game;
+
   componentDataForwarders = new Map();
 
   firstUpdated(changes) {
@@ -71,8 +131,8 @@ export class Editor extends LitElement {
     }
   }
 
-  setupPhaser() {
-    this.game = new Phaser.Game({
+  async setupPhaser() {
+    let game = new Phaser.Game({
       type: Phaser.AUTO,
       disableContextMenu: true,
       scale: {
@@ -91,7 +151,7 @@ export class Editor extends LitElement {
         pixelArt: true,
         powerPreference: "high-performance",
       },
-      scene: [Boot, Preloader, Controller],
+      scene: [Controller],
       callbacks: {
         postBoot: this.onPostBoot.bind(this),
       },
@@ -117,10 +177,18 @@ export class Editor extends LitElement {
         ],
       },
     });
+
+    game.events.once("postrender", () => {
+      this.game = game;
+    });
   }
 
   updated(changedProperties) {
-    if (changedProperties.has("gfxLoader") && this.gfxLoader) {
+    if (
+      changedProperties.has("gfxLoader") &&
+      this.gfxLoader &&
+      this.gfxLoader.failed.length == 0
+    ) {
       this.setupPhaser();
     }
 
@@ -132,17 +200,46 @@ export class Editor extends LitElement {
     }
   }
 
+  renderLogoWith(content) {
+    return html`
+      <div class="icon-container">
+        <img src=${icon} class="icon"></img>
+        ${content}
+      </div>
+    `;
+  }
+
+  renderLoadingContent() {
+    let failed = this.gfxLoader && this.gfxLoader.failed.length > 0;
+    let progressBarClass = failed
+      ? "negative-progress-bar"
+      : "positive-progress-bar";
+    let label = failed
+      ? `Failed to load ${this.gfxLoader.failed.length} gfx file(s).`
+      : "Loading...";
+
+    return this.renderLogoWith(
+      html`
+        <sp-progress-bar
+          class="${progressBarClass}"
+          label="${label}"
+          indeterminate
+          over-background
+        ></sp-progress-bar>
+      `
+    );
+  }
+
+  renderLoading() {
+    if (!this.game) {
+      return html` <div class="loading">${this.renderLoadingContent()}</div>`;
+    }
+  }
+
   render() {
-    if (!this.gfxLoader) {
-      return html`<span>Loading...</span>`;
-    }
-
-    if (this.gfxLoader.failed.length > 0) {
-      return html`<span
-        >Failed to load ${this.gfxLoader.failed.length} files.</span
-      >`;
-    }
-
-    return html`<div id="${Editor.EDITOR_ID}" class="editor"></div>`;
+    return html`
+      ${this.renderLoading()}
+      <div id="${Editor.EDITOR_ID}" class="editor"></div>
+    `;
   }
 }

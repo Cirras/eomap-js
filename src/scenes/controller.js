@@ -9,6 +9,11 @@ export class Controller extends Phaser.Scene {
     this.scaleRatio = 1;
   }
 
+  preload() {
+    this.load.path = "https://game.bones-underground.org/";
+    this.load.json("map", "map/660");
+  }
+
   create() {
     this.setupCanvas();
 
