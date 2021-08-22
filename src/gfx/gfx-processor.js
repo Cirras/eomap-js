@@ -46,7 +46,7 @@ export class GFXProcessor {
       this.scene.game.anims.create({
         key: animationKey,
         frames: animationFrames,
-        frameRate: 2,
+        frameRate: 1.66,
         repeat: -1,
       });
 

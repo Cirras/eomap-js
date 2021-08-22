@@ -135,9 +135,10 @@ export class MapEditor extends Phaser.Scene {
         start: 0,
         end: 3,
       }),
-      frameRate: 2,
+      frameRate: 1.66,
       repeat: -1,
     });
+
     return this.add.sprite(0, -100).setVisible(false).play("masterMapAnimation")
       .anims;
   }
