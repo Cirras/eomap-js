@@ -25,14 +25,6 @@ export class Preloader extends Phaser.Scene {
 
     this.load.path = "https://game.bones-underground.org/";
 
-    this.load.multiatlas("gui", "gfx/2/all.json");
-    this.load.multiatlas("tile", "gfx/3/all.json");
-    this.load.multiatlas("object", "gfx/4/all.json");
-    this.load.multiatlas("overlay", "gfx/5/all.json");
-    this.load.multiatlas("wall", "gfx/6/all.json");
-    this.load.multiatlas("roof", "gfx/7/all.json");
-    this.load.multiatlas("shadow", "gfx/22/all.json");
-
     this.load.json("map", "map/660");
   }
 

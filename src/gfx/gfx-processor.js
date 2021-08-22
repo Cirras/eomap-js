@@ -1,16 +1,16 @@
-class GfxData {
+class GFXData {
   constructor(
-    originFileKey,
-    originFrameKey,
-    fileKey,
+    fileID,
+    resourceID,
+    textureKey,
     frameKey,
     textureFrame,
     hasAnimation,
     animationKey
   ) {
-    this.originFileKey = originFileKey;
-    this.originFrameKey = originFrameKey;
-    this.fileKey = fileKey;
+    this.fileID = fileID;
+    this.resourceID = resourceID;
+    this.textureKey = textureKey;
     this.frameKey = frameKey;
     this.textureFrame = textureFrame;
     this.hasAnimation = hasAnimation;
@@ -18,30 +18,23 @@ class GfxData {
   }
 }
 
-export class GfxProcessor {
+export class GFXProcessor {
   constructor(scene, identifier) {
     this.scene = scene;
     this.identifier = identifier;
   }
 
-  processAssetData(originFileKey, originFrameKey, fileKey, frameKey) {
-    if (fileKey === undefined) {
-      fileKey = originFileKey;
-    }
-    if (frameKey === undefined) {
-      frameKey = originFrameKey;
-    }
-
-    let textureAtlas = this.scene.textures.get(fileKey);
+  processAssetData(fileID, resourceID, textureKey, frameKey) {
+    let textureAtlas = this.scene.textures.get(textureKey);
     let textureFrame = textureAtlas.get(frameKey);
     let hasAnimation = false;
     let animationKey;
 
-    let canBeAnimated = originFileKey === "tile" || originFileKey === "wall";
+    let canBeAnimated = fileID === 3 || fileID === 6;
     let isWideEnough = textureFrame.realWidth >= 32 * 4;
 
     if (canBeAnimated && isWideEnough) {
-      animationKey = this.getAnimationKey(fileKey, frameKey);
+      animationKey = this.getAnimationKey(textureKey, frameKey);
 
       let animationFrames = this.createAnimationFrames(
         textureAtlas,
@@ -64,10 +57,10 @@ export class GfxProcessor {
       );
     }
 
-    return new GfxData(
-      originFileKey,
-      originFrameKey,
-      fileKey,
+    return new GFXData(
+      fileID,
+      resourceID,
+      textureKey,
       frameKey,
       textureFrame,
       hasAnimation,

@@ -9,15 +9,15 @@ const RDG = 0.001; // gap between depth of each row of tiles
 
 // prettier-ignore
 const layerInfo = [
-    { file: 'tile',    xoff: 0,  yoff: 0,  alpha: 1.0, centered: false, depth:-2.0 + TDG * 1 }, // Ground
-    { file: 'object',  xoff:-2,  yoff:-2,  alpha: 1.0, centered: true,  depth: 0.0 + TDG * 4 }, // Objects
-    { file: 'overlay', xoff:-2,  yoff:-2,  alpha: 1.0, centered: true,  depth: 0.0 + TDG * 6 }, // Overlay
-    { file: 'wall',    xoff: 0,  yoff:-1,  alpha: 1.0, centered: false, depth: 0.0 + TDG * 5 }, // Down Wall
-    { file: 'wall',    xoff: 32, yoff:-1,  alpha: 1.0, centered: false, depth:-RDG + TDG * 9 }, // Right Wall
-    { file: 'roof',    xoff: 0,  yoff:-64, alpha: 1.0, centered: false, depth: 0.0 + TDG * 7 }, // Roof
-    { file: 'tile',    xoff: 0,  yoff:-32, alpha: 1.0, centered: false, depth: 0.0 + TDG * 2 }, // Top
-    { file: 'shadow',  xoff:-24, yoff:-12, alpha: 0.2, centered: false, depth:-1.0 + TDG * 2 }, // Shadow
-    { file: 'overlay', xoff:-2,  yoff:-2,  alpha: 1.0, centered: true,  depth: 1.0 + TDG * 8 }  // Overlay 2
+    { file: 3,  xoff: 0,  yoff: 0,  alpha: 1.0, centered: false, depth:-2.0 + TDG * 1 }, // Ground
+    { file: 4,  xoff:-2,  yoff:-2,  alpha: 1.0, centered: true,  depth: 0.0 + TDG * 4 }, // Objects
+    { file: 5,  xoff:-2,  yoff:-2,  alpha: 1.0, centered: true,  depth: 0.0 + TDG * 6 }, // Overlay
+    { file: 6,  xoff: 0,  yoff:-1,  alpha: 1.0, centered: false, depth: 0.0 + TDG * 5 }, // Down Wall
+    { file: 6,  xoff: 32, yoff:-1,  alpha: 1.0, centered: false, depth:-RDG + TDG * 9 }, // Right Wall
+    { file: 7,  xoff: 0,  yoff:-64, alpha: 1.0, centered: false, depth: 0.0 + TDG * 7 }, // Roof
+    { file: 3,  xoff: 0,  yoff:-32, alpha: 1.0, centered: false, depth: 0.0 + TDG * 2 }, // Top
+    { file: 22, xoff:-24, yoff:-12, alpha: 0.2, centered: false, depth:-1.0 + TDG * 2 }, // Shadow
+    { file: 5,  xoff:-2,  yoff:-2,  alpha: 1.0, centered: true,  depth: 1.0 + TDG * 8 }  // Overlay 2
 ];
 
 const calcDepth = (x, y, layer) => {
@@ -33,11 +33,15 @@ export class MapEditor extends Phaser.Scene {
   }
 
   create() {
-    this.textureCache = new TextureCache(this, "mapEditor", 1024, 1024);
-    this.cursorSprite = this.add.sprite(0, 0, "tileCursor", 0);
-    this.cursorSprite.visible = false;
-    this.cursorSprite.setDepth(3.0);
-    this.cursorSprite.setOrigin(0);
+    this.textureCache = new TextureCache(
+      this,
+      this.controller.data.values.gfxLoader,
+      1024,
+      1024
+    );
+
+    this.cursorSprite = this.createTileCursor();
+    this.masterAnimation = this.createMasterAnimation();
 
     this.cursors = this.input.keyboard.createCursorKeys();
     this.zKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z);
@@ -91,6 +95,51 @@ export class MapEditor extends Phaser.Scene {
     });
 
     this.scene.sendToBack();
+  }
+
+  createTileCursor() {
+    let asset = this.textureCache.get(2, 124);
+    asset.incRef();
+
+    let texture = this.game.textures.addSpriteSheetFromAtlas("tileCursor", {
+      atlas: asset.data.textureKey,
+      frame: asset.data.frameKey,
+      frameWidth: 64,
+      frameHeight: 32,
+    });
+
+    this.game.anims.create({
+      key: "tileCursorClick",
+      frames: this.game.anims.generateFrameNumbers("tileCursor", {
+        start: 0,
+        end: 3,
+      }),
+      frameRate: 60,
+      yoyo: true,
+    });
+
+    texture.setFilter(1);
+
+    let cursorSprite = this.add.sprite(0, 0, "tileCursor", 0);
+    cursorSprite.visible = false;
+    cursorSprite.setDepth(3.0);
+    cursorSprite.setOrigin(0);
+
+    return cursorSprite;
+  }
+
+  createMasterAnimation() {
+    this.game.anims.create({
+      key: "masterMapAnimation",
+      frames: this.anims.generateFrameNumbers("tileCursor", {
+        start: 0,
+        end: 3,
+      }),
+      frameRate: 2,
+      repeat: -1,
+    });
+    return this.add.sprite(0, -100).setVisible(false).play("masterMapAnimation")
+      .anims;
   }
 
   moveTileCursor(tilePos) {
@@ -252,6 +301,8 @@ export class MapEditor extends Phaser.Scene {
     if (this.cameras.main.dirty) {
       this.cull();
     }
+
+    this.textureCache.update();
   }
 
   updateCurrentPos(pointerPos) {
@@ -303,8 +354,6 @@ export class MapEditor extends Phaser.Scene {
         }
       }
     }
-
-    this.textureCache.uploadChanges();
   }
 
   /*
@@ -318,8 +367,8 @@ export class MapEditor extends Phaser.Scene {
     let info = layerInfo[layer];
 
     const getAsset = (displayGfx) => {
-      let frameKey = (displayGfx + 100).toString();
-      return this.textureCache.get(info.file, frameKey);
+      let resourceID = displayGfx + 100;
+      return this.textureCache.get(info.file, resourceID);
     };
 
     const getDisplayGfx = (gfx) => {
@@ -380,7 +429,7 @@ export class MapEditor extends Phaser.Scene {
       this.controller.syncToMasterAnimation(sprite);
     } else {
       sprite.anims.stop();
-      sprite.setTexture(asset.data.fileKey, asset.data.frameKey);
+      sprite.setTexture(asset.data.textureKey, asset.data.frameKey);
     }
 
     tile.sprites[layer] = sprite;

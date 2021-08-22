@@ -11,6 +11,8 @@ import "./palette";
 import "./infobar";
 
 import { TilePos } from "../tilepos";
+import { GFXLoader } from "../gfx/load/gfx-loader";
+import { DownloadLoadingStrategy } from "../gfx/load/download-loading-strategy";
 
 @customElement("eomap-application")
 export class Application extends LitElement {
@@ -60,10 +62,13 @@ export class Application extends LitElement {
     `;
   }
 
+  @state({ type: GFXLoader })
+  gfxLoader = null;
+
   @state({ type: String })
   tool = "draw";
 
-  @state({ type: Object })
+  @state({ type: TilePos })
   currentPos = new TilePos();
 
   @state({ type: Array })
@@ -71,6 +76,7 @@ export class Application extends LitElement {
 
   constructor() {
     super();
+    this.initializeGFXLoader();
     this.addEventListener("keydown", (event) => {
       switch (event.key) {
         case "ArrowDown":
@@ -85,6 +91,17 @@ export class Application extends LitElement {
     });
   }
 
+  initializeGFXLoader() {
+    let strategy = new DownloadLoadingStrategy(
+      "https://game.bones-underground.org/mapper_gfx"
+    );
+    let gfxLoader = new GFXLoader(strategy);
+    let promises = [2, 3, 4, 5, 6, 7, 22].map((fileID) =>
+      gfxLoader.loadEGF(fileID)
+    );
+    Promise.allSettled(promises).then(() => (this.gfxLoader = gfxLoader));
+  }
+
   render() {
     return html`
       <sp-theme color="darkest" scale="medium">
@@ -97,6 +114,7 @@ export class Application extends LitElement {
           .tool="${this.tool}"
         ></eomap-sidebar>
         <eomap-editor
+          .gfxLoader=${this.gfxLoader}
           .layerVisibility=${this.layerVisibility}
           .tool=${this.tool}
           @changedata-currentPos=${this.onCurrentPosChanged}

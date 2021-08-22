@@ -1,5 +1,5 @@
 import { ScaleModes } from "phaser";
-import { GfxProcessor } from "./gfx/gfx-processor";
+import { GFXProcessor } from "./gfx/gfx-processor";
 
 export const PaletteColor = {
   Outline: 0x181c1f,
@@ -975,7 +975,7 @@ export class Palette {
     this.files = {};
     this.layers = [];
     this.scene = scene;
-    this.gfxProcessor = new GfxProcessor(this.scene, "palette");
+    this.gfxProcessor = new GFXProcessor(this.scene, "palette");
     this.selectedLayer = 0;
     this.selectedGraphic = 0;
 
@@ -990,38 +990,6 @@ export class Palette {
     this._width = 0;
     this._height = 0;
     this._scaleRatio = 1;
-
-    let tileCursorTexture = this.scene.game.textures.addSpriteSheetFromAtlas(
-      "tileCursor",
-      {
-        atlas: "gui",
-        frame: "124",
-        frameWidth: 64,
-        frameHeight: 32,
-      }
-    );
-
-    this.scene.game.anims.create({
-      key: "tileCursorClick",
-      frames: this.scene.game.anims.generateFrameNumbers("tileCursor", {
-        start: 0,
-        end: 3,
-      }),
-      frameRate: 60,
-      yoyo: true,
-    });
-
-    this.scene.game.anims.create({
-      key: "masterMapAnimation",
-      frames: this.scene.game.anims.generateFrameNumbers("tileCursor", {
-        start: 0,
-        end: 3,
-      }),
-      frameRate: 2,
-      repeat: -1,
-    });
-
-    tileCursorTexture.setFilter(1);
   }
 
   addLayer(layerName, fileKey, assetBackgroundColor) {

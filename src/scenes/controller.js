@@ -16,11 +16,6 @@ export class Controller extends Phaser.Scene {
     this.toolBar = new ToolBar(this);
     this.mapEditor = new MapEditor(this);
 
-    this.masterAnimation = this.add
-      .sprite(0, -100)
-      .setVisible(false)
-      .play("masterMapAnimation").anims;
-
     this.ctrlKeyDown = false;
     this.input.on("pointermove", (pointer) => this.handlePointerMove(pointer));
     this.input.on("pointerdown", (pointer) => this.handlePointerDown(pointer));
@@ -150,8 +145,8 @@ export class Controller extends Phaser.Scene {
 
   syncToMasterAnimation(sprite) {
     if (sprite.anims.isPlaying) {
-      sprite.anims.setProgress(this.masterAnimation.getProgress());
-      sprite.anims.accumulator = this.masterAnimation.accumulator;
+      sprite.anims.setProgress(this.mapEditor.masterAnimation.getProgress());
+      sprite.anims.accumulator = this.mapEditor.masterAnimation.accumulator;
     }
   }
 }

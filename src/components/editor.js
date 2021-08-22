@@ -10,6 +10,7 @@ import { patchPhaser } from "../patch-phaser";
 import UIPlugin from "phaser3-rex-plugins/templates/ui/ui-plugin.js";
 import ScrollerPlugin from "phaser3-rex-plugins/plugins/scroller-plugin";
 import SliderPlugin from "phaser3-rex-plugins/plugins/slider-plugin";
+import { GFXLoader } from "../gfx/load/gfx-loader";
 
 @customElement("eomap-editor")
 export class Editor extends LitElement {
@@ -17,7 +18,7 @@ export class Editor extends LitElement {
 
   static PHASER_DATA_KEYS = ["currentPos"];
 
-  static COMPONENT_DATA_KEYS = ["tool", "layerVisibility"];
+  static COMPONENT_DATA_KEYS = ["tool", "layerVisibility", "gfxLoader"];
 
   static get styles() {
     return css`
@@ -29,18 +30,49 @@ export class Editor extends LitElement {
     `;
   }
 
+  @property({ type: GFXLoader })
+  gfxLoader;
+
   @property({ type: String })
   tool;
 
   @property({ type: Array })
   layerVisibility;
 
+  game = null;
   componentDataForwarders = new Map();
 
   firstUpdated(changes) {
     super.firstUpdated(changes);
     patchPhaser();
-    return new Phaser.Game({
+  }
+
+  onPostBoot(game) {
+    let scene = game.scene.getScene("controller");
+    this.setupPhaserChangeDataEvents(scene);
+    this.setupComponentDataForwardingToPhaser(scene);
+  }
+
+  setupPhaserChangeDataEvents(scene) {
+    for (let key of Editor.PHASER_DATA_KEYS) {
+      let eventName = "changedata-" + key;
+      scene.data.events.on(eventName, (_parent, value, _previousValue) => {
+        this.dispatchEvent(new CustomEvent(eventName, { detail: value }));
+      });
+    }
+  }
+
+  setupComponentDataForwardingToPhaser(scene) {
+    for (let key of Editor.COMPONENT_DATA_KEYS) {
+      scene.data.set(key, this[key]);
+      this.componentDataForwarders.set(key, () => {
+        scene.data.set(key, this[key]);
+      });
+    }
+  }
+
+  setupPhaser() {
+    this.game = new Phaser.Game({
       type: Phaser.AUTO,
       disableContextMenu: true,
       scale: {
@@ -87,31 +119,11 @@ export class Editor extends LitElement {
     });
   }
 
-  onPostBoot(game) {
-    let scene = game.scene.getScene("controller");
-    this.setupPhaserChangeDataEvents(scene);
-    this.setupComponentDataForwardingToPhaser(scene);
-  }
-
-  setupPhaserChangeDataEvents(scene) {
-    for (let key of Editor.PHASER_DATA_KEYS) {
-      let eventName = "changedata-" + key;
-      scene.data.events.on(eventName, (_parent, value, _previousValue) => {
-        this.dispatchEvent(new CustomEvent(eventName, { detail: value }));
-      });
-    }
-  }
-
-  setupComponentDataForwardingToPhaser(scene) {
-    for (let key of Editor.COMPONENT_DATA_KEYS) {
-      scene.data.set(key, this[key]);
-      this.componentDataForwarders.set(key, () => {
-        scene.data.set(key, this[key]);
-      });
-    }
-  }
-
   updated(changedProperties) {
+    if (changedProperties.has("gfxLoader") && this.gfxLoader) {
+      this.setupPhaser();
+    }
+
     for (let changed of changedProperties.keys()) {
       let dataForwarder = this.componentDataForwarders.get(changed);
       if (dataForwarder) {
@@ -121,6 +133,16 @@ export class Editor extends LitElement {
   }
 
   render() {
-    return html`<div id="${Editor.EDITOR_ID}" class="editor"></div> `;
+    if (!this.gfxLoader) {
+      return html`<span>Loading...</span>`;
+    }
+
+    if (this.gfxLoader.failed.length > 0) {
+      return html`<span
+        >Failed to load ${this.gfxLoader.failed.length} files.</span
+      >`;
+    }
+
+    return html`<div id="${Editor.EDITOR_ID}" class="editor"></div>`;
   }
 }

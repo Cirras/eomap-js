@@ -19,12 +19,10 @@ export class SetGraphicCommand extends MapEditorCommand {
 
   execute() {
     this.mapEditor.setGraphic(this.x, this.y, this.newGfx, this.layer);
-    this.mapEditor.textureCache.uploadChanges();
   }
 
   undo() {
     this.mapEditor.setGraphic(this.x, this.y, this.oldGfx, this.layer);
-    this.mapEditor.textureCache.uploadChanges();
   }
 }
 
@@ -95,13 +93,11 @@ export class FillCommand extends MapEditorCommand {
         this.mapEditor.setGraphic(tile.x, tile.y, this.newGfx, this.layer);
       }
     }
-    this.mapEditor.textureCache.uploadChanges();
   }
 
   undo() {
     for (let tile of this.fillTiles) {
       this.mapEditor.setGraphic(tile.x, tile.y, this.oldGfx, this.layer);
     }
-    this.mapEditor.textureCache.uploadChanges();
   }
 }

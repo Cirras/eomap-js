@@ -1,6 +1,12 @@
 import ShelfPack from "@mapbox/shelf-pack";
-import { GfxProcessor } from "./gfx-processor";
+import { GFXProcessor } from "./gfx-processor";
 import { CanvasMultiTexture } from "./canvas-multi-texture";
+
+const CacheStatus = {
+  Fragmented: 0,
+  Rebuilding: 1,
+  Optimized: 2,
+};
 
 class TextureCacheEntry {
   constructor(data, page, bin) {
@@ -33,23 +39,29 @@ class TextureCachePage {
     this.dirty = false;
   }
 
+  draw(imageData, x, y) {
+    this.canvasTexturePage.putData(imageData, x, y);
+    this.dirty = true;
+  }
+
   get empty() {
     return Object.keys(this.shelfPacker.bins).length === 0;
   }
 }
 
 export class TextureCache {
-  constructor(scene, identifier, width, height) {
+  constructor(scene, gfxLoader, width, height) {
     this.scene = scene;
-    this.identifier = identifier;
+    this.gfxLoader = gfxLoader;
+    this.identifier = Phaser.Utils.String.UUID();
     this.pages = [];
     this.assets = [];
-    this.gfxProcessor = new GfxProcessor(scene, identifier);
-    this.canRebuild = false;
+    this.gfxProcessor = new GFXProcessor(scene, this.identifier);
+    this.status = CacheStatus.Fragmented;
 
     this.canvasMultiTexture = new CanvasMultiTexture(
       this.scene.textures,
-      this.identifier + ".textureCache",
+      this.identifier,
       width,
       height
     );
@@ -58,24 +70,23 @@ export class TextureCache {
     this.pages.push(firstPage);
   }
 
-  get(fileKey, frameKey) {
+  get(fileID, resourceID) {
     for (let asset of this.assets) {
       if (
-        asset.data.originFileKey === fileKey &&
-        asset.data.originFrameKey === frameKey
+        asset.data.fileID === fileID &&
+        asset.data.resourceID === resourceID
       ) {
         return asset;
       }
     }
-
-    return this.add(fileKey, frameKey);
+    return this.add(fileID, resourceID);
   }
 
-  add(fileKey, frameKey) {
-    let cacheEntry;
+  add(fileID, resourceID) {
+    let cacheEntry = null;
 
     for (let i = 0; i < this.pages.length; ++i) {
-      cacheEntry = this.addToPage(i, fileKey, frameKey);
+      cacheEntry = this.addToPage(i, fileID, resourceID);
 
       if (cacheEntry) {
         this.assets.push(cacheEntry);
@@ -84,25 +95,29 @@ export class TextureCache {
 
       if (this.pages[i].empty) {
         throw new Error(
-          "Failed to cache Texture-Asset " + fileKey + "." + frameKey
+          `Failed to cache resource ${resourceID} from file ${fileID}`
         );
       }
     }
 
     if (!cacheEntry) {
       this.handleOutOfSpace();
-      return this.add(fileKey, frameKey);
+      return this.add(fileID, resourceID);
     }
 
-    this.canRebuild = true;
+    this.status = CacheStatus.Fragmented;
+
     return cacheEntry;
   }
 
   handleOutOfSpace() {
-    if (this.canRebuild) {
-      this.rebuild();
-    } else {
-      this.addPage();
+    switch (this.status) {
+      case CacheStatus.Fragmented:
+        this.rebuild();
+        break;
+      case CacheStatus.Optimized:
+        this.addPage();
+        break;
     }
   }
 
@@ -113,51 +128,42 @@ export class TextureCache {
     this.pages.push(newPage);
   }
 
-  addToPage(pageIndex, fileKey, frameKey) {
+  addToPage(pageIndex, fileID, resourceID) {
     let page = this.pages[pageIndex];
-    let textureFrame = this.scene.textures.getFrame(fileKey, frameKey);
-    let bin = page.shelfPacker.packOne(
-      textureFrame.cutWidth,
-      textureFrame.cutHeight
-    );
+    let info = this.gfxLoader.info(fileID, resourceID);
+
+    let bin = page.shelfPacker.packOne(info.width, info.height);
 
     if (!bin) {
       return null;
     }
 
-    let cacheFrameKey = fileKey + "." + frameKey;
-
-    let cacheFrame = this.canvasMultiTexture.add(
+    let cacheFrameKey = fileID + "." + resourceID;
+    this.canvasMultiTexture.add(
       cacheFrameKey,
       pageIndex,
       bin.x,
       bin.y,
-      textureFrame.cutWidth,
-      textureFrame.cutHeight
+      info.width,
+      info.height
     );
-
-    cacheFrame.setTrim(
-      textureFrame.realWidth,
-      textureFrame.realHeight,
-      textureFrame.x,
-      textureFrame.y,
-      textureFrame.cutWidth,
-      textureFrame.cutHeight
-    );
-
-    this.drawToPage(page, textureFrame, bin.x, bin.y);
 
     let assetData = this.gfxProcessor.processAssetData(
-      fileKey,
-      frameKey,
+      fileID,
+      resourceID,
       this.canvasMultiTexture.key,
       cacheFrameKey
     );
+
+    let imageData = this.gfxLoader.loadResource(fileID, resourceID);
+    page.draw(imageData, bin.x, bin.y);
 
     return new TextureCacheEntry(assetData, page, bin);
   }
 
   rebuild() {
+    this.status = CacheStatus.Rebuilding;
+
     const moveFrameToPage = (frame, page, x, y) => {
       let realWidth = frame.realWidth;
       let realHeight = frame.realHeight;
@@ -189,19 +195,16 @@ export class TextureCache {
 
     for (let asset of this.assets) {
       let data = asset.data;
-      let textureFrame = this.scene.textures.getFrame(
-        data.originFileKey,
-        data.originFrameKey
-      );
 
       for (let i = 0; i < this.pages.length; ++i) {
         let page = this.pages[i];
         let isLastPage = i === this.pages.length - 1;
-        let oldBin = asset.bin;
-        let newBin = page.shelfPacker.packOne(
-          textureFrame.cutWidth,
-          textureFrame.cutHeight
+        let info = this.gfxLoader.info(
+          asset.data.fileID,
+          asset.data.resourceID
         );
+        let oldBin = asset.bin;
+        let newBin = page.shelfPacker.packOne(info.width, info.height);
 
         if (!newBin) {
           if (isLastPage) {
@@ -232,12 +235,16 @@ export class TextureCache {
           moveFrameToPage(asset.data.textureFrame, page, newBin.x, newBin.y);
         }
 
-        this.drawToPage(page, textureFrame, newBin.x, newBin.y);
+        let imageData = this.gfxLoader.loadResource(
+          asset.data.fileID,
+          asset.data.resourceID
+        );
+        page.draw(imageData, newBin.x, newBin.y);
 
         break;
       }
 
-      this.canRebuild = false;
+      this.status = CacheStatus.Optimized;
     }
 
     for (let i = this.assets.length - 1; i >= 0; --i) {
@@ -249,30 +256,8 @@ export class TextureCache {
 
       this.removeAsset(asset);
     }
-  }
 
-  drawToPage(page, frame, x, y) {
-    if (frame) {
-      let cd = frame.canvasData;
-      let width = frame.cutWidth;
-      let height = frame.cutHeight;
-      let res = frame.source.resolution;
-
-      page.canvasTexturePage.context.drawImage(
-        frame.source.image,
-        cd.x,
-        cd.y,
-        width,
-        height,
-        x,
-        y,
-        width / res,
-        height / res
-      );
-    }
-
-    page.dirty = true;
-    return this;
+    this.status = CacheStatus.Optimized;
   }
 
   removeAsset(asset) {
@@ -300,7 +285,7 @@ export class TextureCache {
     Phaser.Utils.Array.Remove(this.assets, asset);
   }
 
-  uploadChanges() {
+  update() {
     for (let page of this.pages) {
       if (page.dirty) {
         page.canvasTexturePage.update();

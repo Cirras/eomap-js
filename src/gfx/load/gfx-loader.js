@@ -5,36 +5,33 @@ export class GFXLoader {
   constructor(loadingStrategy) {
     this.loadingStrategy = loadingStrategy;
     this.egfs = new Map();
+    this.failed = [];
   }
 
-  async loadEGF(id) {
-    if (this.egfs.has(id)) {
-      return this.egfs.get(id);
+  async loadEGF(fileID) {
+    if (!this.egfs.has(fileID)) {
+      try {
+        let buffer = await this.loadingStrategy.loadEGF(fileID);
+        this.egfs.set(fileID, new PEReader(buffer));
+      } catch (e) {
+        this.failed.push(`EGF ${fileID}`);
+        console.error("Failed to load EGF %d: %s", id, e);
+      }
     }
-    return this.loadingStrategy
-      .loadEGF(id)
-      .then((buffer) => {
-        let egf = new PEReader(buffer);
-        this.egfs.set(id, egf);
-        return egf;
-      })
-      .catch((e) => {
-        console.error("Failed to load EGF %d: %s", id, e.message);
-      });
   }
 
-  info(file, id) {
-    let egf = this.egfs.get(file);
+  info(fileID, resourceID) {
+    let egf = this.egfs.get(fileID);
     if (egf) {
-      return egf.getResourceInfo(id);
+      return egf.getResourceInfo(resourceID);
     }
     return null;
   }
 
-  async loadResource(file, id) {
-    let egf = this.egfs.get(file);
+  loadResource(fileID, resourceID) {
+    let egf = this.egfs.get(fileID);
     if (egf) {
-      let info = this.info(file, id);
+      let info = this.info(fileID, resourceID);
       if (info) {
         let dib = egf.getResource(info);
         try {
@@ -44,9 +41,9 @@ export class GFXLoader {
         } catch (e) {
           console.error(
             "Failed to read resource %d from file %d: %s",
-            id,
-            file,
-            e.message
+            resourceID,
+            fileID,
+            e
           );
         }
       }
