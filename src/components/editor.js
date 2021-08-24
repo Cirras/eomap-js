@@ -14,7 +14,7 @@ import "phaser";
 
 import icon from "../assets/icon.svg";
 
-import { Controller } from "../scenes/controller";
+import { EditorScene } from "../scenes/editor-scene";
 import { patchPhaser } from "../patch-phaser";
 
 import UIPlugin from "phaser3-rex-plugins/templates/ui/ui-plugin.js";
@@ -26,30 +26,36 @@ import { GFXLoader } from "../gfx/load/gfx-loader";
 export class Editor extends LitElement {
   static EDITOR_ID = "phaser-container";
 
-  static PHASER_DATA_KEYS = ["currentPos"];
+  static PHASER_DATA_KEYS = ["currentPos", "eyedropped"];
 
-  static COMPONENT_DATA_KEYS = ["tool", "layerVisibility", "gfxLoader"];
+  static COMPONENT_DATA_KEYS = [
+    "tool",
+    "layerVisibility",
+    "gfxLoader",
+    "selectedLayer",
+    "selectedGraphic",
+  ];
 
   static get styles() {
     return css`
       :host {
         overflow: hidden;
         display: grid;
-        grid-template-rows: min-content 1fr;
-        grid-template-columns: min-content minmax(0, 1fr) min-content;
+        grid-template-rows: 100%;
+        grid-template-columns: 100%;
       }
       .loading {
         background-color: var(--spectrum-global-color-gray-75);
         display: flex;
         justify-content: center;
         align-items: center;
-        grid-column: 2;
-        grid-row: 2;
+        grid-column: 1;
+        grid-row: 1;
         z-index: 100;
       }
       .editor {
-        grid-column: 2;
-        grid-row: 2;
+        grid-column: 1;
+        grid-row: 1;
       }
       .icon-container {
         display: flex;
@@ -97,6 +103,12 @@ export class Editor extends LitElement {
   @property({ type: Array })
   layerVisibility;
 
+  @property({ type: Number })
+  selectedLayer;
+
+  @property({ type: Number })
+  selectedGraphic;
+
   @state({ type: Phaser.Game })
   game;
 
@@ -108,9 +120,14 @@ export class Editor extends LitElement {
   }
 
   onPostBoot(game) {
-    let scene = game.scene.getScene("controller");
+    let scene = game.scene.getScene("editor");
+
     this.setupPhaserChangeDataEvents(scene);
     this.setupComponentDataForwardingToPhaser(scene);
+
+    scene.events.once("first-update", () => {
+      this.game = game;
+    });
   }
 
   setupPhaserChangeDataEvents(scene) {
@@ -132,7 +149,7 @@ export class Editor extends LitElement {
   }
 
   async setupPhaser() {
-    let game = new Phaser.Game({
+    return new Phaser.Game({
       type: Phaser.AUTO,
       disableContextMenu: true,
       scale: {
@@ -151,7 +168,7 @@ export class Editor extends LitElement {
         pixelArt: true,
         powerPreference: "high-performance",
       },
-      scene: [Controller],
+      scene: [EditorScene],
       callbacks: {
         postBoot: this.onPostBoot.bind(this),
       },
@@ -176,10 +193,6 @@ export class Editor extends LitElement {
           },
         ],
       },
-    });
-
-    game.events.once("postrender", () => {
-      this.game = game;
     });
   }
 

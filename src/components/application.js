@@ -74,6 +74,15 @@ export class Application extends LitElement {
   @state({ type: Array })
   layerVisibility = Array(11).fill(true);
 
+  @state({ type: Number })
+  selectedLayer = 0;
+
+  @state({ type: Number })
+  selectedGraphic = 0;
+
+  @state({ type: Number })
+  eyedropped = null;
+
   constructor() {
     super();
     this.initializeGFXLoader();
@@ -117,9 +126,18 @@ export class Application extends LitElement {
           .gfxLoader=${this.gfxLoader}
           .layerVisibility=${this.layerVisibility}
           .tool=${this.tool}
+          .selectedLayer=${this.selectedLayer}
+          .selectedGraphic=${this.selectedGraphic}
           @changedata-currentPos=${this.onCurrentPosChanged}
+          @changedata-eyedropped=${this.onEyedroppedChanged}
+          @changedata-selectedLayer=${this.onSelectedLayerChanged}
+          @changedata-selectedGraphic=${this.onSelectedGraphicChanged}
         ></eomap-editor>
-        <eomap-palette></eomap-palette>
+        <eomap-palette
+          .eyedropped=${this.eyedropped}
+          .selectedLayer=${this.selectedLayer}
+          .selectedGraphic=${this.selectedGraphic}
+        ></eomap-palette>
         <eomap-infobar .tilePos=${this.currentPos}></eomap-infobar>
       </sp-theme>
     `;
@@ -139,5 +157,17 @@ export class Application extends LitElement {
 
   onCurrentPosChanged(event) {
     this.currentPos = event.detail;
+  }
+
+  onEyedroppedChanged(event) {
+    this.eyedropped = event.detail;
+  }
+
+  onSelectedLayerChanged(event) {
+    this.selectedLayer = event.detail;
+  }
+
+  onSelectedGraphicChanged(event) {
+    this.selectedGraphic = event.detail;
   }
 }

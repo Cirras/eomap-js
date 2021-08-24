@@ -1,8 +1,9 @@
 import { EMF } from "../map";
-import { TilePos } from "../tilepos";
 import { CommandInvoker } from "../command/command";
 import { SetGraphicCommand, FillCommand } from "../command/map-editor-command";
+import { TilePos } from "../tilepos";
 import { TextureCache } from "../gfx/texture-cache";
+import { ToolBar } from "../toolbar";
 
 const TDG = 0.00000001; // gap between depth of each tile on a layer
 const RDG = 0.001; // gap between depth of each row of tiles
@@ -24,28 +25,47 @@ const calcDepth = (x, y, layer) => {
   return layerInfo[layer].depth + y * RDG + x * layerInfo.length * TDG;
 };
 
-export class MapEditor extends Phaser.Scene {
-  constructor(controller) {
-    super("mapEditor");
-    this.controller = controller;
+export class EditorScene extends Phaser.Scene {
+  constructor() {
+    super("editor");
     this.commandInvoker = new CommandInvoker();
-    this.currentPos = new TilePos();
+    this.firstUpdate = true;
+    this.ctrlKeyDown = false;
+
+    this.textureCache = null;
+    this.toolBar = null;
+    this.cursorSprite = null;
+    this.masterAnimation = null;
+    this.cursors = null;
+    this.yKey = null;
+    this.zKey = null;
+    this.cameraControls = null;
+  }
+
+  preload() {
+    // TODO: Drag the map up to the editor component
+    this.load.path = "https://game.bones-underground.org/";
+    this.load.json("map", "map/660");
   }
 
   create() {
+    this.currentPos = new TilePos();
+
     this.textureCache = new TextureCache(
       this,
-      this.controller.data.values.gfxLoader,
+      this.data.values.gfxLoader,
       1024,
       1024
     );
+
+    this.toolBar = new ToolBar(this);
 
     this.cursorSprite = this.createTileCursor();
     this.masterAnimation = this.createMasterAnimation();
 
     this.cursors = this.input.keyboard.createCursorKeys();
-    this.zKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z);
     this.yKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Y);
+    this.zKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z);
 
     let controlConfig = {
       camera: this.cameras.main,
@@ -71,8 +91,14 @@ export class MapEditor extends Phaser.Scene {
       this.handlePointerUp(pointer)
     );
 
-    this.zKey.emitOnRepeat = true;
     this.yKey.emitOnRepeat = true;
+    this.zKey.emitOnRepeat = true;
+
+    this.yKey.on("down", () => {
+      if (this.yKey.ctrlKey) {
+        this.commandInvoker.redo();
+      }
+    });
 
     this.zKey.on("down", () => {
       if (this.zKey.ctrlKey) {
@@ -84,17 +110,14 @@ export class MapEditor extends Phaser.Scene {
       }
     });
 
-    this.yKey.on("down", () => {
-      if (this.yKey.ctrlKey) {
-        this.commandInvoker.redo();
-      }
-    });
-
-    this.controller.data.events.on("changedata-layerVisibility", () => {
+    this.data.events.on("changedata-layerVisibility", () => {
       this.cull();
     });
 
-    this.scene.sendToBack();
+    this.scale.on("resize", this.resize, this);
+    this.resize();
+
+    this.resetCameraPosition();
   }
 
   createTileCursor() {
@@ -143,6 +166,47 @@ export class MapEditor extends Phaser.Scene {
       .anims;
   }
 
+  update(_time, delta) {
+    this.cameraControls.update(delta);
+
+    if (this.cameras.main.dirty) {
+      this.cull();
+    }
+
+    this.textureCache.update();
+
+    if (this.firstUpdate) {
+      this.firstUpdate = false;
+      this.events.emit("first-update");
+    }
+  }
+
+  resize(gameSize, _baseSize, _displaySize, _resolution) {
+    let width;
+    let height;
+
+    if (gameSize === undefined) {
+      width = this.sys.scale.width;
+      height = this.sys.scale.height;
+    } else {
+      width = gameSize.width;
+      height = gameSize.height;
+    }
+
+    this.cameras.main.setSize(width, height);
+    let centerXDiff = this.cameras.main.scrollX + this.cameras.main.centerX;
+    let centerYDiff = this.cameras.main.scrollY + this.cameras.main.centerY;
+    this.cameras.main.scrollX = -this.cameras.main.centerX + centerXDiff;
+    this.cameras.main.scrollY = -this.cameras.main.centerY + centerYDiff;
+  }
+
+  syncToMasterAnimation(sprite) {
+    if (sprite.anims.isPlaying) {
+      sprite.anims.setProgress(this.masterAnimation.getProgress());
+      sprite.anims.accumulator = this.masterAnimation.accumulator;
+    }
+  }
+
   moveTileCursor(tilePos) {
     if (!tilePos.valid) {
       this.cursorSprite.visible = false;
@@ -159,60 +223,50 @@ export class MapEditor extends Phaser.Scene {
   }
 
   handlePointerMove(pointer) {
-    this.controller.toolBar.currentTool.pointerMove(this, pointer);
+    this.ctrlKeyDown = pointer.event.ctrlKey;
+    this.toolBar.currentTool.pointerMove(this, pointer);
   }
 
   handlePointerDown(pointer) {
-    this.controller.toolBar.currentTool.pointerDown(this, pointer);
+    this.ctrlKeyDown = pointer.event.ctrlKey;
+    this.toolBar.currentTool.pointerDown(this, pointer);
   }
 
   handlePointerUp(pointer) {
-    this.controller.toolBar.currentTool.pointerUp(this, pointer);
+    this.toolBar.currentTool.pointerUp(this, pointer);
     this.commandInvoker.finalizeAggregate();
   }
 
   doSetGraphicCommand(x, y, newGfx) {
-    let layer = this.controller.palette.selectedLayer;
-    let oldGfx = this.emf.getTile(x, y).gfx[layer];
+    let oldGfx = this.emf.getTile(x, y).gfx[this.selectedLayer];
 
     if (newGfx === oldGfx) {
       return;
     }
 
     this.commandInvoker.add(
-      new SetGraphicCommand(this, x, y, layer, oldGfx, newGfx),
+      new SetGraphicCommand(this, x, y, this.selectedLayer, oldGfx, newGfx),
       true
     );
   }
 
   doFillCommand(x, y, newGfx) {
-    let layer = this.controller.palette.selectedLayer;
-    let oldGfx = this.emf.getTile(x, y).gfx[layer];
+    let oldGfx = this.emf.getTile(x, y).gfx[this.selectedLayer];
 
     if (newGfx === oldGfx) {
       return;
     }
 
-    this.commandInvoker.add(new FillCommand(this, x, y, layer, oldGfx, newGfx));
+    this.commandInvoker.add(
+      new FillCommand(this, x, y, this.selectedLayer, oldGfx, newGfx)
+    );
   }
 
   doEyeDropper(x, y) {
     this.cursorSprite.play("tileCursorClick");
-
-    let paletteLayer = this.controller.palette.currentLayer;
-    let gfx = this.emf.getTile(x, y).gfx[paletteLayer.index];
-
-    if (gfx === 0 && paletteLayer.index === 0) {
-      gfx = this.emf.fill_tile;
-    }
-
-    if (gfx !== 0) {
-      let entryKey = (gfx + 100).toString();
-      paletteLayer.entries[entryKey].select();
-      paletteLayer.assetAnchor = paletteLayer.selectedEntry.sprite;
-      paletteLayer.assetAnchorOffset = 0;
-      paletteLayer.scrollToAnchor();
-    }
+    this.data.values.eyedropped = this.emf.getTile(x, y).gfx[
+      this.selectedLayer
+    ];
   }
 
   cull() {
@@ -238,7 +292,7 @@ export class MapEditor extends Phaser.Scene {
     var cameraH = camera.height;
 
     let depthSortRequired = false;
-    let layerVisibility = this.controller.data.values.layerVisibility;
+    let layerVisibility = this.data.values.layerVisibility;
 
     for (let row of this.emf.rows) {
       for (let tile of row) {
@@ -294,16 +348,6 @@ export class MapEditor extends Phaser.Scene {
     if (depthSortRequired) {
       this.children.queueDepthSort();
     }
-  }
-
-  update(_time, delta) {
-    this.cameraControls.update(delta);
-
-    if (this.cameras.main.dirty) {
-      this.cull();
-    }
-
-    this.textureCache.update();
   }
 
   updateCurrentPos(pointerPos) {
@@ -427,7 +471,7 @@ export class MapEditor extends Phaser.Scene {
 
     if (asset.data.hasAnimation) {
       sprite.play(asset.data.animationKey);
-      this.controller.syncToMasterAnimation(sprite);
+      this.syncToMasterAnimation(sprite);
     } else {
       sprite.anims.stop();
       sprite.setTexture(asset.data.textureKey, asset.data.frameKey);
@@ -446,7 +490,7 @@ export class MapEditor extends Phaser.Scene {
   addSpriteToScene(sprite) {
     this.sys.updateList.add(sprite);
     this.children.add(sprite);
-    this.controller.syncToMasterAnimation(sprite);
+    this.syncToMasterAnimation(sprite);
   }
 
   removeSpriteFromScene(sprite) {
@@ -455,10 +499,18 @@ export class MapEditor extends Phaser.Scene {
   }
 
   get currentPos() {
-    return this.controller.data.get("currentPos");
+    return this.data.get("currentPos");
   }
 
   set currentPos(value) {
-    this.controller.data.set("currentPos", value);
+    this.data.set("currentPos", value);
+  }
+
+  get selectedLayer() {
+    return this.data.get("selectedLayer");
+  }
+
+  get selectedGraphic() {
+    return this.data.get("selectedGraphic");
   }
 }

@@ -77,18 +77,10 @@ class Tool {
 
 export class Pencil extends Tool {
   handleLeftPointerDown(mapEditor) {
-    let newGfx = parseInt(
-      mapEditor.controller.palette.currentLayer.selectedEntryKey
-    );
-
-    if (newGfx > 0) {
-      newGfx -= 100;
-    }
-
     mapEditor.doSetGraphicCommand(
       mapEditor.currentPos.x,
       mapEditor.currentPos.y,
-      newGfx
+      mapEditor.selectedGraphic
     );
   }
 
@@ -180,18 +172,10 @@ export class Hand extends Tool {
 
 export class Fill extends Tool {
   handleLeftPointerDown(mapEditor) {
-    let newGfx = parseInt(
-      mapEditor.controller.palette.currentLayer.selectedEntryKey
-    );
-
-    if (newGfx > 0) {
-      newGfx -= 100;
-    }
-
     mapEditor.doFillCommand(
       mapEditor.currentPos.x,
       mapEditor.currentPos.y,
-      newGfx
+      mapEditor.selectedGraphic
     );
   }
 }

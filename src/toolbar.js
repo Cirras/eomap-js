@@ -1,8 +1,8 @@
 import * as Tool from "./tool";
 
 export class ToolBar {
-  constructor(controller) {
-    this.controller = controller;
+  constructor(scene) {
+    this.scene = scene;
     this._currentTool = null;
     this.tools = new Map([
       ["draw", new Tool.Pencil()],
@@ -13,13 +13,13 @@ export class ToolBar {
       ["entity", new Tool.Entity()],
     ]);
 
-    controller.data.events.on("changedata-tool", () => {
+    scene.data.events.on("changedata-tool", () => {
       this.updateCurrentTool();
     });
   }
 
   updateCurrentTool() {
-    this._currentTool = this.tools.get(this.controller.data.get("tool"));
+    this._currentTool = this.tools.get(this.scene.data.get("tool"));
   }
 
   get currentTool() {

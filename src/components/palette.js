@@ -4,7 +4,14 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
 } from "@spectrum-web-components/icons-workflow";
-import { css, customElement, html, LitElement, state } from "lit-element";
+import {
+  css,
+  customElement,
+  html,
+  LitElement,
+  property,
+  state,
+} from "lit-element";
 
 import "./sidebar-button";
 
@@ -87,8 +94,14 @@ export class Palette extends LitElement {
     `;
   }
 
-  @state({ type: Number })
-  selectedLayer = 0;
+  @property({ type: Number, reflect: true })
+  selectedLayer;
+
+  @property({ type: Number, reflect: true })
+  selectedGraphic;
+
+  @property({ type: Number })
+  eyedropped = null;
 
   @state({ type: Boolean })
   leftArrowEnabled = false;
@@ -98,6 +111,13 @@ export class Palette extends LitElement {
 
   headerScrolling = false;
   headerScrollStartTimestamp = null;
+
+  update(changedProperties) {
+    super.update(changedProperties);
+    if (changedProperties.has("eyedroppered")) {
+      this.select(changedProperties.get("eyedroppered"), true);
+    }
+  }
 
   async firstUpdated(changes) {
     super.firstUpdated(changes);
@@ -219,5 +239,23 @@ export class Palette extends LitElement {
     this.leftArrowEnabled = element.scrollLeft > 0;
     this.rightArrowEnabled =
       element.scrollLeft + element.offsetWidth !== element.scrollWidth;
+  }
+
+  select(gfx, scroll) {
+    if (scroll === undefined) {
+      scroll = false;
+    }
+    // TODO:
+    /*
+      if (gfx !== null) {
+        let entryKey = (gfx + 100).toString();
+        paletteLayer.entries[entryKey].select();
+        if (select) {
+          paletteLayer.assetAnchor = paletteLayer.selectedEntry.sprite;
+          paletteLayer.assetAnchorOffset = 0;
+          paletteLayer.scrollToAnchor();
+        }
+      }
+      */
   }
 }
