@@ -17,16 +17,13 @@ import icon from "../assets/icon.svg";
 import { EditorScene } from "../scenes/editor-scene";
 import { patchPhaser } from "../patch-phaser";
 
-import UIPlugin from "phaser3-rex-plugins/templates/ui/ui-plugin.js";
-import ScrollerPlugin from "phaser3-rex-plugins/plugins/scroller-plugin";
-import SliderPlugin from "phaser3-rex-plugins/plugins/slider-plugin";
 import { GFXLoader } from "../gfx/load/gfx-loader";
 
 @customElement("eomap-editor")
 export class Editor extends LitElement {
   static EDITOR_ID = "phaser-container";
 
-  static PHASER_DATA_KEYS = ["currentPos", "eyedropped"];
+  static PHASER_DATA_KEYS = ["currentPos", "eyedrop"];
 
   static COMPONENT_DATA_KEYS = [
     "tool",
@@ -171,27 +168,6 @@ export class Editor extends LitElement {
       scene: [EditorScene],
       callbacks: {
         postBoot: this.onPostBoot.bind(this),
-      },
-      plugins: {
-        scene: [
-          {
-            key: "rexUI",
-            plugin: UIPlugin,
-            mapping: "rexUI",
-          },
-          {
-            key: "scroller",
-            plugin: ScrollerPlugin,
-            mapping: "scroller",
-            start: true,
-          },
-          {
-            key: "slider",
-            plugin: SliderPlugin,
-            mapping: "slider",
-            start: true,
-          },
-        ],
       },
     });
   }

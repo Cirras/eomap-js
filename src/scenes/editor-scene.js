@@ -4,6 +4,7 @@ import { SetGraphicCommand, FillCommand } from "../command/map-editor-command";
 import { TilePos } from "../tilepos";
 import { TextureCache } from "../gfx/texture-cache";
 import { ToolBar } from "../toolbar";
+import { Eyedrop } from "../eyedrop";
 
 const TDG = 0.00000001; // gap between depth of each tile on a layer
 const RDG = 0.001; // gap between depth of each row of tiles
@@ -110,6 +111,8 @@ export class EditorScene extends Phaser.Scene {
       }
     });
 
+    this.data.set("eyedrop", null);
+
     this.data.events.on("changedata-layerVisibility", () => {
       this.cull();
     });
@@ -147,15 +150,14 @@ export class EditorScene extends Phaser.Scene {
     }));
     frames.pop();
 
-    this.game.anims.create({
-      key: "masterMapAnimation",
+    let animation = this.game.anims.create({
+      key: "masterAnimation",
       frames: frames,
       frameRate: 1.66,
       repeat: -1,
     });
 
-    return this.add.sprite(0, -100).setVisible(false).play("masterMapAnimation")
-      .anims;
+    return this.add.sprite(0, -100).setVisible(false).play(animation).anims;
   }
 
   update(_time, delta) {
@@ -257,9 +259,8 @@ export class EditorScene extends Phaser.Scene {
   doEyeDropper(x, y) {
     let asset = this.getTileCursorAsset();
     this.cursorSprite.play(asset.data.animation);
-    this.data.values.eyedropped = this.emf.getTile(x, y).gfx[
-      this.selectedLayer
-    ];
+    let graphic = this.emf.getTile(x, y).gfx[this.selectedLayer];
+    this.data.set("eyedrop", new Eyedrop(graphic));
   }
 
   cull() {
@@ -410,7 +411,7 @@ export class EditorScene extends Phaser.Scene {
     };
 
     const getDisplayGfx = (gfx) => {
-      if (gfx === 0 && layer === 0) {
+      if ((gfx === 0 || gfx === null) && layer === 0) {
         return this.emf.fill_tile;
       }
 

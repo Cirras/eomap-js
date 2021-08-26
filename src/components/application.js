@@ -13,6 +13,7 @@ import "./infobar";
 import { TilePos } from "../tilepos";
 import { GFXLoader } from "../gfx/load/gfx-loader";
 import { DownloadLoadingStrategy } from "../gfx/load/download-loading-strategy";
+import { Eyedrop } from "../eyedrop";
 
 @customElement("eomap-application")
 export class Application extends LitElement {
@@ -78,26 +79,15 @@ export class Application extends LitElement {
   selectedLayer = 0;
 
   @state({ type: Number })
-  selectedGraphic = 0;
+  selectedGraphic = null;
 
-  @state({ type: Number })
-  eyedropped = null;
+  @state({ type: Eyedrop })
+  eyedrop = null;
 
   constructor() {
     super();
     this.initializeGFXLoader();
-    this.addEventListener("keydown", (event) => {
-      switch (event.key) {
-        case "ArrowDown":
-        case "ArrowUp":
-        case "ArrowLeft":
-        case "ArrowRight":
-          document.activeElement.blur();
-          break;
-        default:
-          return;
-      }
-    });
+    this.preventSpecialInputsFromBeingSwallowed();
   }
 
   initializeGFXLoader() {
@@ -109,6 +99,25 @@ export class Application extends LitElement {
       gfxLoader.loadEGF(fileID)
     );
     Promise.allSettled(promises).then(() => (this.gfxLoader = gfxLoader));
+  }
+
+  preventSpecialInputsFromBeingSwallowed() {
+    this.addEventListener("keydown", (event) => {
+      switch (event.key) {
+        case "ArrowDown":
+        case "ArrowUp":
+        case "ArrowLeft":
+        case "ArrowRight":
+        case "End":
+        case "Home":
+        case "PageUp":
+        case "PageDown":
+          document.activeElement.blur();
+          break;
+        default:
+          return;
+      }
+    });
   }
 
   render() {
@@ -129,14 +138,14 @@ export class Application extends LitElement {
           .selectedLayer=${this.selectedLayer}
           .selectedGraphic=${this.selectedGraphic}
           @changedata-currentPos=${this.onCurrentPosChanged}
-          @changedata-eyedropped=${this.onEyedroppedChanged}
-          @changedata-selectedLayer=${this.onSelectedLayerChanged}
-          @changedata-selectedGraphic=${this.onSelectedGraphicChanged}
+          @changedata-eyedrop=${this.onEyedropChanged}
         ></eomap-editor>
         <eomap-palette
-          .eyedropped=${this.eyedropped}
+          .gfxLoader=${this.gfxLoader}
+          .eyedrop=${this.eyedrop}
           .selectedLayer=${this.selectedLayer}
-          .selectedGraphic=${this.selectedGraphic}
+          @layer-selected=${this.onSelectedLayerChanged}
+          @changedata-selectedGraphic=${this.onSelectedGraphicChanged}
         ></eomap-palette>
         <eomap-infobar .tilePos=${this.currentPos}></eomap-infobar>
       </sp-theme>
@@ -159,8 +168,8 @@ export class Application extends LitElement {
     this.currentPos = event.detail;
   }
 
-  onEyedroppedChanged(event) {
-    this.eyedropped = event.detail;
+  onEyedropChanged(event) {
+    this.eyedrop = event.detail;
   }
 
   onSelectedLayerChanged(event) {

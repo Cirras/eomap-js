@@ -20,6 +20,14 @@ export class GFXLoader {
     }
   }
 
+  resourceIDs(fileID) {
+    let egf = this.egfs.get(fileID);
+    if (egf) {
+      return egf.getResourceIDs();
+    }
+    return [];
+  }
+
   info(fileID, resourceID) {
     let egf = this.egfs.get(fileID);
     if (egf) {

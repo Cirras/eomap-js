@@ -185,6 +185,10 @@ export class PEReader {
     }
   }
 
+  getResourceIDs() {
+    return this.resourceInfo.keys();
+  }
+
   getResourceInfo(id) {
     let info = this.resourceInfo.get(id);
     if (!info) {

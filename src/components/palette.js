@@ -1,28 +1,42 @@
-import "@spectrum-web-components/action-group/sp-action-group";
-import "@spectrum-web-components/action-button/sp-action-button";
-import {
-  ChevronLeftIcon,
-  ChevronRightIcon,
-} from "@spectrum-web-components/icons-workflow";
 import {
   css,
   customElement,
   html,
   LitElement,
   property,
+  query,
   state,
 } from "lit-element";
 
+import "@spectrum-web-components/action-group/sp-action-group";
+import "@spectrum-web-components/action-button/sp-action-button";
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+} from "@spectrum-web-components/icons-workflow";
+
 import "./sidebar-button";
+
+import "phaser";
+import { PaletteScene } from "../scenes/palette-scene";
+
+import { GFXLoader } from "../gfx/load/gfx-loader";
+import { Eyedrop } from "../eyedrop";
 
 @customElement("eomap-palette")
 export class Palette extends LitElement {
+  static PHASER_CONTAINER_ID = "phaser-palette";
+
+  static PHASER_DATA_KEYS = ["selectedGraphic", "contentHeight"];
+
+  static COMPONENT_DATA_KEYS = ["gfxLoader", "selectedLayer", "eyedrop"];
+
   static get styles() {
     return css`
       :host {
         display: grid;
-        grid-template-rows: min-content 1fr;
-        width: var(--spectrum-global-dimension-size-5000);
+        grid-template-rows: min-content minmax(0, 1fr);
+        width: var(--spectrum-global-dimension-size-4600);
         background-color: var(--spectrum-global-color-gray-400);
       }
       .palette-header {
@@ -31,13 +45,21 @@ export class Palette extends LitElement {
         padding-top: var(--spectrum-global-dimension-size-100);
         padding-bottom: var(--spectrum-global-dimension-size-100);
       }
-      .palette-content {
+      #palette-content {
         width: auto;
         height: auto;
-        background-color: var(--spectrum-global-color-gray-75);
+        padding: var(--spectrum-global-dimension-size-50);
         margin-left: var(--spectrum-global-dimension-size-50);
         margin-right: var(--spectrum-global-dimension-size-50);
         margin-bottom: var(--spectrum-global-dimension-size-50);
+        background-color: var(--spectrum-global-color-gray-75);
+        overflow-y: scroll;
+      }
+      .palette-viewport {
+        width: 100%;
+        position: -webkit-sticky;
+        position: sticky;
+        top: 0;
       }
       .scroll-arrow {
         --spectrum-actionbutton-m-quiet-background-color: var(
@@ -94,14 +116,23 @@ export class Palette extends LitElement {
     `;
   }
 
-  @property({ type: Number, reflect: true })
-  selectedLayer;
+  @query("#layer-buttons", true)
+  layerButtons;
 
-  @property({ type: Number, reflect: true })
-  selectedGraphic;
+  @query("#palette-content", true)
+  paletteContent;
+
+  @property({ type: GFXLoader })
+  gfxLoader;
 
   @property({ type: Number })
-  eyedropped = null;
+  selectedLayer;
+
+  @property({ type: Number })
+  selectedGraphic;
+
+  @property({ type: Eyedrop })
+  eyedrop = null;
 
   @state({ type: Boolean })
   leftArrowEnabled = false;
@@ -109,21 +140,142 @@ export class Palette extends LitElement {
   @state({ type: Boolean })
   rightArrowEnabled = false;
 
+  @state({ type: Number })
+  viewportHeight;
+
+  @state({ type: Number })
+  contentHeight = 0;
+
+  @state({ type: Function })
+  onPaletteContentScroll = null;
+
+  @state({ type: Phaser.Game })
+  game;
+
+  componentDataForwarders = new Map();
+
   headerScrolling = false;
   headerScrollStartTimestamp = null;
 
-  update(changedProperties) {
-    super.update(changedProperties);
-    if (changedProperties.has("eyedroppered")) {
-      this.select(changedProperties.get("eyedroppered"), true);
-    }
-  }
+  onResize = (_event) => {
+    this.updateViewportHeight();
+  };
 
   async firstUpdated(changes) {
     super.firstUpdated(changes);
+
     const children = this.shadowRoot.querySelectorAll("*");
     await Promise.all(Array.from(children).map((c) => c.updateComplete));
+
+    this.preventLayerButtonsFromSwallowingKeyDownInputs();
     this.checkLayerButtonsArrows();
+    this.updateViewportHeight();
+  }
+
+  setupPhaserChangeDataEvents(scene) {
+    for (let key of Palette.PHASER_DATA_KEYS) {
+      scene.data.set(key, null);
+      let eventName = "changedata-" + key;
+      scene.data.events.on(eventName, (_parent, value, _previousValue) => {
+        this.dispatchEvent(new CustomEvent(eventName, { detail: value }));
+      });
+    }
+  }
+
+  setupComponentDataForwardingToPhaser(scene) {
+    for (let key of Palette.COMPONENT_DATA_KEYS) {
+      scene.data.set(key, this[key]);
+      this.componentDataForwarders.set(key, () => {
+        scene.data.set(key, this[key]);
+      });
+    }
+  }
+
+  setupContentScrollMirroring(scene) {
+    scene.data.set("contentScroll", 0);
+    this.onPaletteContentScroll = (_event) => {
+      scene.data.set("contentScroll", this.paletteContent.scrollTop);
+    };
+
+    scene.data.events.on(
+      "changedata-contentScroll",
+      (_parent, value, previousValue) => {
+        if (value !== previousValue) {
+          this.paletteContent.scrollTop = value;
+        }
+      }
+    );
+  }
+
+  setupContentHeightListener() {
+    this.addEventListener("changedata-contentHeight", (event) => {
+      this.contentHeight = event.detail;
+    });
+  }
+
+  async setupPhaser() {
+    let game = new Phaser.Game({
+      type: Phaser.AUTO,
+      disableContextMenu: true,
+      banner: false,
+      scale: {
+        width: "100%",
+        height: "100%",
+        parent: this.shadowRoot.querySelector(
+          "#" + Palette.PHASER_CONTAINER_ID
+        ),
+        mode: Phaser.Scale.ScaleModes.RESIZE,
+        resizeInterval: 250,
+      },
+      render: {
+        pixelArt: true,
+        powerPreference: "high-performance",
+        transparent: true,
+      },
+      input: {
+        keyboard: false,
+        mouse: {
+          preventDefaultWheel: false,
+          preventDefaultDown: false,
+          preventDefaultUp: false,
+        },
+        touch: {
+          capture: false,
+        },
+      },
+    });
+
+    game.events.once("ready", () => {
+      let scene = new PaletteScene();
+      game.scene.add("palette", scene);
+
+      scene.sys.events.once("ready", () => {
+        this.setupPhaserChangeDataEvents(scene);
+        this.setupComponentDataForwardingToPhaser(scene);
+        this.setupContentScrollMirroring(scene);
+        this.setupContentHeightListener(scene);
+        this.game = game;
+      });
+
+      game.scene.start("palette");
+    });
+  }
+
+  updated(changedProperties) {
+    if (
+      changedProperties.has("gfxLoader") &&
+      this.gfxLoader &&
+      this.gfxLoader.failed.length == 0
+    ) {
+      this.setupPhaser();
+    }
+
+    for (let changed of changedProperties.keys()) {
+      let dataForwarder = this.componentDataForwarders.get(changed);
+      if (dataForwarder) {
+        dataForwarder();
+      }
+    }
   }
 
   renderLayerButtons() {
@@ -145,9 +297,7 @@ export class Palette extends LitElement {
         <sp-action-button
           value="${i}"
           ?selected=${this.selectedLayer === i}
-          @click=${() => {
-            this.selectedLayer = i;
-          }}
+          @click=${this.onLayerClick}
         >
           ${label}
         </sp-action-button>
@@ -186,13 +336,36 @@ export class Palette extends LitElement {
           <sp-icon slot="icon">${ChevronRightIcon()}</sp-icon">
         </sp-action-button>
       </div>
-      <div class="palette-content">
+      <div id="palette-content" @scroll=${this.onPaletteContentScroll}>
+        <div style="width: 100%; height: ${this.contentHeight}px">
+          <div class="palette-viewport" style="height: ${
+            this.viewportHeight
+          }px">
+            <div id="${Palette.PHASER_CONTAINER_ID}"></div>
+          </div>
+        </div>
       </div>
     `;
   }
 
-  getHeaderScrollElement() {
-    return this.shadowRoot.querySelector("#layer-buttons");
+  connectedCallback() {
+    super.connectedCallback();
+    window.addEventListener("resize", this.onResize);
+  }
+  disconnectedCallback() {
+    window.removeEventListener("resize", this.onResize);
+    super.disconnectedCallback();
+  }
+
+  updateViewportHeight() {
+    let paletteContent = this.paletteContent;
+    if (paletteContent) {
+      let style = getComputedStyle(paletteContent);
+      this.viewportHeight =
+        paletteContent.clientHeight -
+        parseFloat(style.paddingTop) -
+        parseFloat(style.paddingBottom);
+    }
   }
 
   onLeftArrowPointerDown() {
@@ -205,7 +378,7 @@ export class Palette extends LitElement {
 
   onArrowPointerDown(direction) {
     this.scrollingHeader = true;
-    let startValue = this.getHeaderScrollElement().scrollLeft;
+    let startValue = this.layerButtons.scrollLeft;
     requestAnimationFrame((timestamp) => {
       this.scrollHeader(timestamp, startValue, direction);
     });
@@ -224,7 +397,7 @@ export class Palette extends LitElement {
 
       let delta = timestamp - this.headerScrollStartTimestamp;
       let scrollValue = startValue + (delta / 2) * direction;
-      this.getHeaderScrollElement().scrollLeft = scrollValue;
+      this.layerButtons.scrollLeft = scrollValue;
 
       requestAnimationFrame((t) => this.scrollHeader(t, startValue, direction));
     }
@@ -234,28 +407,25 @@ export class Palette extends LitElement {
     this.checkLayerButtonsArrows();
   }
 
+  preventLayerButtonsFromSwallowingKeyDownInputs() {
+    this.layerButtons.addEventListener("focusin", () => {
+      this.layerButtons.dispatchEvent(new CustomEvent("focusout"));
+    });
+  }
+
   checkLayerButtonsArrows() {
-    let element = this.getHeaderScrollElement();
+    let element = this.layerButtons;
     this.leftArrowEnabled = element.scrollLeft > 0;
     this.rightArrowEnabled =
       element.scrollLeft + element.offsetWidth !== element.scrollWidth;
   }
 
-  select(gfx, scroll) {
-    if (scroll === undefined) {
-      scroll = false;
-    }
-    // TODO:
-    /*
-      if (gfx !== null) {
-        let entryKey = (gfx + 100).toString();
-        paletteLayer.entries[entryKey].select();
-        if (select) {
-          paletteLayer.assetAnchor = paletteLayer.selectedEntry.sprite;
-          paletteLayer.assetAnchorOffset = 0;
-          paletteLayer.scrollToAnchor();
-        }
-      }
-      */
+  onLayerClick(event) {
+    event.preventDefault();
+    this.dispatchEvent(
+      new CustomEvent("layer-selected", {
+        detail: parseInt(event.target.value),
+      })
+    );
   }
 }
