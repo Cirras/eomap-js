@@ -120,44 +120,36 @@ export class EditorScene extends Phaser.Scene {
     this.resetCameraPosition();
   }
 
+  getTileCursorAsset() {
+    return this.textureCache.get(2, 124);
+  }
+
   createTileCursor() {
-    let asset = this.textureCache.get(2, 124);
+    let asset = this.getTileCursorAsset();
     asset.incRef();
 
-    let texture = this.game.textures.addSpriteSheetFromAtlas("tileCursor", {
-      atlas: asset.data.textureKey,
-      frame: asset.data.frameKey,
-      frameWidth: 64,
-      frameHeight: 32,
-    });
-
-    this.game.anims.create({
-      key: "tileCursorClick",
-      frames: this.game.anims.generateFrameNumbers("tileCursor", {
-        start: 0,
-        end: 3,
-      }),
-      frameRate: 60,
-      yoyo: true,
-    });
-
-    texture.setFilter(1);
-
-    let cursorSprite = this.add.sprite(0, 0, "tileCursor", 0);
+    let cursorSprite = this.add.sprite(0, 0);
     cursorSprite.visible = false;
     cursorSprite.setDepth(3.0);
     cursorSprite.setOrigin(0);
+    cursorSprite.setTexture(asset.data.textureKey, asset.data.frames[0].name);
 
     return cursorSprite;
   }
 
+  // FIXME: This is a stupid idea.
   createMasterAnimation() {
+    let asset = this.getTileCursorAsset();
+
+    let frames = asset.data.frames.map((f) => ({
+      key: f.texture.key,
+      frame: f.name,
+    }));
+    frames.pop();
+
     this.game.anims.create({
       key: "masterMapAnimation",
-      frames: this.anims.generateFrameNumbers("tileCursor", {
-        start: 0,
-        end: 3,
-      }),
+      frames: frames,
       frameRate: 1.66,
       repeat: -1,
     });
@@ -263,7 +255,8 @@ export class EditorScene extends Phaser.Scene {
   }
 
   doEyeDropper(x, y) {
-    this.cursorSprite.play("tileCursorClick");
+    let asset = this.getTileCursorAsset();
+    this.cursorSprite.play(asset.data.animation);
     this.data.values.eyedropped = this.emf.getTile(x, y).gfx[
       this.selectedLayer
     ];
@@ -449,15 +442,14 @@ export class EditorScene extends Phaser.Scene {
     let tiley = info.yoff + x * 16 + y * 16;
 
     let asset = getAsset(displayGfx);
-    let texture = asset.data.textureFrame;
     asset.incRef();
 
     if (info.centered) {
-      tilex -= Math.floor(texture.realWidth / 2) - 32;
+      tilex -= Math.floor(asset.data.width / 2) - 32;
     }
 
     if (layer !== 0 && layer !== 7) {
-      tiley -= texture.realHeight - 32;
+      tiley -= asset.data.height - 32;
     }
 
     if (!sprite) {
@@ -469,8 +461,8 @@ export class EditorScene extends Phaser.Scene {
     sprite.setAlpha(info.alpha);
     sprite.setOrigin(0);
 
-    if (asset.data.hasAnimation) {
-      sprite.play(asset.data.animationKey);
+    if (asset.data.animation) {
+      sprite.play(asset.data.animation);
       this.syncToMasterAnimation(sprite);
     } else {
       sprite.anims.stop();

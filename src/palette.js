@@ -962,11 +962,11 @@ class PaletteLayerEntry {
   }
 
   width() {
-    return this.data.textureFrame.realWidth;
+    return this.data.width;
   }
 
   height() {
-    return this.data.textureFrame.realHeight;
+    return this.data.height;
   }
 }
 

@@ -1,20 +1,26 @@
 class GFXData {
-  constructor(
-    fileID,
-    resourceID,
-    textureKey,
-    frameKey,
-    textureFrame,
-    hasAnimation,
-    animationKey
-  ) {
+  constructor(fileID, resourceID, textureFrame, width, height, animation) {
     this.fileID = fileID;
     this.resourceID = resourceID;
-    this.textureKey = textureKey;
-    this.frameKey = frameKey;
     this.textureFrame = textureFrame;
-    this.hasAnimation = hasAnimation;
-    this.animationKey = animationKey;
+    this.width = width;
+    this.height = height;
+    this.animation = animation;
+  }
+
+  get textureKey() {
+    return this.textureFrame.texture.key;
+  }
+
+  get frameKey() {
+    return this.textureFrame.name;
+  }
+
+  get frames() {
+    if (this.animation) {
+      return this.animation.frames.map((f) => f.frame);
+    }
+    return [];
   }
 }
 
@@ -25,16 +31,28 @@ export class GFXProcessor {
   }
 
   processAssetData(fileID, resourceID, textureKey, frameKey) {
+    let tileCursor = this.processTileCursor(
+      fileID,
+      resourceID,
+      textureKey,
+      frameKey
+    );
+
+    if (tileCursor) {
+      return tileCursor;
+    }
+
     let textureAtlas = this.scene.textures.get(textureKey);
     let textureFrame = textureAtlas.get(frameKey);
-    let hasAnimation = false;
-    let animationKey;
+    let width = textureFrame.realWidth;
+    let height = textureFrame.realHeight;
+    let animation = null;
 
     let canBeAnimated = fileID === 3 || fileID === 6;
     let isWideEnough = textureFrame.realWidth >= 32 * 4;
 
     if (canBeAnimated && isWideEnough) {
-      animationKey = this.getAnimationKey(textureKey, frameKey);
+      let animationKey = this.getAnimationKey(textureKey, frameKey);
 
       let animationFrames = this.createAnimationFrames(
         textureAtlas,
@@ -43,28 +61,70 @@ export class GFXProcessor {
         textureFrame.realHeight
       );
 
-      this.scene.game.anims.create({
+      animation = this.scene.game.anims.create({
         key: animationKey,
         frames: animationFrames,
         frameRate: 1.66,
         repeat: -1,
       });
 
-      hasAnimation = true;
-      textureFrame = this.scene.textures.getFrame(
+      let sizeFrame = this.scene.textures.getFrame(
         animationFrames[0].key,
         animationFrames[0].frame
       );
+
+      width = sizeFrame.width;
+      height = sizeFrame.height;
     }
 
     return new GFXData(
       fileID,
       resourceID,
-      textureKey,
-      frameKey,
       textureFrame,
-      hasAnimation,
-      animationKey
+      width,
+      height,
+      animation
+    );
+  }
+
+  processTileCursor(fileID, resourceID, textureKey, frameKey) {
+    if (fileID !== 2 || resourceID !== 124) {
+      return null;
+    }
+
+    let textureAtlas = this.scene.textures.get(textureKey);
+    let textureFrame = textureAtlas.get(frameKey);
+    let animationKey = this.getAnimationKey(textureKey, frameKey);
+
+    let animationFrames = this.createAnimationFrames(
+      textureAtlas,
+      textureFrame,
+      Math.floor(textureFrame.realWidth / 5),
+      textureFrame.realHeight
+    );
+
+    let animation = this.scene.game.anims.create({
+      key: animationKey,
+      frames: animationFrames,
+      frameRate: 60,
+      yoyo: true,
+    });
+
+    let sizeFrame = this.scene.textures.getFrame(
+      animationFrames[0].key,
+      animationFrames[0].frame
+    );
+
+    let width = sizeFrame.width;
+    let height = sizeFrame.height;
+
+    return new GFXData(
+      fileID,
+      resourceID,
+      textureFrame,
+      width,
+      height,
+      animation
     );
   }
 

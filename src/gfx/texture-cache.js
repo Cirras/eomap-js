@@ -9,10 +9,11 @@ const CacheStatus = {
 };
 
 class TextureCacheEntry {
-  constructor(data, page, bin) {
+  constructor(data, page, bin, pixels) {
     this.data = data;
     this.page = page;
     this.bin = bin;
+    this.pixels = pixels;
     this.refCount = 0;
   }
 
@@ -39,20 +40,20 @@ class TextureCachePage {
     this.dirty = false;
   }
 
-  draw(imageData, x, y) {
-    this.canvasTexturePage.putData(imageData, x, y);
-    this.dirty = true;
-  }
-
   get empty() {
     return Object.keys(this.shelfPacker.bins).length === 0;
   }
 }
 
 export class TextureCache {
-  constructor(scene, gfxLoader, width, height) {
+  constructor(scene, gfxLoader, width, height, minimumPages) {
+    if (minimumPages === undefined) {
+      minimumPages = 1;
+    }
+
     this.scene = scene;
     this.gfxLoader = gfxLoader;
+    this.minimumPages = minimumPages;
     this.identifier = Phaser.Utils.String.UUID();
     this.pages = [];
     this.assets = [];
@@ -106,6 +107,7 @@ export class TextureCache {
     }
 
     this.status = CacheStatus.Fragmented;
+    this.dirty = true;
 
     return cacheEntry;
   }
@@ -113,7 +115,11 @@ export class TextureCache {
   handleOutOfSpace() {
     switch (this.status) {
       case CacheStatus.Fragmented:
-        this.rebuild();
+        if (this.pages.length < this.minimumPages) {
+          this.addPage();
+        } else {
+          this.rebuild();
+        }
         break;
       case CacheStatus.Optimized:
         this.addPage();
@@ -155,10 +161,9 @@ export class TextureCache {
       cacheFrameKey
     );
 
-    let imageData = this.gfxLoader.loadResource(fileID, resourceID);
-    page.draw(imageData, bin.x, bin.y);
+    let pixels = this.gfxLoader.loadResource(fileID, resourceID);
 
-    return new TextureCacheEntry(assetData, page, bin);
+    return new TextureCacheEntry(assetData, page, bin, pixels);
   }
 
   rebuild() {
@@ -188,7 +193,6 @@ export class TextureCache {
 
     for (let page of this.pages) {
       page.shelfPacker.clear();
-      page.canvasTexturePage.clear();
     }
 
     Phaser.Utils.Array.StableSort(this.assets, this.refCountSort);
@@ -214,16 +218,17 @@ export class TextureCache {
           continue;
         }
 
+        asset.page = page;
         asset.bin = newBin;
 
-        if (data.hasAnimation) {
-          let animation = this.scene.anims.get(data.animationKey);
+        moveFrameToPage(asset.data.textureFrame, page, newBin.x, newBin.y);
+
+        if (data.animation) {
           let diffX = newBin.x - oldBin.x;
           let diffY = newBin.y - oldBin.y;
 
-          for (let animFrame of animation.frames) {
+          for (let animFrame of data.animation.frames) {
             let frame = animFrame.frame;
-
             moveFrameToPage(
               frame,
               page,
@@ -231,15 +236,14 @@ export class TextureCache {
               frame.cutY + diffY
             );
           }
-        } else {
-          moveFrameToPage(asset.data.textureFrame, page, newBin.x, newBin.y);
         }
 
-        let imageData = this.gfxLoader.loadResource(
-          asset.data.fileID,
-          asset.data.resourceID
-        );
-        page.draw(imageData, newBin.x, newBin.y);
+        if (!asset.pixels) {
+          asset.pixels = this.gfxLoader.loadResource(
+            asset.data.fileID,
+            asset.data.resourceID
+          );
+        }
 
         break;
       }
@@ -262,7 +266,7 @@ export class TextureCache {
 
   removeAsset(asset) {
     let data = asset.data;
-    let texture = this.scene.textures.get(data.fileKey);
+    let texture = this.scene.textures.get(data.textureKey);
 
     let removeFromTexture = (frame) => {
       delete texture.frames[frame.name];
@@ -270,29 +274,71 @@ export class TextureCache {
       frame.destroy();
     };
 
-    if (data.hasAnimation) {
-      let animation = this.scene.anims.get(data.animationKey);
+    removeFromTexture(asset.data.textureFrame);
 
-      for (let animFrame of animation.frames) {
+    if (data.animation) {
+      for (let animFrame of data.animation.frames) {
         removeFromTexture(animFrame.frame);
       }
-
-      animation.destroy();
-    } else {
-      removeFromTexture(asset.data.textureFrame);
+      data.animation.destroy();
     }
 
     Phaser.Utils.Array.Remove(this.assets, asset);
   }
 
   update() {
-    for (let page of this.pages) {
-      if (page.dirty) {
-        page.canvasTexturePage.update();
-        page.canvasTexturePage.refresh();
-        page.dirty = false;
+    if (this.dirty) {
+      for (let asset of this.assets) {
+        this.upload(asset);
+      }
+      this.dirty = false;
+    }
+  }
+
+  upload(asset) {
+    if (!asset.pixels) {
+      return;
+    }
+
+    let page = asset.page.canvasTexturePage;
+    let x = asset.bin.x;
+    let y = asset.bin.y;
+
+    page.putData(asset.pixels, x, y);
+
+    let glTexture = page.source.glTexture;
+
+    if (glTexture) {
+      let gl = page.source.renderer.gl;
+
+      let width = asset.pixels.width;
+      let height = asset.pixels.height;
+
+      if (width > 0 && height > 0) {
+        gl.activeTexture(gl.TEXTURE0);
+        let currentTexture = gl.getParameter(gl.TEXTURE_BINDING_2D);
+        gl.bindTexture(gl.TEXTURE_2D, glTexture);
+
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+        gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+
+        gl.texSubImage2D(
+          gl.TEXTURE_2D,
+          0,
+          x,
+          y,
+          gl.RGBA,
+          gl.UNSIGNED_BYTE,
+          asset.pixels
+        );
+
+        if (currentTexture) {
+          gl.bindTexture(gl.TEXTURE_2D, currentTexture);
+        }
       }
     }
+
+    asset.pixels = null;
   }
 
   refCountSort(childA, childB) {

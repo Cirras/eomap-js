@@ -154,14 +154,17 @@ export class Hand extends Tool {
       this.startX = camera.scrollX;
       this.startY = camera.scrollY;
       this.dragging = true;
-      mapEditor.cursorSprite.setFrame(1);
+
+      let asset = mapEditor.getTileCursorAsset();
+      mapEditor.cursorSprite.setFrame(asset.data.frames[1].name);
     }
   }
 
   handleLeftPointerUp(mapEditor, _pointer) {
     if (this.dragging) {
       this.dragging = false;
-      mapEditor.cursorSprite.setFrame(0);
+      let asset = mapEditor.getTileCursorAsset();
+      mapEditor.cursorSprite.setFrame(asset.data.frames[0].name);
     }
   }
 
