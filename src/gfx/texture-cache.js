@@ -2,12 +2,6 @@ import ShelfPack from "@mapbox/shelf-pack";
 import { GFXProcessor } from "./gfx-processor";
 import { CanvasMultiTexture } from "./canvas-multi-texture";
 
-const CacheStatus = {
-  Fragmented: 0,
-  Rebuilding: 1,
-  Optimized: 2,
-};
-
 class TextureCacheEntry {
   constructor(data, page, bin, pixels) {
     this.data = data;
@@ -37,28 +31,22 @@ class TextureCachePage {
       canvasTexturePage.width,
       canvasTexturePage.height
     );
-    this.dirty = false;
   }
 
   get empty() {
-    return Object.keys(this.shelfPacker.bins).length === 0;
+    return this.shelfPacker.bins[1] === undefined;
   }
 }
 
 export class TextureCache {
-  constructor(scene, gfxLoader, width, height, minimumPages) {
-    if (minimumPages === undefined) {
-      minimumPages = 1;
-    }
-
+  constructor(scene, gfxLoader, width, height) {
     this.scene = scene;
     this.gfxLoader = gfxLoader;
-    this.minimumPages = minimumPages;
     this.identifier = Phaser.Utils.String.UUID();
     this.pages = [];
-    this.assets = [];
+    this.assets = new Map();
+    this.pending = [];
     this.gfxProcessor = new GFXProcessor(scene, this.identifier);
-    this.status = CacheStatus.Fragmented;
 
     this.canvasMultiTexture = new CanvasMultiTexture(
       this.scene.textures,
@@ -71,16 +59,16 @@ export class TextureCache {
     this.pages.push(firstPage);
   }
 
+  makeAssetKey(fileID, resourceID) {
+    return fileID + "." + resourceID;
+  }
+
   get(fileID, resourceID) {
-    for (let asset of this.assets) {
-      if (
-        asset.data.fileID === fileID &&
-        asset.data.resourceID === resourceID
-      ) {
-        return asset;
-      }
+    let asset = this.assets.get(this.makeAssetKey(fileID, resourceID));
+    if (!asset) {
+      asset = this.add(fileID, resourceID);
     }
-    return this.add(fileID, resourceID);
+    return asset;
   }
 
   add(fileID, resourceID) {
@@ -90,7 +78,7 @@ export class TextureCache {
       cacheEntry = this.addToPage(i, fileID, resourceID);
 
       if (cacheEntry) {
-        this.assets.push(cacheEntry);
+        this.assets.set(this.makeAssetKey(fileID, resourceID), cacheEntry);
         break;
       }
 
@@ -106,25 +94,11 @@ export class TextureCache {
       return this.add(fileID, resourceID);
     }
 
-    this.status = CacheStatus.Fragmented;
-    this.dirty = true;
-
     return cacheEntry;
   }
 
   handleOutOfSpace() {
-    switch (this.status) {
-      case CacheStatus.Fragmented:
-        if (this.pages.length < this.minimumPages) {
-          this.addPage();
-        } else {
-          this.rebuild();
-        }
-        break;
-      case CacheStatus.Optimized:
-        this.addPage();
-        break;
-    }
+    this.addPage();
   }
 
   addPage() {
@@ -161,110 +135,78 @@ export class TextureCache {
       cacheFrameKey
     );
 
-    let pixels = this.gfxLoader.loadResource(fileID, resourceID);
+    let asset = new TextureCacheEntry(assetData, page, bin);
+    this.pending.push(asset);
 
-    return new TextureCacheEntry(assetData, page, bin, pixels);
+    return asset;
   }
 
-  rebuild() {
-    this.status = CacheStatus.Rebuilding;
-
-    const moveFrameToPage = (frame, page, x, y) => {
-      let realWidth = frame.realWidth;
-      let realHeight = frame.realHeight;
-
-      frame.setSize(frame.cutWidth, frame.cutHeight, x, y);
-
-      frame.setTrim(
-        realWidth,
-        realHeight,
-        frame.x,
-        frame.y,
-        frame.cutWidth,
-        frame.cutHeight
-      );
-
-      frame.source = page.canvasTexturePage.source;
-      frame.sourceIndex = this.canvasMultiTexture.getTextureSourceIndex(
-        frame.source
-      );
-      frame.glTexture = frame.source.glTexture;
-    };
-
-    for (let page of this.pages) {
-      page.shelfPacker.clear();
-    }
-
-    Phaser.Utils.Array.StableSort(this.assets, this.refCountSort);
-
-    for (let asset of this.assets) {
-      let data = asset.data;
-
-      for (let i = 0; i < this.pages.length; ++i) {
-        let page = this.pages[i];
-        let isLastPage = i === this.pages.length - 1;
-        let info = this.gfxLoader.info(
-          asset.data.fileID,
-          asset.data.resourceID
-        );
-        let oldBin = asset.bin;
-        let newBin = page.shelfPacker.packOne(info.width, info.height);
-
-        if (!newBin) {
-          if (isLastPage) {
-            this.addPage();
-          }
-
-          continue;
-        }
-
-        asset.page = page;
-        asset.bin = newBin;
-
-        moveFrameToPage(asset.data.textureFrame, page, newBin.x, newBin.y);
-
-        if (data.animation) {
-          let diffX = newBin.x - oldBin.x;
-          let diffY = newBin.y - oldBin.y;
-
-          for (let animFrame of data.animation.frames) {
-            let frame = animFrame.frame;
-            moveFrameToPage(
-              frame,
-              page,
-              frame.cutX + diffX,
-              frame.cutY + diffY
-            );
-          }
-        }
-
-        if (!asset.pixels) {
-          asset.pixels = this.gfxLoader.loadResource(
-            asset.data.fileID,
-            asset.data.resourceID
-          );
-        }
-
-        break;
-      }
-
-      this.status = CacheStatus.Optimized;
-    }
-
-    for (let i = this.assets.length - 1; i >= 0; --i) {
-      let asset = this.assets[i];
-
-      if (asset.refCount > 0) {
-        break;
-      }
-
-      this.removeAsset(asset);
-    }
-
-    this.status = CacheStatus.Optimized;
+  loadAsset(asset) {
+    this.gfxLoader
+      .loadResource(asset.data.fileID, asset.data.resourceID)
+      .then((pixels) => {
+        let page = asset.page.canvasTexturePage;
+        let x = asset.bin.x;
+        let y = asset.bin.y;
+        page.putData(pixels, x, y);
+      });
   }
 
-  removeAsset(asset) {
+  update() {
+    let start = performance.now();
+    let elapsed;
+    let loaded = 0;
+    let loadTime = Math.min(3, 1000 / this.scene.game.loop.actualFps / 2);
+
+    this.pending.sort((a, b) => b.refCount - a.refCount);
+
+    for (let asset of this.pending) {
+      this.loadAsset(asset);
+      ++loaded;
+      elapsed = performance.now() - start;
+      if (elapsed > loadTime) {
+        break;
+      }
+    }
+
+    this.pending.splice(0, loaded);
+    if (loaded > 0) {
+      console.log(`Sent ${loaded} assets to the worker in ${elapsed}ms`);
+    }
+  }
+}
+
+export class EvictingTextureCache extends TextureCache {
+  constructor(scene, gfxLoader, width, height) {
+    super(scene, gfxLoader, width, height);
+    this.canEvict = true;
+  }
+
+  add(fileID, resourceID) {
+    let asset = super.add(fileID, resourceID);
+    this.canEvict = true;
+    return asset;
+  }
+
+  handleOutOfSpace() {
+    if (this.canEvict) {
+      this.evict();
+    } else {
+      this.addPage();
+    }
+  }
+
+  evict() {
+    for (let [key, value] of this.assets.entries()) {
+      if (value.refCount === 0) {
+        this.evictAsset(key);
+      }
+    }
+    this.canEvict = false;
+  }
+
+  evictAsset(assetKey) {
+    let asset = this.assets.get(assetKey);
     let data = asset.data;
     let texture = this.scene.textures.get(data.textureKey);
 
@@ -283,65 +225,6 @@ export class TextureCache {
       data.animation.destroy();
     }
 
-    Phaser.Utils.Array.Remove(this.assets, asset);
-  }
-
-  update() {
-    if (this.dirty) {
-      for (let asset of this.assets) {
-        this.upload(asset);
-      }
-      this.dirty = false;
-    }
-  }
-
-  upload(asset) {
-    if (!asset.pixels) {
-      return;
-    }
-
-    let page = asset.page.canvasTexturePage;
-    let x = asset.bin.x;
-    let y = asset.bin.y;
-
-    page.putData(asset.pixels, x, y);
-
-    let glTexture = page.source.glTexture;
-
-    if (glTexture) {
-      let gl = page.source.renderer.gl;
-
-      let width = asset.pixels.width;
-      let height = asset.pixels.height;
-
-      if (width > 0 && height > 0) {
-        gl.activeTexture(gl.TEXTURE0);
-        let currentTexture = gl.getParameter(gl.TEXTURE_BINDING_2D);
-        gl.bindTexture(gl.TEXTURE_2D, glTexture);
-
-        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
-        gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
-
-        gl.texSubImage2D(
-          gl.TEXTURE_2D,
-          0,
-          x,
-          y,
-          gl.RGBA,
-          gl.UNSIGNED_BYTE,
-          asset.pixels
-        );
-
-        if (currentTexture) {
-          gl.bindTexture(gl.TEXTURE_2D, currentTexture);
-        }
-      }
-    }
-
-    asset.pixels = null;
-  }
-
-  refCountSort(childA, childB) {
-    return childB.refCount - childA.refCount;
+    this.assets.delete(assetKey);
   }
 }

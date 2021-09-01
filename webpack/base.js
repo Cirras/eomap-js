@@ -25,6 +25,20 @@ module.exports = {
         }
       },
       {
+        test: /\.worker\.js$/i,
+        use: [
+          {
+            loader: "worker-loader",
+          },
+          {
+            loader: "babel-loader",
+            options: {
+              presets: ["@babel/preset-env"],
+            },
+          },
+        ],
+      },
+      {
         test: /\.css$/i,
         use: [MiniCssExtractPlugin.loader, "css-loader"]
       },

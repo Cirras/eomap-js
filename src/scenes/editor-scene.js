@@ -2,7 +2,7 @@ import { EMF } from "../map";
 import { CommandInvoker } from "../command/command";
 import { SetGraphicCommand, FillCommand } from "../command/map-editor-command";
 import { TilePos } from "../tilepos";
-import { TextureCache } from "../gfx/texture-cache";
+import { EvictingTextureCache } from "../gfx/texture-cache";
 import { ToolBar } from "../toolbar";
 import { Eyedrop } from "../eyedrop";
 
@@ -52,7 +52,7 @@ export class EditorScene extends Phaser.Scene {
   create() {
     this.currentPos = new TilePos();
 
-    this.textureCache = new TextureCache(
+    this.textureCache = new EvictingTextureCache(
       this,
       this.data.values.gfxLoader,
       1024,

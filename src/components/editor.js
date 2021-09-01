@@ -94,6 +94,9 @@ export class Editor extends LitElement {
   @property({ type: GFXLoader })
   gfxLoader;
 
+  @property({ type: Number })
+  loadFail;
+
   @property({ type: String })
   tool;
 
@@ -176,7 +179,7 @@ export class Editor extends LitElement {
     if (
       changedProperties.has("gfxLoader") &&
       this.gfxLoader &&
-      this.gfxLoader.failed.length == 0
+      this.loadFail === 0
     ) {
       this.setupPhaser();
     }
@@ -199,12 +202,12 @@ export class Editor extends LitElement {
   }
 
   renderLoadingContent() {
-    let failed = this.gfxLoader && this.gfxLoader.failed.length > 0;
+    let failed = this.loadFail > 0;
     let progressBarClass = failed
       ? "negative-progress-bar"
       : "positive-progress-bar";
     let label = failed
-      ? `Failed to load ${this.gfxLoader.failed.length} gfx file(s).`
+      ? `Failed to load ${this.loadFail} gfx file(s).`
       : "Loading...";
 
     return this.renderLogoWith(

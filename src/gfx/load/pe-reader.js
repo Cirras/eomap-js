@@ -31,7 +31,7 @@ class ResourceDataEntry {
   }
 }
 
-class BitmapInfo {
+class ResourceInfo {
   constructor(start, size, width, height) {
     this.start = start;
     this.size = size;
@@ -180,7 +180,7 @@ export class PEReader {
 
       this.resourceInfo.set(
         entry.resourceType,
-        new BitmapInfo(start, size, width, height)
+        new ResourceInfo(start, size, width, height)
       );
     }
   }
@@ -189,15 +189,15 @@ export class PEReader {
     return this.resourceInfo.keys();
   }
 
-  getResourceInfo(id) {
-    let info = this.resourceInfo.get(id);
+  getResourceInfo(resourceID) {
+    let info = this.resourceInfo.get(resourceID);
     if (!info) {
       info = null;
     }
     return info;
   }
 
-  getResource(info) {
+  readResource(info) {
     return this.file.slice(info.start, info.start + info.size);
   }
 }

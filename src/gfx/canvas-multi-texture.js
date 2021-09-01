@@ -117,72 +117,44 @@ class CanvasTexturePage {
     );
   }
 
-  draw(x, y, source) {
-    this.context.drawImage(source, x, y);
+  putData(imageData, x, y) {
+    let glTexture = this.source.glTexture;
 
-    return this;
-  }
+    if (glTexture) {
+      let gl = this.source.renderer.gl;
 
-  putData(imageData, x, y, dirtyX, dirtyY, dirtyWidth, dirtyHeight) {
-    if (dirtyX === undefined) {
-      dirtyX = 0;
-    }
-    if (dirtyY === undefined) {
-      dirtyY = 0;
-    }
-    if (dirtyWidth === undefined) {
-      dirtyWidth = imageData.width;
-    }
-    if (dirtyHeight === undefined) {
-      dirtyHeight = imageData.height;
-    }
+      if (imageData.width > 0 && imageData.height > 0) {
+        gl.activeTexture(gl.TEXTURE0);
+        let currentTexture = gl.getParameter(gl.TEXTURE_BINDING_2D);
+        gl.bindTexture(gl.TEXTURE_2D, glTexture);
 
-    this.context.putImageData(
-      imageData,
-      x,
-      y,
-      dirtyX,
-      dirtyY,
-      dirtyWidth,
-      dirtyHeight
-    );
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+        gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
 
-    return this;
-  }
+        gl.texSubImage2D(
+          gl.TEXTURE_2D,
+          0,
+          x,
+          y,
+          gl.RGBA,
+          gl.UNSIGNED_BYTE,
+          imageData
+        );
 
-  refresh() {
-    this.source.update();
-
-    return this;
-  }
-
-  getCanvas() {
-    return this.canvas;
-  }
-
-  getContext() {
-    return this.context;
-  }
-
-  setSize(width, height) {
-    if (height === undefined) {
-      height = width;
-    }
-
-    if (width !== this.width || height !== this.height) {
-      //  Update the Canvas
-      this.canvas.width = width;
-      this.canvas.height = height;
-
-      //  Update the Texture Source
-      this.source.width = width;
-      this.source.height = height;
-      this.source.isPowerOf2 = IsSizePowerOfTwo(width, height);
-
-      //  Update the Frame
-      this.frames["__BASE"].setSize(width, height, 0, 0);
-
-      this.refresh();
+        if (currentTexture) {
+          gl.bindTexture(gl.TEXTURE_2D, currentTexture);
+        }
+      }
+    } else {
+      this.context.putImageData(
+        imageData,
+        x,
+        y,
+        0,
+        0,
+        imageData.width,
+        imageData.height
+      );
     }
 
     return this;

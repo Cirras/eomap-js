@@ -66,6 +66,9 @@ export class Application extends LitElement {
   @state({ type: GFXLoader })
   gfxLoader = null;
 
+  @state({ type: Number })
+  loadFail = 0;
+
   @state({ type: String })
   tool = "draw";
 
@@ -96,7 +99,10 @@ export class Application extends LitElement {
     );
     let gfxLoader = new GFXLoader(strategy);
     let promises = [2, 3, 4, 5, 6, 7, 22].map((fileID) =>
-      gfxLoader.loadEGF(fileID)
+      gfxLoader.loadEGF(fileID).catch((error) => {
+        ++this.loadFail;
+        console.error("Failed to load EGF %d: %s", fileID, error);
+      })
     );
     Promise.allSettled(promises).then(() => (this.gfxLoader = gfxLoader));
   }
@@ -133,6 +139,7 @@ export class Application extends LitElement {
         ></eomap-sidebar>
         <eomap-editor
           .gfxLoader=${this.gfxLoader}
+          .loadFail=${this.loadFail}
           .layerVisibility=${this.layerVisibility}
           .tool=${this.tool}
           .selectedLayer=${this.selectedLayer}
@@ -142,6 +149,7 @@ export class Application extends LitElement {
         ></eomap-editor>
         <eomap-palette
           .gfxLoader=${this.gfxLoader}
+          .loadFail=${this.loadFail}
           .eyedrop=${this.eyedrop}
           .selectedLayer=${this.selectedLayer}
           @layer-selected=${this.onSelectedLayerChanged}
