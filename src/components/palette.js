@@ -45,7 +45,7 @@ export class Palette extends LitElement {
         padding-top: var(--spectrum-global-dimension-size-100);
         padding-bottom: var(--spectrum-global-dimension-size-100);
       }
-      #palette-content {
+      #palette-scroll-container {
         width: auto;
         height: auto;
         padding: var(--spectrum-global-dimension-size-50);
@@ -149,6 +149,9 @@ export class Palette extends LitElement {
   @query("#layer-buttons", true)
   layerButtons;
 
+  @query("#palette-scroll-container", true)
+  paletteScrollContainer;
+
   @query("#palette-content", true)
   paletteContent;
 
@@ -224,14 +227,14 @@ export class Palette extends LitElement {
   setupContentScrollMirroring(scene) {
     scene.data.set("contentScroll", 0);
     this.onPaletteContentScroll = (_event) => {
-      scene.data.set("contentScroll", this.paletteContent.scrollTop);
+      scene.data.set("contentScroll", this.paletteScrollContainer.scrollTop);
     };
 
     scene.data.events.on(
       "changedata-contentScroll",
       (_parent, value, previousValue) => {
         if (value !== previousValue) {
-          this.paletteContent.scrollTop = value;
+          this.paletteScrollContainer.scrollTop = value;
         }
       }
     );
@@ -240,6 +243,10 @@ export class Palette extends LitElement {
   setupContentHeightListener() {
     this.addEventListener("changedata-contentHeight", (event) => {
       this.contentHeight = event.detail;
+      // The paletteContent height needs an immediate update, or
+      // paletteScrollContainer.scrollTop will get clamped to the previous
+      // content height when switching layers.
+      this.paletteContent.style.height = `${this.contentHeight}px`;
     });
   }
 
@@ -366,8 +373,10 @@ export class Palette extends LitElement {
           <sp-icon slot="icon">${ChevronRightIcon()}</sp-icon">
         </sp-action-button>
       </div>
-      <div id="palette-content" @scroll=${this.onPaletteContentScroll}>
-        <div style="width: 100%; height: ${this.contentHeight}px">
+      <div id="palette-scroll-container" @scroll=${this.onPaletteContentScroll}>
+        <div id="palette-content" style="width: 100%; height: ${
+          this.contentHeight
+        }px">
           <div class="palette-viewport" style="height: ${
             this.viewportHeight
           }px">
@@ -388,11 +397,11 @@ export class Palette extends LitElement {
   }
 
   updateViewportHeight() {
-    let paletteContent = this.paletteContent;
-    if (paletteContent) {
-      let style = getComputedStyle(paletteContent);
+    let container = this.paletteScrollContainer;
+    if (container) {
+      let style = getComputedStyle(container);
       this.viewportHeight =
-        paletteContent.clientHeight -
+        container.clientHeight -
         parseFloat(style.paddingTop) -
         parseFloat(style.paddingBottom);
     }

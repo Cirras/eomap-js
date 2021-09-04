@@ -160,10 +160,10 @@ class PaletteLayer {
   }
 
   show() {
-    this.scene.updateScroll();
-    this.scene.updateSelectedGraphic();
     this.prioritizePreloads();
     this.layout();
+    this.scene.updateScroll();
+    this.scene.updateSelectedGraphic();
   }
 
   prioritizePreloads() {
