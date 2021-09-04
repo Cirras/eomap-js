@@ -82,6 +82,10 @@ class PaletteLayerResource {
     return this.layer.scene.textureCache.get(this.fileID, this.resourceID);
   }
 
+  preload() {
+    this.getAsset();
+  }
+
   get selected() {
     return this.layer.selectedResource === this;
   }
@@ -155,7 +159,18 @@ class PaletteLayer {
   show() {
     this.scene.updateScroll();
     this.scene.updateSelectedGraphic();
+    this.prioritizePreloads();
     this.layout();
+  }
+
+  prioritizePreloads() {
+    let preloads = this.scene.preloads;
+    for (let preload of preloads) {
+      if (preload.layer === this) {
+        Phaser.Utils.Array.MoveTo(preloads, preload, 0);
+        break;
+      }
+    }
   }
 
   cull() {
@@ -268,12 +283,41 @@ class PaletteLayer {
   }
 }
 
+class LayerPreload {
+  static PRELOAD_PER_FRAME = 5;
+
+  constructor(layer) {
+    this.layer = layer;
+    this.preloadResources = Array.from(this.layer.resources.values());
+  }
+
+  update() {
+    let pending = this.layer.scene.textureCache.pending;
+    let amount = 0;
+
+    for (let resource of this.preloadResources) {
+      if (pending.length >= LayerPreload.PRELOAD_PER_FRAME) {
+        break;
+      }
+      resource.preload();
+      ++amount;
+    }
+
+    this.preloadResources.splice(0, amount);
+  }
+
+  get finished() {
+    return this.preloadResources.length === 0;
+  }
+}
+
 export class PaletteScene extends Phaser.Scene {
   constructor() {
     super("palette");
     this.firstUpdate = true;
     this.textureCache = null;
     this.layers = [];
+    this.preloads = [];
     this.masterAnimation = null;
   }
 
@@ -286,6 +330,7 @@ export class PaletteScene extends Phaser.Scene {
     );
 
     this.layers = this.createLayers();
+    this.preloads = this.layers.map((layer) => new LayerPreload(layer));
     this.masterAnimation = this.createMasterAnimation();
 
     this.data.events.on(
@@ -361,6 +406,14 @@ export class PaletteScene extends Phaser.Scene {
   update(_time, _delta) {
     if (this.cameras.main.dirty) {
       this.selectedLayer.cull();
+    }
+
+    if (this.preloads.length > 0) {
+      let preload = this.preloads[0];
+      preload.update();
+      if (preload.finished) {
+        this.preloads.shift();
+      }
     }
 
     this.textureCache.update();
