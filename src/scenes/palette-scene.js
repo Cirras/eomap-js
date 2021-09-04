@@ -114,10 +114,13 @@ class PaletteLayerResource {
 }
 
 class PaletteLayer {
+  static SECTION_HEIGHT = 512;
+
   constructor(scene, fileID) {
     this.scene = scene;
     this.fileID = fileID;
     this.resources = this.createResources();
+    this.sections = [];
     this._selectedResource = null;
     this.width = 0;
     this.height = 0;
@@ -174,17 +177,27 @@ class PaletteLayer {
   }
 
   cull() {
+    let visibleSections = [];
     let cullTop = this.scroll;
     let cullBottom = cullTop + this.scene.cameras.main.height;
 
-    for (let resource of this.resources.values()) {
-      let resourceTop = resource.y;
-      let resourceBottom = resourceTop + resource.height;
-
-      if (resourceBottom > cullTop && resourceTop < cullBottom) {
-        resource.show();
+    for (let i = 0; i < this.sections.length; ++i) {
+      let section = this.sections[i];
+      let sectionTop = i * PaletteLayer.SECTION_HEIGHT;
+      let sectionBottom = sectionTop + PaletteLayer.SECTION_HEIGHT;
+      let show = sectionBottom > cullTop && sectionTop < cullBottom;
+      if (show) {
+        visibleSections.push(section);
       } else {
-        resource.hide();
+        for (let resource of section) {
+          resource.hide();
+        }
+      }
+    }
+
+    for (let section of visibleSections) {
+      for (let resource of section) {
+        resource.show();
       }
     }
   }
@@ -197,6 +210,14 @@ class PaletteLayer {
     this.scene.data.set("contentHeight", this.height);
   }
 
+  calcSection(y) {
+    let section = y;
+    if (section !== 0) {
+      section = Math.trunc(section / PaletteLayer.SECTION_HEIGHT);
+    }
+    return section;
+  }
+
   layoutAssets() {
     const xRes = 32;
     const yRes = 32;
@@ -204,6 +225,7 @@ class PaletteLayer {
     let pageWidth = Math.floor(this.width / xRes);
     let colHeights = new Array(pageWidth).fill(0);
 
+    this.sections.length = 0;
     this.height = 0;
 
     for (let resource of this.resources.values()) {
@@ -249,6 +271,18 @@ class PaletteLayer {
             resource.y = (y - 1) * yRes;
 
             this.height = Math.max(resource.y + resource.height, this.height);
+
+            let startSection = this.calcSection(resource.y);
+            let endSection = this.calcSection(resource.y + resource.height);
+
+            let sectionsToAdd = endSection + 1 - this.sections.length;
+            for (let i = 0; i < sectionsToAdd; ++i) {
+              this.sections.push([]);
+            }
+
+            for (let i = startSection; i <= endSection; ++i) {
+              this.sections[i].push(resource);
+            }
 
             foundPosition = true;
             break;
