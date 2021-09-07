@@ -109,6 +109,9 @@ export class Editor extends LitElement {
   @property({ type: Number })
   selectedGraphic;
 
+  @property({ type: Boolean })
+  inputEnabled = true;
+
   @state({ type: Phaser.Game })
   game;
 
@@ -127,6 +130,7 @@ export class Editor extends LitElement {
 
     scene.events.once("first-update", () => {
       this.game = game;
+      this.updateInputEnabledState();
     });
   }
 
@@ -148,6 +152,12 @@ export class Editor extends LitElement {
     }
   }
 
+  updateInputEnabledState() {
+    if (this.game) {
+      this.game.input.enabled = this.inputEnabled;
+    }
+  }
+
   async setupPhaser() {
     return new Phaser.Game({
       type: Phaser.AUTO,
@@ -158,7 +168,7 @@ export class Editor extends LitElement {
         zoom: 1,
         parent: this.shadowRoot.querySelector("#" + Editor.EDITOR_ID),
         mode: Phaser.Scale.ScaleModes.RESIZE,
-        resizeInterval: 250,
+        resizeInterval: 16,
       },
       loader: {
         maxParallelDownloads: 100,
@@ -182,6 +192,10 @@ export class Editor extends LitElement {
       this.loadFail === 0
     ) {
       this.setupPhaser();
+    }
+
+    if (changedProperties.has("inputEnabled")) {
+      this.updateInputEnabledState();
     }
 
     for (let changed of changedProperties.keys()) {

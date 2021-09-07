@@ -8,6 +8,8 @@ import {
   state,
 } from "lit-element";
 
+import { classMap } from "lit-html/directives/class-map";
+
 import "@spectrum-web-components/action-group/sp-action-group";
 import "@spectrum-web-components/action-button/sp-action-button";
 import {
@@ -25,6 +27,9 @@ import { Eyedrop } from "../eyedrop";
 
 @customElement("eomap-palette")
 export class Palette extends LitElement {
+  static DEFAULT_WIDTH = 351;
+  static MIN_WIDTH = 159;
+
   static PHASER_CONTAINER_ID = "phaser-palette";
 
   static PHASER_DATA_KEYS = ["selectedGraphic", "contentHeight"];
@@ -34,13 +39,33 @@ export class Palette extends LitElement {
   static get styles() {
     return css`
       :host {
+        position: relative;
         display: grid;
         grid-template-rows: min-content minmax(0, 1fr);
-        width: var(--spectrum-global-dimension-size-4600);
         background-color: var(--spectrum-global-color-gray-400);
+      }
+      .palette-gutter {
+        position: absolute;
+        top: 0px;
+        left: -3px;
+        bottom: 0px;
+        width: 4px;
+        touch-action: none;
+        cursor: w-resize;
+        z-index: 1000;
+        transition-property: background, box-shadow;
+      }
+      .palette-gutter-hover {
+        background: var(--spectrum-alias-focus-color);
+        transition-duration: 0.3s;
+        transition-delay: 0.3s;
+      }
+      .palette-gutter-active {
+        background: var(--spectrum-alias-focus-color);
       }
       .palette-header {
         display: grid;
+        place-self: center;
         grid-template-columns: min-content minmax(0, 1fr) min-content;
         padding-top: var(--spectrum-global-dimension-size-100);
         padding-bottom: var(--spectrum-global-dimension-size-100);
@@ -74,6 +99,7 @@ export class Palette extends LitElement {
       }
       #layer-buttons {
         display: flex;
+        padding-right: 1px;
         flex-wrap: nowrap;
         overflow-x: scroll;
         overflow: -moz-scrollbars-none;
@@ -167,11 +193,26 @@ export class Palette extends LitElement {
   @property({ type: Eyedrop })
   eyedrop = null;
 
+  @property({ type: Boolean })
+  inputEnabled = true;
+
+  @property({ type: Number })
+  maxWidth = Palette.MIN_WIDTH;
+
+  @state({ type: Number })
+  width = Palette.DEFAULT_WIDTH;
+
   @state({ type: Boolean })
   leftArrowEnabled = false;
 
   @state({ type: Boolean })
   rightArrowEnabled = false;
+
+  @state({ type: Boolean })
+  gutterHover = false;
+
+  @state({ type: Boolean })
+  gutterActive = false;
 
   @state({ type: Number })
   viewportHeight;
@@ -189,6 +230,8 @@ export class Palette extends LitElement {
 
   headerScrolling = false;
   headerScrollStartTimestamp = null;
+
+  gutterTouch = false;
 
   onResize = (_event) => {
     this.updateViewportHeight();
@@ -250,6 +293,12 @@ export class Palette extends LitElement {
     });
   }
 
+  updateInputEnabledState() {
+    if (this.game) {
+      this.game.input.enabled = this.inputEnabled;
+    }
+  }
+
   async setupPhaser() {
     let game = new Phaser.Game({
       type: Phaser.AUTO,
@@ -262,7 +311,7 @@ export class Palette extends LitElement {
           "#" + Palette.PHASER_CONTAINER_ID
         ),
         mode: Phaser.Scale.ScaleModes.RESIZE,
-        resizeInterval: 250,
+        resizeInterval: 16,
       },
       render: {
         pixelArt: true,
@@ -292,10 +341,18 @@ export class Palette extends LitElement {
         this.setupContentScrollMirroring(scene);
         this.setupContentHeightListener(scene);
         this.game = game;
+        this.updateInputEnabledState();
       });
 
       game.scene.start("palette");
     });
+  }
+
+  shouldUpdate(changedProperties) {
+    if (changedProperties.length === 1 && changedProperties.has("maxWidth")) {
+      return this.width !== this.calcWidth();
+    }
+    return true;
   }
 
   updated(changedProperties) {
@@ -305,6 +362,14 @@ export class Palette extends LitElement {
       this.loadFail === 0
     ) {
       this.setupPhaser();
+    }
+
+    if (changedProperties.has("width")) {
+      this.checkLayerButtonsArrows();
+    }
+
+    if (changedProperties.has("inputEnabled")) {
+      this.updateInputEnabledState();
     }
 
     for (let changed of changedProperties.keys()) {
@@ -342,8 +407,49 @@ export class Palette extends LitElement {
     });
   }
 
+  calcWidth() {
+    return Math.min(this.maxWidth, Math.max(this.width, Palette.MIN_WIDTH));
+  }
+
+  renderGutter() {
+    const gutterClasses = {
+      "palette-gutter-hover": this.gutterHover,
+      "palette-gutter-active": this.gutterActive,
+    };
+
+    return html`
+      <div
+        class="palette-gutter ${classMap(gutterClasses)}"
+        @pointerdown=${this.onGutterPointerDown}
+        @mouseover=${() => {
+          this.gutterHover = !this.gutterTouch;
+        }}
+        @mouseout=${() => {
+          this.gutterHover = false;
+        }}
+        @touchstart=${() => {
+          this.gutterHover = false;
+          this.gutterTouch = true;
+        }}
+        @touchend=${(event) => {
+          event.preventDefault();
+          this.gutterTouch = false;
+        }}
+        @touchcancel=${() => {
+          this.gutterTouch = false;
+        }}
+      ></div>
+    `;
+  }
+
   render() {
     return html`
+      <style>
+        :host {
+          width: ${this.calcWidth()}px;
+        }
+      </style>
+      ${this.renderGutter()}
       <div class="palette-header">
         <sp-action-button
           class="scroll-arrow"
@@ -405,6 +511,31 @@ export class Palette extends LitElement {
         parseFloat(style.paddingTop) -
         parseFloat(style.paddingBottom);
     }
+  }
+
+  onGutterPointerDown(event) {
+    this.gutterActive = true;
+
+    let oldWidth = this.calcWidth();
+    let oldX = event.x;
+
+    let onPointerMove = (moveEvent) => {
+      this.width = oldWidth + oldX - moveEvent.x;
+      moveEvent.preventDefault();
+    };
+
+    let onPointerUp = (_event) => {
+      this.gutterActive = false;
+      this.width = this.calcWidth();
+      this.dispatchEvent(new CustomEvent("resize-end"));
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", onPointerUp);
+    };
+
+    window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointerup", onPointerUp);
+
+    this.dispatchEvent(new CustomEvent("resize-start"));
   }
 
   onLeftArrowPointerDown() {

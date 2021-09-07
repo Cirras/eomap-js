@@ -1,4 +1,11 @@
-import { css, customElement, html, LitElement, state } from "lit-element";
+import {
+  css,
+  customElement,
+  html,
+  LitElement,
+  query,
+  state,
+} from "lit-element";
 
 import "@spectrum-web-components/theme/theme-darkest.js";
 import "@spectrum-web-components/theme/scale-medium.js";
@@ -14,6 +21,7 @@ import { TilePos } from "../tilepos";
 import { GFXLoader } from "../gfx/load/gfx-loader";
 import { DownloadLoadingStrategy } from "../gfx/load/download-loading-strategy";
 import { Eyedrop } from "../eyedrop";
+import { Palette } from "./palette";
 
 @customElement("eomap-application")
 export class Application extends LitElement {
@@ -63,6 +71,12 @@ export class Application extends LitElement {
     `;
   }
 
+  @query("sp-theme", true)
+  theme;
+
+  @query("eomap-sidebar", true)
+  sidebar;
+
   @state({ type: GFXLoader })
   gfxLoader = null;
 
@@ -86,6 +100,16 @@ export class Application extends LitElement {
 
   @state({ type: Eyedrop })
   eyedrop = null;
+
+  @state({ type: Boolean })
+  rendererInputEnabled = true;
+
+  @state({ type: Number })
+  maxPaletteWidth = Palette.DEFAULT_WIDTH;
+
+  onResize = (_event) => {
+    this.calculateMaxPaletteWidth();
+  };
 
   constructor() {
     super();
@@ -126,6 +150,20 @@ export class Application extends LitElement {
     });
   }
 
+  async firstUpdated(changes) {
+    super.firstUpdated(changes);
+
+    const children = this.shadowRoot.querySelectorAll("*");
+    await Promise.all(Array.from(children).map((c) => c.updateComplete));
+
+    this.calculateMaxPaletteWidth();
+  }
+
+  calculateMaxPaletteWidth() {
+    let width = this.theme.clientWidth - this.sidebar.offsetWidth - 2;
+    this.maxPaletteWidth = Math.max(Palette.MIN_WIDTH, width);
+  }
+
   render() {
     return html`
       <sp-theme color="darkest" scale="medium">
@@ -144,6 +182,7 @@ export class Application extends LitElement {
           .tool=${this.tool}
           .selectedLayer=${this.selectedLayer}
           .selectedGraphic=${this.selectedGraphic}
+          .inputEnabled=${this.rendererInputEnabled}
           @changedata-currentPos=${this.onCurrentPosChanged}
           @changedata-eyedrop=${this.onEyedropChanged}
         ></eomap-editor>
@@ -152,12 +191,26 @@ export class Application extends LitElement {
           .loadFail=${this.loadFail}
           .eyedrop=${this.eyedrop}
           .selectedLayer=${this.selectedLayer}
+          .inputEnabled=${this.rendererInputEnabled}
+          .maxWidth=${this.maxPaletteWidth}
+          @resize-start=${this.onPaletteResizeStart}
+          @resize-end=${this.onPaletteResizeEnd}
           @layer-selected=${this.onSelectedLayerChanged}
           @changedata-selectedGraphic=${this.onSelectedGraphicChanged}
         ></eomap-palette>
         <eomap-infobar .tilePos=${this.currentPos}></eomap-infobar>
       </sp-theme>
     `;
+  }
+
+  connectedCallback() {
+    super.connectedCallback();
+    addEventListener("resize", this.onResize);
+  }
+
+  disconnectedCallback() {
+    removeEventListener("resize", this.onResize);
+    super.disconnectedCallback();
   }
 
   onLayerToggle(event) {
@@ -178,6 +231,14 @@ export class Application extends LitElement {
 
   onEyedropChanged(event) {
     this.eyedrop = event.detail;
+  }
+
+  onPaletteResizeStart(_event) {
+    this.rendererInputEnabled = false;
+  }
+
+  onPaletteResizeEnd(_event) {
+    this.rendererInputEnabled = true;
   }
 
   onSelectedLayerChanged(event) {

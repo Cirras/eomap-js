@@ -353,6 +353,7 @@ export class PaletteScene extends Phaser.Scene {
     this.layers = [];
     this.preloads = [];
     this.masterAnimation = null;
+    this.lastResize = performance.now();
   }
 
   create() {
@@ -442,6 +443,10 @@ export class PaletteScene extends Phaser.Scene {
       this.selectedLayer.cull();
     }
 
+    if (this.selectedLayer.dirty && this.canDoResizeLayout()) {
+      this.selectedLayer.layout();
+    }
+
     if (this.preloads.length > 0) {
       let preload = this.preloads[0];
       preload.update();
@@ -456,6 +461,10 @@ export class PaletteScene extends Phaser.Scene {
       this.firstUpdate = false;
       this.events.emit("first-update");
     }
+  }
+
+  canDoResizeLayout() {
+    return this.lastResize < performance.now() - 100;
   }
 
   resize(gameSize, _baseSize, _displaySize, _resolution) {
@@ -475,7 +484,7 @@ export class PaletteScene extends Phaser.Scene {
     }
 
     this.cameras.main.setSize(width, height);
-    this.selectedLayer.layout();
+    this.lastResize = performance.now();
   }
 
   syncToMasterAnimation(sprite) {
