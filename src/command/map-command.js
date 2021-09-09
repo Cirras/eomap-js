@@ -1,15 +1,15 @@
 import { Command } from "./command";
 
-class MapEditorCommand extends Command {
-  constructor(mapEditor) {
+class MapCommand extends Command {
+  constructor(map) {
     super();
-    this.mapEditor = mapEditor;
+    this.map = map;
   }
 }
 
-export class SetGraphicCommand extends MapEditorCommand {
-  constructor(mapEditor, x, y, layer, oldGfx, newGfx) {
-    super(mapEditor);
+export class SetGraphicCommand extends MapCommand {
+  constructor(map, x, y, layer, oldGfx, newGfx) {
+    super(map);
     this.x = x;
     this.y = y;
     this.layer = layer;
@@ -18,11 +18,11 @@ export class SetGraphicCommand extends MapEditorCommand {
   }
 
   execute() {
-    this.mapEditor.setGraphic(this.x, this.y, this.newGfx, this.layer);
+    this.map.setTileGraphic(this.x, this.y, this.newGfx, this.layer);
   }
 
   undo() {
-    this.mapEditor.setGraphic(this.x, this.y, this.oldGfx, this.layer);
+    this.map.setTileGraphic(this.x, this.y, this.oldGfx, this.layer);
   }
 }
 
@@ -33,9 +33,9 @@ class Tile {
   }
 }
 
-export class FillCommand extends MapEditorCommand {
-  constructor(mapEditor, x, y, layer, oldGfx, newGfx) {
-    super(mapEditor);
+export class FillCommand extends MapCommand {
+  constructor(map, x, y, layer, oldGfx, newGfx) {
+    super(map);
     this.originX = x;
     this.originY = y;
     this.layer = layer;
@@ -46,13 +46,13 @@ export class FillCommand extends MapEditorCommand {
 
   doFloodFill() {
     let isContiguousTile = (x, y) => {
-      let gfx = this.mapEditor.emf.getTile(x, y).gfx[this.layer];
+      let gfx = this.map.emf.getTile(x, y).gfx[this.layer];
       return gfx === this.oldGfx;
     };
 
     let stack = [new Tile(this.originX, this.originY)];
-    let width = this.mapEditor.emf.width;
-    let height = this.mapEditor.emf.height;
+    let width = this.map.emf.width;
+    let height = this.map.emf.height;
 
     this.fillTiles = [];
 
@@ -66,7 +66,7 @@ export class FillCommand extends MapEditorCommand {
       let spanUp = false;
       let spanDown = false;
       while (x < width && isContiguousTile(x, y)) {
-        this.mapEditor.setGraphic(x, y, this.newGfx, this.layer);
+        this.map.setTileGraphic(x, y, this.newGfx, this.layer, false);
         this.fillTiles.push(new Tile(x, y));
         if (!spanUp && y > 0 && isContiguousTile(x, y - 1)) {
           stack.push(new Tile(x, y - 1));
@@ -90,14 +90,16 @@ export class FillCommand extends MapEditorCommand {
       this.doFloodFill();
     } else {
       for (let tile of this.fillTiles) {
-        this.mapEditor.setGraphic(tile.x, tile.y, this.newGfx, this.layer);
+        this.map.setTileGraphic(tile.x, tile.y, this.newGfx, this.layer, false);
       }
     }
+    this.map.dirtyRenderList = true;
   }
 
   undo() {
     for (let tile of this.fillTiles) {
-      this.mapEditor.setGraphic(tile.x, tile.y, this.oldGfx, this.layer);
+      this.map.setTileGraphic(tile.x, tile.y, this.oldGfx, this.layer, false);
     }
+    this.map.dirtyRenderList = true;
   }
 }

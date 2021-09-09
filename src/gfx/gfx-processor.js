@@ -8,6 +8,13 @@ class GFXData {
     this.animation = animation;
   }
 
+  getFrame(index) {
+    if (this.animation) {
+      return this.animation.frames[index].frame;
+    }
+    return this.textureFrame;
+  }
+
   get textureKey() {
     return this.textureFrame.texture.key;
   }
