@@ -14,7 +14,9 @@ export class EditorScene extends Phaser.Scene {
     this.commandInvoker = new CommandInvoker();
     this.firstUpdate = true;
     this.ctrlKeyDown = false;
+    this.currentPosDirty = false;
 
+    this.currentPos = null;
     this.textureCache = null;
     this.map = null;
     this.toolBar = null;
@@ -132,6 +134,11 @@ export class EditorScene extends Phaser.Scene {
     this.textureCache.update();
     this.map.update(time, delta);
 
+    if (this.currentPosDirty) {
+      this.data.set("currentPos", this.currentPos);
+      this.currentPosDirty = false;
+    }
+
     if (this.firstUpdate) {
       this.firstUpdate = false;
       this.events.emit("first-update");
@@ -226,6 +233,7 @@ export class EditorScene extends Phaser.Scene {
     let newPos = this.getTilePosFromWorldPos(worldPos);
 
     if (this.currentPos.x !== newPos.x || this.currentPos.y !== newPos.y) {
+      this.currentPosDirty = true;
       this.currentPos = newPos;
     }
   }
@@ -263,14 +271,6 @@ export class EditorScene extends Phaser.Scene {
     let scrollY = -64;
 
     this.cameras.main.setScroll(scrollX, scrollY);
-  }
-
-  get currentPos() {
-    return this.data.get("currentPos");
-  }
-
-  set currentPos(value) {
-    this.data.set("currentPos", value);
   }
 
   get selectedLayer() {
