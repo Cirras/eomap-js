@@ -15,7 +15,6 @@ import "phaser";
 import icon from "../assets/icon.svg";
 
 import { EditorScene } from "../scenes/editor-scene";
-import { patchPhaser } from "../patch-phaser";
 
 import { GFXLoader } from "../gfx/load/gfx-loader";
 
@@ -116,11 +115,6 @@ export class Editor extends LitElement {
   game;
 
   componentDataForwarders = new Map();
-
-  firstUpdated(changes) {
-    super.firstUpdated(changes);
-    patchPhaser();
-  }
 
   onPostBoot(game) {
     let scene = game.scene.getScene("editor");
