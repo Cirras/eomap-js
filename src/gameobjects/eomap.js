@@ -25,10 +25,11 @@ const calcDepth = (x, y, layer) => {
 const depthComparator = (a, b) => a.depth - b.depth;
 
 class TileGraphic {
-  constructor(asset, x, y, depth, alpha) {
+  constructor(asset, x, y, layer, depth, alpha) {
     this.asset = asset;
     this.x = x;
     this.y = y;
+    this.layer = layer;
     this.depth = depth;
     this.alpha = alpha;
   }
@@ -50,6 +51,7 @@ export class EOMap extends Phaser.GameObjects.GameObject {
     this.textureCache = textureCache;
     this.width = width;
     this.height = height;
+    this.layerVisibility = new Array(layerInfo.length).fill(true);
     this.sectionWidth = Math.ceil((this.emf.width * 64) / SECTION_SIZE);
     this.sectionHeight = Math.ceil((this.emf.height * 32) / SECTION_SIZE);
     this.sections = [];
@@ -73,10 +75,10 @@ export class EOMap extends Phaser.GameObjects.GameObject {
   }
 
   initTileGraphics() {
-    for (let y = 0; y < this.emf.rows.length; ++y) {
-      for (let x = 0; x < this.emf.rows[y].length; ++x) {
+    for (let y = 0; y < this.emf.height; ++y) {
+      for (let x = 0; x < this.emf.width; ++x) {
         for (let layer = 0; layer < layerInfo.length; ++layer) {
-          let gfx = this.emf.rows[y][x].gfx[layer];
+          let gfx = this.emf.getTile(x, y).gfx[layer];
 
           this.setTileGraphic(x, y, gfx, layer);
         }
@@ -88,7 +90,10 @@ export class EOMap extends Phaser.GameObjects.GameObject {
     let visibleGraphicIndices = new Set();
     for (let section of this.visibleSections) {
       for (let graphicIndex of section) {
-        visibleGraphicIndices.add(graphicIndex);
+        let layer = this.tileGraphics[graphicIndex].layer;
+        if (this.layerVisibility[layer]) {
+          visibleGraphicIndices.add(graphicIndex);
+        }
       }
     }
 
@@ -102,8 +107,8 @@ export class EOMap extends Phaser.GameObjects.GameObject {
   }
 
   getDisplayGfx(gfx, layer) {
-    if ((gfx === 0 || gfx === null) && layer === 0) {
-      return this.emf.fill_tile;
+    if (gfx === null && layer === 0) {
+      return this.emf.fillTile;
     }
     return gfx;
   }
@@ -164,7 +169,7 @@ export class EOMap extends Phaser.GameObjects.GameObject {
     }
 
     let displayGfx = this.getDisplayGfx(gfx, layer);
-    if (displayGfx === 0) {
+    if (displayGfx === null) {
       if (modifyRenderList && oldGraphic) {
         removeFirst(this.renderList, oldGraphic);
       }
@@ -174,7 +179,13 @@ export class EOMap extends Phaser.GameObjects.GameObject {
     let info = layerInfo[layer];
 
     let resourceID = displayGfx + 100;
+
     let asset = this.textureCache.get(info.file, resourceID);
+    if (!asset) {
+      console.debug("Could not load gfx %d/%d.", displayGfx, info.file);
+      return;
+    }
+
     asset.incRef();
 
     let tilex = info.xoff + x * 32 - y * 32;
@@ -192,6 +203,7 @@ export class EOMap extends Phaser.GameObjects.GameObject {
       asset,
       tilex,
       tiley,
+      layer,
       calcDepth(x, y, layer),
       info.alpha
     );
@@ -260,15 +272,21 @@ export class EOMap extends Phaser.GameObjects.GameObject {
       }
     }
 
-    this.dirtyRenderList = !arrayEquals(
-      oldVisibleSections,
-      this.visibleSections
-    );
+    if (!arrayEquals(oldVisibleSections, this.visibleSections)) {
+      this.dirtyRenderList = true;
+    }
   }
 
   setSize(width, height) {
     this.width = width;
     this.height = height;
+  }
+
+  setLayerVisibility(layer, visibility) {
+    if (this.layerVisibility[layer] !== visibility) {
+      this.layerVisibility[layer] = visibility;
+      this.dirtyRenderList = true;
+    }
   }
 
   renderWebGL(renderer, src, camera) {

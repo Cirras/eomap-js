@@ -1,6 +1,8 @@
 import Worker from "./gfx-loader.worker";
 import { LoadType } from "./load-type";
 
+import { getEGFFilename } from "../../utils";
+
 class PendingPromise {
   constructor() {
     this.promise = new Promise((resolve, reject) => {

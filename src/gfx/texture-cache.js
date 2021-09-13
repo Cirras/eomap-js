@@ -74,8 +74,19 @@ export class TextureCache {
   add(fileID, resourceID) {
     let cacheEntry = null;
 
+    let info = this.gfxLoader.info(fileID, resourceID);
+    if (!info) {
+      return cacheEntry;
+    }
+
     for (let i = 0; i < this.pages.length; ++i) {
-      cacheEntry = this.addToPage(i, fileID, resourceID);
+      cacheEntry = this.addToPage(
+        i,
+        fileID,
+        resourceID,
+        info.width,
+        info.height
+      );
 
       if (cacheEntry) {
         this.assets.set(this.makeAssetKey(fileID, resourceID), cacheEntry);
@@ -108,11 +119,9 @@ export class TextureCache {
     this.pages.push(newPage);
   }
 
-  addToPage(pageIndex, fileID, resourceID) {
+  addToPage(pageIndex, fileID, resourceID, width, height) {
     let page = this.pages[pageIndex];
-    let info = this.gfxLoader.info(fileID, resourceID);
-
-    let bin = page.shelfPacker.packOne(info.width, info.height);
+    let bin = page.shelfPacker.packOne(width, height);
 
     if (!bin) {
       return null;
@@ -124,8 +133,8 @@ export class TextureCache {
       pageIndex,
       bin.x,
       bin.y,
-      info.width,
-      info.height
+      width,
+      height
     );
 
     let assetData = this.gfxProcessor.processAssetData(

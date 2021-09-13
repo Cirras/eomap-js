@@ -19,9 +19,13 @@ import "./infobar";
 
 import { TilePos } from "../tilepos";
 import { GFXLoader } from "../gfx/load/gfx-loader";
-import { DownloadLoadingStrategy } from "../gfx/load/download-loading-strategy";
+import { DownloadLoadingStrategy } from "../gfx/load/strategy/download-loading-strategy";
 import { Eyedrop } from "../eyedrop";
 import { Palette } from "./palette";
+
+import { EMF } from "../data/emf";
+import { EOReader } from "../data/eo-reader";
+import { getEMFFilename } from "../utils";
 
 @customElement("eomap-application")
 export class Application extends LitElement {
@@ -80,6 +84,9 @@ export class Application extends LitElement {
   @state({ type: GFXLoader })
   gfxLoader = null;
 
+  @state({ type: EMF })
+  emf = null;
+
   @state({ type: Number })
   loadFail = 0;
 
@@ -118,17 +125,22 @@ export class Application extends LitElement {
   }
 
   initializeGFXLoader() {
-    let strategy = new DownloadLoadingStrategy(
-      "https://game.bones-underground.org/mapper_gfx"
+    let loadingStrategy = new DownloadLoadingStrategy(
+      "https://game.bones-underground.org/"
     );
-    let gfxLoader = new GFXLoader(strategy);
+    let gfxLoader = new GFXLoader(loadingStrategy);
     let promises = [2, 3, 4, 5, 6, 7, 22].map((fileID) =>
       gfxLoader.loadEGF(fileID).catch((error) => {
         ++this.loadFail;
         console.error("Failed to load EGF %d: %s", fileID, error);
       })
     );
-    Promise.allSettled(promises).then(() => (this.gfxLoader = gfxLoader));
+    Promise.allSettled(promises).then(() => {
+      this.gfxLoader = gfxLoader;
+      if (this.loadFail === 0) {
+        this.openMap(660);
+      }
+    });
   }
 
   preventSpecialInputsFromBeingSwallowed() {
@@ -148,6 +160,22 @@ export class Application extends LitElement {
           return;
       }
     });
+  }
+
+  async openMap(fileID) {
+    try {
+      let filename = getEMFFilename(fileID);
+      let url = "https://game.bones-underground.org/maps/" + filename;
+      let response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`HTTP error. Status: ${response.status}`);
+      }
+      let buffer = await response.arrayBuffer();
+      let reader = new EOReader(buffer);
+      this.emf = EMF.read(reader);
+    } catch (e) {
+      console.error("Failed to load EMF %d: %s", fileID, e);
+    }
   }
 
   async firstUpdated(changes) {
@@ -178,6 +206,7 @@ export class Application extends LitElement {
         <eomap-editor
           .gfxLoader=${this.gfxLoader}
           .loadFail=${this.loadFail}
+          .emf=${this.emf}
           .layerVisibility=${this.layerVisibility}
           .tool=${this.tool}
           .selectedLayer=${this.selectedLayer}

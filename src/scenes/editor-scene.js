@@ -1,4 +1,3 @@
-import { EMF } from "../map";
 import { CommandInvoker } from "../command/command";
 import { SetGraphicCommand, FillCommand } from "../command/map-command";
 import { TilePos } from "../tilepos";
@@ -27,12 +26,6 @@ export class EditorScene extends Phaser.Scene {
     this.cameraControls = null;
   }
 
-  preload() {
-    // TODO: Drag the map up to the editor component
-    this.load.path = "https://game.bones-underground.org/";
-    this.load.json("map", "map/660");
-  }
-
   create() {
     this.currentPos = new TilePos();
 
@@ -46,7 +39,7 @@ export class EditorScene extends Phaser.Scene {
     this.map = this.add.eomap(
       this,
       this.textureCache,
-      EMF.from_json(this.cache.json.get("map")),
+      this.data.values.emf,
       this.cameras.main.width,
       this.cameras.main.height
     );
@@ -103,8 +96,10 @@ export class EditorScene extends Phaser.Scene {
     this.data.set("eyedrop", null);
 
     this.data.events.on("changedata-layerVisibility", () => {
-      this.cull();
+      this.updateLayerVisibility();
     });
+
+    this.updateLayerVisibility();
 
     this.scale.on("resize", this.resize, this);
     this.resize();
@@ -235,6 +230,13 @@ export class EditorScene extends Phaser.Scene {
     if (this.currentPos.x !== newPos.x || this.currentPos.y !== newPos.y) {
       this.currentPosDirty = true;
       this.currentPos = newPos;
+    }
+  }
+
+  updateLayerVisibility() {
+    let layerVisibility = this.data.values.layerVisibility;
+    for (let layer = 0; layer < layerVisibility.length; ++layer) {
+      this.map.setLayerVisibility(layer, layerVisibility[layer]);
     }
   }
 

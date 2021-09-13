@@ -17,6 +17,7 @@ import icon from "../assets/icon.svg";
 import { EditorScene } from "../scenes/editor-scene";
 
 import { GFXLoader } from "../gfx/load/gfx-loader";
+import { EMF } from "../data/emf";
 
 @customElement("eomap-editor")
 export class Editor extends LitElement {
@@ -25,6 +26,7 @@ export class Editor extends LitElement {
   static PHASER_DATA_KEYS = ["currentPos", "eyedrop"];
 
   static COMPONENT_DATA_KEYS = [
+    "emf",
     "tool",
     "layerVisibility",
     "gfxLoader",
@@ -93,6 +95,9 @@ export class Editor extends LitElement {
   @property({ type: GFXLoader })
   gfxLoader;
 
+  @property({ type: EMF })
+  emf;
+
   @property({ type: Number })
   loadFail;
 
@@ -115,18 +120,6 @@ export class Editor extends LitElement {
   game;
 
   componentDataForwarders = new Map();
-
-  onPostBoot(game) {
-    let scene = game.scene.getScene("editor");
-
-    this.setupPhaserChangeDataEvents(scene);
-    this.setupComponentDataForwardingToPhaser(scene);
-
-    scene.events.once("first-update", () => {
-      this.game = game;
-      this.updateInputEnabledState();
-    });
-  }
 
   setupPhaserChangeDataEvents(scene) {
     for (let key of Editor.PHASER_DATA_KEYS) {
@@ -153,7 +146,7 @@ export class Editor extends LitElement {
   }
 
   async setupPhaser() {
-    return new Phaser.Game({
+    let game = new Phaser.Game({
       type: Phaser.AUTO,
       disableContextMenu: true,
       scale: {
@@ -172,19 +165,25 @@ export class Editor extends LitElement {
         pixelArt: true,
         powerPreference: "high-performance",
       },
-      scene: [EditorScene],
-      callbacks: {
-        postBoot: this.onPostBoot.bind(this),
-      },
+    });
+
+    game.events.once("ready", () => {
+      let scene = new EditorScene();
+      game.scene.add("editor", scene);
+
+      scene.sys.events.once("ready", () => {
+        this.setupPhaserChangeDataEvents(scene);
+        this.setupComponentDataForwardingToPhaser(scene);
+        this.game = game;
+        this.updateInputEnabledState();
+      });
+
+      game.scene.start("editor");
     });
   }
 
   updated(changedProperties) {
-    if (
-      changedProperties.has("gfxLoader") &&
-      this.gfxLoader &&
-      this.loadFail === 0
-    ) {
+    if (changedProperties.has("emf") && this.emf) {
       this.setupPhaser();
     }
 

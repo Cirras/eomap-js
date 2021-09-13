@@ -51,3 +51,17 @@ export function removeFirst(array, element) {
     array.splice(index, 1);
   }
 }
+
+export function swap(array, indexA, indexB) {
+  let element = array[indexA];
+  array[indexA] = array[indexB];
+  array[indexB] = element;
+}
+
+export function getEGFFilename(fileID) {
+  return "gfx" + fileID.toString().padStart(3, "0") + ".egf";
+}
+
+export function getEMFFilename(fileID) {
+  return fileID.toString().padStart(5, "0") + ".emf";
+}

@@ -77,6 +77,10 @@ class Tool {
 
 export class Pencil extends Tool {
   handleLeftPointerDown(mapEditor) {
+    if (!mapEditor.selectedGraphic) {
+      return;
+    }
+
     mapEditor.doSetGraphicCommand(
       mapEditor.currentPos.x,
       mapEditor.currentPos.y,
@@ -88,7 +92,7 @@ export class Pencil extends Tool {
     mapEditor.doSetGraphicCommand(
       mapEditor.currentPos.x,
       mapEditor.currentPos.y,
-      0
+      null
     );
   }
 
@@ -102,7 +106,7 @@ export class Eraser extends Tool {
     mapEditor.doSetGraphicCommand(
       mapEditor.currentPos.x,
       mapEditor.currentPos.y,
-      0
+      null
     );
   }
 
@@ -110,7 +114,7 @@ export class Eraser extends Tool {
     mapEditor.doSetGraphicCommand(
       mapEditor.currentPos.x,
       mapEditor.currentPos.y,
-      0
+      null
     );
   }
 
@@ -175,6 +179,10 @@ export class Hand extends Tool {
 
 export class Fill extends Tool {
   handleLeftPointerDown(mapEditor) {
+    if (!mapEditor.selectedGraphic) {
+      return;
+    }
+
     mapEditor.doFillCommand(
       mapEditor.currentPos.x,
       mapEditor.currentPos.y,
