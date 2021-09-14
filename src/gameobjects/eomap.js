@@ -315,7 +315,7 @@ export class EOMap extends Phaser.GameObjects.GameObject {
         1,
         0,
         false,
-        false,
+        true,
         1,
         1,
         0,

@@ -1,6 +1,6 @@
 import ShelfPack from "@mapbox/shelf-pack";
 import { GFXProcessor } from "./gfx-processor";
-import { CanvasMultiTexture } from "./canvas-multi-texture";
+import { DrawableMultiTexture } from "./drawable-multi-texture";
 
 class TextureCacheEntry {
   constructor(data, page, bin, pixels) {
@@ -25,12 +25,9 @@ class TextureCacheEntry {
 }
 
 class TextureCachePage {
-  constructor(canvasTexturePage) {
-    this.canvasTexturePage = canvasTexturePage;
-    this.shelfPacker = new ShelfPack(
-      canvasTexturePage.width,
-      canvasTexturePage.height
-    );
+  constructor(texturePage) {
+    this.texturePage = texturePage;
+    this.shelfPacker = new ShelfPack(texturePage.width, texturePage.height);
   }
 
   get empty() {
@@ -48,14 +45,14 @@ export class TextureCache {
     this.pending = [];
     this.gfxProcessor = new GFXProcessor(scene, this.identifier);
 
-    this.canvasMultiTexture = new CanvasMultiTexture(
+    this.multiTexture = new DrawableMultiTexture(
       this.scene.textures,
       this.identifier,
       width,
       height
     );
 
-    let firstPage = new TextureCachePage(this.canvasMultiTexture.pages[0]);
+    let firstPage = new TextureCachePage(this.multiTexture.pages[0]);
     this.pages.push(firstPage);
   }
 
@@ -113,8 +110,8 @@ export class TextureCache {
   }
 
   addPage() {
-    let canvasTexturePage = this.canvasMultiTexture.addPage();
-    let newPage = new TextureCachePage(canvasTexturePage);
+    let texturePage = this.multiTexture.addPage();
+    let newPage = new TextureCachePage(texturePage);
 
     this.pages.push(newPage);
   }
@@ -128,7 +125,7 @@ export class TextureCache {
     }
 
     let cacheFrameKey = fileID + "." + resourceID;
-    this.canvasMultiTexture.add(
+    this.multiTexture.add(
       cacheFrameKey,
       pageIndex,
       bin.x,
@@ -140,7 +137,7 @@ export class TextureCache {
     let assetData = this.gfxProcessor.processAssetData(
       fileID,
       resourceID,
-      this.canvasMultiTexture.key,
+      this.multiTexture.key,
       cacheFrameKey
     );
 
@@ -154,10 +151,10 @@ export class TextureCache {
     this.gfxLoader
       .loadResource(asset.data.fileID, asset.data.resourceID)
       .then((pixels) => {
-        let page = asset.page.canvasTexturePage;
+        let page = asset.page.texturePage;
         let x = asset.bin.x;
         let y = asset.bin.y;
-        page.putData(pixels, x, y);
+        page.draw(pixels, x, y);
       });
   }
 
