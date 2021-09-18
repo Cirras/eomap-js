@@ -2,8 +2,13 @@ import { CommandInvoker } from "../command/command";
 import { SetGraphicCommand, FillCommand } from "../command/map-command";
 import { TilePos } from "../tilepos";
 import { EvictingTextureCache } from "../gfx/texture-cache";
-import { ToolBar } from "../toolbar";
-import { Eyedrop } from "../eyedrop";
+
+import { DrawTool } from "../tools/draw-tool";
+import { EraseTool } from "../tools/erase-tool";
+import { EyeDropperTool } from "../tools/eyedropper-tool";
+import { MoveTool } from "../tools/move-tool";
+import { FillTool } from "../tools/fill-tool";
+import { EntityTool } from "../tools/entity-tool";
 
 import "../gameobjects/eomap";
 
@@ -18,7 +23,8 @@ export class EditorScene extends Phaser.Scene {
     this.currentPos = null;
     this.textureCache = null;
     this.map = null;
-    this.toolBar = null;
+    this.tools = null;
+    this.currentTool = null;
     this.cursorSprite = null;
     this.cursors = null;
     this.yKey = null;
@@ -44,7 +50,8 @@ export class EditorScene extends Phaser.Scene {
       this.cameras.main.height
     );
 
-    this.toolBar = new ToolBar(this);
+    this.tools = this.createTools();
+    this.currentTool = null;
 
     this.cursorSprite = this.createTileCursor();
 
@@ -99,12 +106,28 @@ export class EditorScene extends Phaser.Scene {
       this.updateLayerVisibility();
     });
 
-    this.updateLayerVisibility();
+    this.data.events.on("changedata-tool", () => {
+      this.updateCurrentTool();
+    });
 
     this.scale.on("resize", this.resize, this);
+
+    this.updateLayerVisibility();
+    this.updateCurrentTool();
     this.resize();
 
     this.resetCameraPosition();
+  }
+
+  createTools() {
+    return new Map([
+      ["draw", new DrawTool()],
+      ["erase", new EraseTool()],
+      ["eyedropper", new EyeDropperTool()],
+      ["move", new MoveTool()],
+      ["fill", new FillTool()],
+      ["entity", new EntityTool()],
+    ]);
   }
 
   getTileCursorAsset() {
@@ -178,17 +201,16 @@ export class EditorScene extends Phaser.Scene {
 
   handlePointerMove(pointer) {
     this.ctrlKeyDown = pointer.event.ctrlKey;
-    this.toolBar.currentTool.pointerMove(this, pointer);
+    this.currentTool.pointerMove(this, pointer);
   }
 
   handlePointerDown(pointer) {
     this.ctrlKeyDown = pointer.event.ctrlKey;
-    this.toolBar.currentTool.pointerDown(this, pointer);
+    this.currentTool.pointerDown(this, pointer);
   }
 
   handlePointerUp(pointer) {
-    this.toolBar.currentTool.pointerUp(this, pointer);
-    this.commandInvoker.finalizeAggregate();
+    this.currentTool.pointerUp(this, pointer);
   }
 
   doSetGraphicCommand(x, y, newGfx) {
@@ -216,13 +238,6 @@ export class EditorScene extends Phaser.Scene {
     );
   }
 
-  doEyeDropper(x, y) {
-    let asset = this.getTileCursorAsset();
-    this.cursorSprite.play(asset.data.animation);
-    let graphic = this.map.emf.getTile(x, y).gfx[this.selectedLayer];
-    this.data.set("eyedrop", new Eyedrop(graphic));
-  }
-
   updateCurrentPos(pointerPos) {
     let worldPos = this.cameras.main.getWorldPoint(pointerPos.x, pointerPos.y);
     let newPos = this.getTilePosFromWorldPos(worldPos);
@@ -238,6 +253,10 @@ export class EditorScene extends Phaser.Scene {
     for (let layer = 0; layer < layerVisibility.length; ++layer) {
       this.map.setLayerVisibility(layer, layerVisibility[layer]);
     }
+  }
+
+  updateCurrentTool() {
+    this.currentTool = this.tools.get(this.data.values.tool);
   }
 
   getTilePosFromPointerPos(pointerPos) {

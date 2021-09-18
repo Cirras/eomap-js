@@ -14,14 +14,14 @@ import "@spectrum-web-components/theme/sp-theme.js";
 import "./menubar";
 import "./sidebar";
 import "./editor";
-import "./palette";
 import "./infobar";
+
+import { Palette } from "./palette";
 
 import { TilePos } from "../tilepos";
 import { GFXLoader } from "../gfx/load/gfx-loader";
 import { DownloadLoadingStrategy } from "../gfx/load/strategy/download-loading-strategy";
-import { Eyedrop } from "../eyedrop";
-import { Palette } from "./palette";
+import { Eyedrop } from "../tools/eyedrop";
 
 import { EMF } from "../data/emf";
 import { EOReader } from "../data/eo-reader";

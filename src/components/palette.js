@@ -23,7 +23,7 @@ import "phaser";
 import { PaletteScene } from "../scenes/palette-scene";
 
 import { GFXLoader } from "../gfx/load/gfx-loader";
-import { Eyedrop } from "../eyedrop";
+import { Eyedrop } from "../tools/eyedrop";
 
 @customElement("eomap-palette")
 export class Palette extends LitElement {
