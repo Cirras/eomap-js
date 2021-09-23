@@ -1,24 +1,19 @@
-import { getEGFFilename } from "../../../utils";
 import { LoadingStrategy } from "./loading-strategy";
 
 export class DownloadLoadingStrategy extends LoadingStrategy {
-  constructor(baseURL) {
+  constructor(url) {
     super();
-    this.baseURL = baseURL;
-    if (!this.baseURL.endsWith("/")) {
-      this.baseURL += "/";
+    this.url = url;
+    if (!this.url.endsWith("/")) {
+      this.url += "/";
     }
   }
 
-  async download(url) {
-    let response = await fetch(url);
+  async load(path) {
+    let response = await fetch(this.url + path);
     if (!response.ok) {
       throw new Error(`HTTP error. Status: ${response.status}`);
     }
     return response.arrayBuffer();
-  }
-
-  async loadEGF(fileID) {
-    return this.download(this.baseURL + "gfx/" + getEGFFilename(fileID));
   }
 }

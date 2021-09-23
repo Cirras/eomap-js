@@ -12,8 +12,9 @@ class PendingPromise {
   }
 }
 export class GFXLoader {
-  constructor(loadingStrategy) {
-    this.loadingStrategy = loadingStrategy;
+  constructor(egfStrategy, rawStrategy) {
+    this.egfStrategy = egfStrategy;
+    this.rawStrategy = rawStrategy;
     this.egfs = new Map();
     this.worker = this.setupWorker();
     this.pendingEGFs = new Map();
@@ -45,7 +46,7 @@ export class GFXLoader {
   }
 
   handleDIBMessage(data) {
-    let info = this.info(data.fileID, data.resourceID);
+    let info = this.resourceInfo(data.fileID, data.resourceID);
     if (this.pendingResources.has(info)) {
       let pending = this.pendingResources.get(info);
       this.pendingResources.delete(info);
@@ -86,7 +87,8 @@ export class GFXLoader {
       let pending = new PendingPromise();
       this.pendingEGFs.set(fileID, pending);
 
-      let buffer = await this.loadingStrategy.loadEGF(fileID);
+      let filename = getEGFFilename(fileID);
+      let buffer = await this.egfStrategy.load(filename);
 
       this.worker.postMessage(
         {
@@ -110,7 +112,7 @@ export class GFXLoader {
     return [];
   }
 
-  info(fileID, resourceID) {
+  resourceInfo(fileID, resourceID) {
     let result = null;
 
     let resourceInfo = this.egfs.get(fileID);
@@ -123,8 +125,12 @@ export class GFXLoader {
     return result;
   }
 
+  errorGfx() {
+    return new ImageData(1, 1);
+  }
+
   async loadResource(fileID, resourceID) {
-    let info = this.info(fileID, resourceID);
+    let info = this.resourceInfo(fileID, resourceID);
     if (info) {
       if (this.pendingResources.has(info)) {
         return this.pendingResources.get(info).promise;
@@ -153,6 +159,15 @@ export class GFXLoader {
       }
     }
 
-    return new ImageData(1, 1);
+    return this.errorGfx();
+  }
+
+  async loadRaw(path) {
+    try {
+      return await this.rawStrategy.load(path);
+    } catch (e) {
+      console.error("Failed to load %s: %s", path, e);
+    }
+    return this.errorGfx();
   }
 }

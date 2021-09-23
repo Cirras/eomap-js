@@ -1,5 +1,5 @@
 export class LoadingStrategy {
-  async loadEGF(fileID) {
-    throw new Error("loadEGF must be implemented");
+  async load(_path) {
+    throw new Error("LoadingStrategy.load() must be implemented");
   }
 }

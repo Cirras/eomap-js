@@ -26,6 +26,7 @@ import { Eyedrop } from "../tools/eyedrop";
 import { EMF } from "../data/emf";
 import { EOReader } from "../data/eo-reader";
 import { getEMFFilename } from "../utils";
+import { BundledLoadingStrategy } from "../gfx/load/strategy/bundled-loading-strategy";
 
 @customElement("eomap-application")
 export class Application extends LitElement {
@@ -125,10 +126,13 @@ export class Application extends LitElement {
   }
 
   initializeGFXLoader() {
-    let loadingStrategy = new DownloadLoadingStrategy(
-      "https://game.bones-underground.org/"
+    let egfStrategy = new DownloadLoadingStrategy(
+      "https://game.bones-underground.org/gfx"
     );
-    let gfxLoader = new GFXLoader(loadingStrategy);
+    let rawStrategy = new BundledLoadingStrategy(
+      require.context("../assets/bundled", true, /\.png$/)
+    );
+    let gfxLoader = new GFXLoader(egfStrategy, rawStrategy);
     let promises = [2, 3, 4, 5, 6, 7, 22].map((fileID) =>
       gfxLoader.loadEGF(fileID).catch((error) => {
         ++this.loadFail;

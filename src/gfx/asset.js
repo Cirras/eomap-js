@@ -1,11 +1,13 @@
-class GFXData {
-  constructor(fileID, resourceID, textureFrame, width, height, animation) {
-    this.fileID = fileID;
-    this.resourceID = resourceID;
+export class Asset {
+  constructor(textureFrame, width, height, animation) {
     this.textureFrame = textureFrame;
     this.width = width;
     this.height = height;
     this.animation = animation;
+  }
+
+  async load(_gfxLoader) {
+    throw new Error("Asset.load() must be implemented");
   }
 
   getFrame(index) {
@@ -31,18 +33,41 @@ class GFXData {
   }
 }
 
-export class GFXProcessor {
+class ResourceAsset extends Asset {
+  constructor(textureFrame, width, height, animation, fileID, resourceID) {
+    super(textureFrame, width, height, animation);
+    this.fileID = fileID;
+    this.resourceID = resourceID;
+  }
+
+  async load(gfxLoader) {
+    return gfxLoader.loadResource(this.fileID, this.resourceID);
+  }
+}
+
+class RawAsset extends Asset {
+  constructor(textureFrame, path) {
+    super(textureFrame, textureFrame.width, textureFrame.height, null);
+    this.path = path;
+  }
+
+  async load(gfxLoader) {
+    return gfxLoader.loadRaw(this.path);
+  }
+}
+
+export class AssetFactory {
   constructor(scene, identifier) {
     this.scene = scene;
     this.identifier = identifier;
   }
 
-  processAssetData(fileID, resourceID, textureKey, frameKey) {
-    let tileCursor = this.processTileCursor(
-      fileID,
-      resourceID,
+  createResource(textureKey, frameKey, fileID, resourceID) {
+    let tileCursor = this.createTileCursor(
       textureKey,
-      frameKey
+      frameKey,
+      fileID,
+      resourceID
     );
 
     if (tileCursor) {
@@ -84,17 +109,17 @@ export class GFXProcessor {
       height = sizeFrame.height;
     }
 
-    return new GFXData(
-      fileID,
-      resourceID,
+    return new ResourceAsset(
       textureFrame,
       width,
       height,
-      animation
+      animation,
+      fileID,
+      resourceID
     );
   }
 
-  processTileCursor(fileID, resourceID, textureKey, frameKey) {
+  createTileCursor(textureKey, frameKey, fileID, resourceID) {
     if (fileID !== 2 || resourceID !== 124) {
       return null;
     }
@@ -125,14 +150,24 @@ export class GFXProcessor {
     let width = sizeFrame.width;
     let height = sizeFrame.height;
 
-    return new GFXData(
-      fileID,
-      resourceID,
+    return new ResourceAsset(
       textureFrame,
       width,
       height,
-      animation
+      animation,
+      fileID,
+      resourceID
     );
+  }
+
+  createSpec(textureKey, frameKey, tileSpec) {
+    let textureFrame = this.getTextureFrame(textureKey, frameKey);
+    return new RawAsset(textureFrame, `specs/${tileSpec}.png`);
+  }
+
+  createEntity(textureKey, frameKey, entityType) {
+    let textureFrame = this.getTextureFrame(textureKey, frameKey);
+    return new RawAsset(textureFrame, `entities/${entityType}.png`);
   }
 
   createAnimationFrames(texture, frame, frameWidth, frameHeight) {
@@ -251,6 +286,11 @@ export class GFXProcessor {
     }
 
     return animationFrames;
+  }
+
+  getTextureFrame(textureKey, frameKey) {
+    let texture = this.scene.textures.get(textureKey);
+    return texture.get(frameKey);
   }
 
   getAnimationKey(fileKey, frameKey) {

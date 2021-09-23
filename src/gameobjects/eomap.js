@@ -25,8 +25,8 @@ const calcDepth = (x, y, layer) => {
 const depthComparator = (a, b) => a.depth - b.depth;
 
 class TileGraphic {
-  constructor(asset, x, y, layer, depth, alpha) {
-    this.asset = asset;
+  constructor(cacheEntry, x, y, layer, depth, alpha) {
+    this.cacheEntry = cacheEntry;
     this.x = x;
     this.y = y;
     this.layer = layer;
@@ -35,11 +35,11 @@ class TileGraphic {
   }
 
   get width() {
-    return this.asset.data.width;
+    return this.cacheEntry.asset.width;
   }
 
   get height() {
-    return this.asset.data.height;
+    return this.cacheEntry.asset.height;
   }
 }
 
@@ -161,7 +161,7 @@ export class EOMap extends Phaser.GameObjects.GameObject {
     let oldGraphic = this.tileGraphics[graphicIndex];
 
     if (oldGraphic) {
-      oldGraphic.asset.decRef();
+      oldGraphic.cacheEntry.decRef();
       for (let section of this.findSections(oldGraphic)) {
         section.delete(graphicIndex);
       }
@@ -180,27 +180,27 @@ export class EOMap extends Phaser.GameObjects.GameObject {
 
     let resourceID = displayGfx + 100;
 
-    let asset = this.textureCache.get(info.file, resourceID);
-    if (!asset) {
+    let cacheEntry = this.textureCache.getResource(info.file, resourceID);
+    if (!cacheEntry) {
       console.debug("Could not load gfx %d/%d.", displayGfx, info.file);
       return;
     }
 
-    asset.incRef();
+    cacheEntry.incRef();
 
     let tilex = info.xoff + x * 32 - y * 32;
     let tiley = info.yoff + x * 16 + y * 16;
 
     if (info.centered) {
-      tilex -= Math.floor(asset.data.width / 2) - 32;
+      tilex -= Math.floor(cacheEntry.asset.width / 2) - 32;
     }
 
     if (layer !== 0 && layer !== 7) {
-      tiley -= asset.data.height - 32;
+      tiley -= cacheEntry.asset.height - 32;
     }
 
     let tileGraphic = new TileGraphic(
-      asset,
+      cacheEntry,
       tilex,
       tiley,
       layer,
@@ -296,7 +296,7 @@ export class EOMap extends Phaser.GameObjects.GameObject {
     renderer.pipelines.preBatch(src);
 
     for (let tileGraphic of this.renderList) {
-      let frame = tileGraphic.asset.data.getFrame(this.animationFrame);
+      let frame = tileGraphic.cacheEntry.asset.getFrame(this.animationFrame);
       let texture = frame.glTexture;
       let textureUnit = pipeline.setTexture2D(texture, src);
 
@@ -355,7 +355,7 @@ export class EOMap extends Phaser.GameObjects.GameObject {
       ctx.save();
       ctx.globalAlpha = tileGraphic.alpha;
 
-      let frame = tileGraphic.asset.data.getFrame(this.animationFrame);
+      let frame = tileGraphic.cacheEntry.asset.getFrame(this.animationFrame);
       let cd = frame.canvasData;
       let frameX = cd.x;
       let frameY = cd.y;
@@ -395,7 +395,7 @@ export class EOMap extends Phaser.GameObjects.GameObject {
 
   destroy(fromScene) {
     for (let index in this.tileGraphics) {
-      this.tileGraphics[index].asset.decRef();
+      this.tileGraphics[index].cacheEntry.decRef();
       delete this.tileGraphics[index];
     }
 

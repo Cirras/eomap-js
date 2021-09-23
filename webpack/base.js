@@ -43,12 +43,8 @@ module.exports = {
         use: [MiniCssExtractPlugin.loader, "css-loader"]
       },
       {
-        test: [/\.vert$/, /\.frag$/],
-        use: "raw-loader"
-      },
-      {
         test: /\.(gif|png|jpe?g|svg|xml)$/i,
-        use: "file-loader"
+        use: "url-loader"
       }
     ]
   },

@@ -1,13 +1,12 @@
 import ShelfPack from "@mapbox/shelf-pack";
-import { GFXProcessor } from "./gfx-processor";
+import { AssetFactory } from "./asset";
 import { DrawableMultiTexture } from "./drawable-multi-texture";
 
 class TextureCacheEntry {
-  constructor(data, page, bin, pixels) {
-    this.data = data;
+  constructor(asset, page, bin) {
+    this.asset = asset;
     this.page = page;
     this.bin = bin;
-    this.pixels = pixels;
     this.refCount = 0;
   }
 
@@ -17,7 +16,7 @@ class TextureCacheEntry {
 
   decRef() {
     if (this.refCount === 0) {
-      throw new Error("Negative asset entry refCount");
+      throw new Error("Negative refCount");
     }
 
     --this.refCount;
@@ -41,9 +40,9 @@ export class TextureCache {
     this.gfxLoader = gfxLoader;
     this.identifier = Phaser.Utils.String.UUID();
     this.pages = [];
-    this.assets = new Map();
+    this.entries = new Map();
     this.pending = [];
-    this.gfxProcessor = new GFXProcessor(scene, this.identifier);
+    this.assetFactory = new AssetFactory(scene, this.identifier);
 
     this.multiTexture = new DrawableMultiTexture(
       this.scene.textures,
@@ -56,50 +55,109 @@ export class TextureCache {
     this.pages.push(firstPage);
   }
 
-  makeAssetKey(fileID, resourceID) {
+  makeResourceKey(fileID, resourceID) {
     return fileID + "." + resourceID;
   }
 
-  get(fileID, resourceID) {
-    let asset = this.assets.get(this.makeAssetKey(fileID, resourceID));
-    if (!asset) {
-      asset = this.add(fileID, resourceID);
-    }
-    return asset;
+  makeSpecKey(tileSpec) {
+    return "spec." + tileSpec;
   }
 
-  add(fileID, resourceID) {
+  makeEntityKey(entityType) {
+    return "entity." + entityType;
+  }
+
+  getEntry(key, getDimensions, createAsset) {
+    let entry = this.entries.get(key);
+    if (!entry) {
+      let dimensions = getDimensions();
+      entry = this.add(key, dimensions.width, dimensions.height, createAsset);
+    }
+    return entry;
+  }
+
+  getResource(fileID, resourceID) {
+    let key = this.makeResourceKey(fileID, resourceID);
+
+    let getDimensions = () => {
+      let width = 1;
+      let height = 1;
+      let info = this.gfxLoader.resourceInfo(fileID, resourceID);
+      if (info) {
+        width = info.width;
+        height = info.height;
+      }
+      return {
+        width: width,
+        height: height,
+      };
+    };
+
+    let createAsset = () => {
+      return this.assetFactory.createResource(
+        this.multiTexture.key,
+        key,
+        fileID,
+        resourceID
+      );
+    };
+
+    return this.getEntry(key, getDimensions, createAsset);
+  }
+
+  getSpec(tileSpec) {
+    let key = this.makeSpecKey(tileSpec);
+
+    let getDimensions = () => ({
+      width: 64,
+      height: 32,
+    });
+
+    let createAsset = () => {
+      return this.assetFactory.createSpec(this.multiTexture.key, key, tileSpec);
+    };
+
+    return this.getEntry(key, getDimensions, createAsset);
+  }
+
+  getEntity(entityType) {
+    let key = this.makeEntityKey(entityType);
+
+    let getDimensions = () => ({
+      width: 64,
+      height: 32,
+    });
+
+    let createAsset = () => {
+      return this.assetFactory.createEntity(
+        this.multiTexture.key,
+        key,
+        entityType
+      );
+    };
+
+    return this.getEntry(key, getDimensions, createAsset);
+  }
+
+  add(key, width, height, createAsset) {
     let cacheEntry = null;
 
-    let info = this.gfxLoader.info(fileID, resourceID);
-    if (!info) {
-      return cacheEntry;
-    }
-
     for (let i = 0; i < this.pages.length; ++i) {
-      cacheEntry = this.addToPage(
-        i,
-        fileID,
-        resourceID,
-        info.width,
-        info.height
-      );
+      cacheEntry = this.addToPage(i, key, width, height, createAsset);
 
       if (cacheEntry) {
-        this.assets.set(this.makeAssetKey(fileID, resourceID), cacheEntry);
+        this.entries.set(key, cacheEntry);
         break;
       }
 
       if (this.pages[i].empty) {
-        throw new Error(
-          `Failed to cache resource ${resourceID} from file ${fileID}`
-        );
+        throw new Error(`Failed to cache \"${key}\"`);
       }
     }
 
     if (!cacheEntry) {
       this.handleOutOfSpace();
-      return this.add(fileID, resourceID);
+      return this.add(key, width, height, createAsset);
     }
 
     return cacheEntry;
@@ -116,7 +174,7 @@ export class TextureCache {
     this.pages.push(newPage);
   }
 
-  addToPage(pageIndex, fileID, resourceID, width, height) {
+  addToPage(pageIndex, key, width, height, createAsset) {
     let page = this.pages[pageIndex];
     let bin = page.shelfPacker.packOne(width, height);
 
@@ -124,38 +182,23 @@ export class TextureCache {
       return null;
     }
 
-    let cacheFrameKey = fileID + "." + resourceID;
-    this.multiTexture.add(
-      cacheFrameKey,
-      pageIndex,
-      bin.x,
-      bin.y,
-      width,
-      height
-    );
+    this.multiTexture.add(key, pageIndex, bin.x, bin.y, width, height);
 
-    let assetData = this.gfxProcessor.processAssetData(
-      fileID,
-      resourceID,
-      this.multiTexture.key,
-      cacheFrameKey
-    );
+    let asset = createAsset();
 
-    let asset = new TextureCacheEntry(assetData, page, bin);
-    this.pending.push(asset);
+    let entry = new TextureCacheEntry(asset, page, bin);
+    this.pending.push(entry);
 
-    return asset;
+    return entry;
   }
 
-  loadAsset(asset) {
-    this.gfxLoader
-      .loadResource(asset.data.fileID, asset.data.resourceID)
-      .then((pixels) => {
-        let page = asset.page.texturePage;
-        let x = asset.bin.x;
-        let y = asset.bin.y;
-        page.draw(pixels, x, y);
-      });
+  loadEntry(entry) {
+    entry.asset.load(this.gfxLoader).then((pixels) => {
+      let page = entry.page.texturePage;
+      let x = entry.bin.x;
+      let y = entry.bin.y;
+      page.draw(pixels, x, y);
+    });
   }
 
   update() {
@@ -166,8 +209,8 @@ export class TextureCache {
 
     this.pending.sort((a, b) => b.refCount - a.refCount);
 
-    for (let asset of this.pending) {
-      this.loadAsset(asset);
+    for (let entry of this.pending) {
+      this.loadEntry(entry);
       ++loaded;
       elapsed = performance.now() - start;
       if (elapsed > loadTime) {
@@ -177,7 +220,7 @@ export class TextureCache {
 
     this.pending.splice(0, loaded);
     if (loaded > 0) {
-      console.log(`Sent ${loaded} assets to the worker in ${elapsed}ms`);
+      console.debug(`Sent ${loaded} entries to the worker in ${elapsed}ms`);
     }
   }
 }
@@ -188,10 +231,10 @@ export class EvictingTextureCache extends TextureCache {
     this.canEvict = true;
   }
 
-  add(fileID, resourceID) {
-    let asset = super.add(fileID, resourceID);
+  add(key, width, height, createAsset) {
+    let entry = super.add(key, width, height, createAsset);
     this.canEvict = true;
-    return asset;
+    return entry;
   }
 
   handleOutOfSpace() {
@@ -203,18 +246,18 @@ export class EvictingTextureCache extends TextureCache {
   }
 
   evict() {
-    for (let [key, value] of this.assets.entries()) {
+    for (let [key, value] of this.entries.entries()) {
       if (value.refCount === 0) {
-        this.evictAsset(key);
+        this.evictEntry(key);
       }
     }
     this.canEvict = false;
   }
 
-  evictAsset(assetKey) {
-    let asset = this.assets.get(assetKey);
-    let data = asset.data;
-    let texture = this.scene.textures.get(data.textureKey);
+  evictEntry(key) {
+    let entry = this.entries.get(key);
+    let asset = entry.asset;
+    let texture = this.scene.textures.get(asset.textureKey);
 
     let removeFromTexture = (frame) => {
       delete texture.frames[frame.name];
@@ -222,15 +265,15 @@ export class EvictingTextureCache extends TextureCache {
       frame.destroy();
     };
 
-    removeFromTexture(asset.data.textureFrame);
+    removeFromTexture(asset.textureFrame);
 
-    if (data.animation) {
-      for (let animFrame of data.animation.frames) {
+    if (asset.animation) {
+      for (let animFrame of asset.animation.frames) {
         removeFromTexture(animFrame.frame);
       }
-      data.animation.destroy();
+      asset.animation.destroy();
     }
 
-    this.assets.delete(assetKey);
+    this.entries.delete(key);
   }
 }

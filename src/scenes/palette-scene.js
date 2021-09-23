@@ -18,20 +18,20 @@ class PaletteLayerResource {
       return;
     }
 
-    let asset = this.getAsset();
-    asset.incRef();
+    let cacheEntry = this.getCacheEntry();
+    cacheEntry.incRef();
 
-    if (asset.data.animation) {
+    if (cacheEntry.asset.animation) {
       this.sprite = this.layer.scene.add
         .sprite(this.x, this.y)
-        .play(asset.data.animation);
+        .play(cacheEntry.asset.animation);
       this.layer.scene.syncToMasterAnimation(this.sprite);
     } else {
       this.sprite = this.layer.scene.add.sprite(
         this.x,
         this.y,
-        asset.data.textureKey,
-        asset.data.frameKey
+        cacheEntry.asset.textureKey,
+        cacheEntry.asset.frameKey
       );
     }
 
@@ -55,7 +55,7 @@ class PaletteLayerResource {
       return;
     }
 
-    this.getAsset().decRef();
+    this.getCacheEntry().decRef();
     this.sprite.destroy();
     this.sprite = null;
   }
@@ -78,12 +78,15 @@ class PaletteLayerResource {
     }
   }
 
-  getAsset() {
-    return this.layer.scene.textureCache.get(this.fileID, this.resourceID);
+  getCacheEntry() {
+    return this.layer.scene.textureCache.getResource(
+      this.fileID,
+      this.resourceID
+    );
   }
 
   preload() {
-    this.getAsset();
+    this.getCacheEntry();
   }
 
   get selected() {
@@ -136,7 +139,7 @@ class PaletteLayer {
 
     for (let resourceID of resourceIDs) {
       if (resourceID > 100) {
-        let info = gfxLoader.info(this.fileID, resourceID);
+        let info = gfxLoader.resourceInfo(this.fileID, resourceID);
         result.set(
           resourceID,
           new PaletteLayerResource(
@@ -419,10 +422,10 @@ export class PaletteScene extends Phaser.Scene {
 
   // FIXME: This is a stupid idea.
   createMasterAnimation() {
-    let asset = this.textureCache.get(2, 124);
-    asset.incRef();
+    let cacheEntry = this.textureCache.getResource(2, 124);
+    cacheEntry.incRef();
 
-    let frames = asset.data.frames.map((f) => ({
+    let frames = cacheEntry.asset.frames.map((f) => ({
       key: f.texture.key,
       frame: f.name,
     }));

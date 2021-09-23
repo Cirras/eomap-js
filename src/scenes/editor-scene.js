@@ -131,18 +131,21 @@ export class EditorScene extends Phaser.Scene {
   }
 
   getTileCursorAsset() {
-    return this.textureCache.get(2, 124);
+    return this.textureCache.getResource(2, 124).asset;
   }
 
   createTileCursor() {
-    let asset = this.getTileCursorAsset();
-    asset.incRef();
+    let cacheEntry = this.textureCache.getResource(2, 124);
+    cacheEntry.incRef();
 
     let cursorSprite = this.add.sprite(0, 0);
     cursorSprite.visible = false;
     cursorSprite.setDepth(1.0);
     cursorSprite.setOrigin(0);
-    cursorSprite.setTexture(asset.data.textureKey, asset.data.frames[0].name);
+    cursorSprite.setTexture(
+      cacheEntry.asset.textureKey,
+      cacheEntry.asset.frames[0].name
+    );
 
     return cursorSprite;
   }

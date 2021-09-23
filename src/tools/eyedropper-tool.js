@@ -13,7 +13,7 @@ export class EyeDropperTool extends Tool {
     }
 
     let asset = mapEditor.getTileCursorAsset();
-    mapEditor.cursorSprite.play(asset.data.animation);
+    mapEditor.cursorSprite.play(asset.animation);
 
     mapEditor.data.set("eyedrop", new Eyedrop(graphic));
   }
