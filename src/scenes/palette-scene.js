@@ -1,10 +1,8 @@
 import { TextureCache } from "../gfx/texture-cache";
 
-class PaletteLayerResource {
-  constructor(layer, fileID, resourceID, width, height) {
+class PaletteLayerEntry {
+  constructor(layer, width, height) {
     this.layer = layer;
-    this.fileID = fileID;
-    this.resourceID = resourceID;
     this.width = width;
     this.height = height;
     this._x = 0;
@@ -79,10 +77,7 @@ class PaletteLayerResource {
   }
 
   getCacheEntry() {
-    return this.layer.scene.textureCache.getResource(
-      this.fileID,
-      this.resourceID
-    );
+    throw new Error("PaletteLayerEntry.getCacheEntry() must be implemented");
   }
 
   preload() {
@@ -116,13 +111,38 @@ class PaletteLayerResource {
   }
 }
 
+class PaletteLayerResourceEntry extends PaletteLayerEntry {
+  constructor(layer, width, height, fileID, resourceID) {
+    super(layer, width, height);
+    this.fileID = fileID;
+    this.resourceID = resourceID;
+  }
+
+  getCacheEntry() {
+    return this.layer.scene.textureCache.getResource(
+      this.fileID,
+      this.resourceID
+    );
+  }
+}
+
+class PaletteLayerSpecEntry extends PaletteLayerEntry {
+  constructor(layer, tileSpec) {
+    super(layer, 64, 32);
+    this.tileSpec = tileSpec;
+  }
+
+  getCacheEntry() {
+    return this.layer.scene.textureCache.getSpec(this.tileSpec);
+  }
+}
+
 class PaletteLayer {
   static SECTION_HEIGHT = 512;
 
-  constructor(scene, fileID) {
+  constructor(scene) {
     this.scene = scene;
-    this.fileID = fileID;
-    this.resources = this.createResources();
+    this.entries = new Map();
     this.sections = [];
     this._selectedResource = null;
     this.width = 0;
@@ -131,33 +151,8 @@ class PaletteLayer {
     this.dirty = true;
   }
 
-  createResources() {
-    let result = new Map();
-
-    let gfxLoader = this.scene.data.values.gfxLoader;
-    let resourceIDs = gfxLoader.resourceIDs(this.fileID);
-
-    for (let resourceID of resourceIDs) {
-      if (resourceID > 100) {
-        let info = gfxLoader.resourceInfo(this.fileID, resourceID);
-        result.set(
-          resourceID,
-          new PaletteLayerResource(
-            this,
-            this.fileID,
-            resourceID,
-            info.width,
-            info.height
-          )
-        );
-      }
-    }
-
-    return result;
-  }
-
   hide() {
-    for (let resource of this.resources.values()) {
+    for (let resource of this.entries.values()) {
       resource.hide();
     }
   }
@@ -207,7 +202,7 @@ class PaletteLayer {
 
   layout() {
     if (this.dirty) {
-      this.layoutAssets();
+      this.layoutEntries();
     }
     this.cull();
     this.scene.data.set("contentHeight", this.height);
@@ -221,7 +216,7 @@ class PaletteLayer {
     return section;
   }
 
-  layoutAssets() {
+  layoutEntries() {
     const xRes = 32;
     const yRes = 32;
 
@@ -231,18 +226,9 @@ class PaletteLayer {
     this.sections.length = 0;
     this.height = 0;
 
-    for (let resource of this.resources.values()) {
-      let width = resource.width;
-      let height = resource.height;
-
-      if (this.fileID === 3) {
-        width = 64;
-        height = 32;
-      }
-
-      if (this.fileID === 6 && width >= 32 * 4) {
-        width = Math.floor(width / 4);
-      }
+    for (let entry of this.entries.values()) {
+      let width = entry.width;
+      let height = entry.height;
 
       let blockWidth = Math.floor((width + xRes - 1) / xRes);
       let blockHeight = Math.floor((height + yRes - 1) / yRes);
@@ -270,13 +256,13 @@ class PaletteLayer {
               colHeights[i] = maxY + blockHeight;
             }
 
-            resource.x = x * xRes;
-            resource.y = (y - 1) * yRes;
+            entry.x = x * xRes;
+            entry.y = (y - 1) * yRes;
 
-            this.height = Math.max(resource.y + resource.height, this.height);
+            this.height = Math.max(entry.y + entry.height, this.height);
 
-            let startSection = this.calcSection(resource.y);
-            let endSection = this.calcSection(resource.y + resource.height);
+            let startSection = this.calcSection(entry.y);
+            let endSection = this.calcSection(entry.y + entry.height);
 
             let sectionsToAdd = endSection + 1 - this.sections.length;
             for (let i = 0; i < sectionsToAdd; ++i) {
@@ -284,7 +270,7 @@ class PaletteLayer {
             }
 
             for (let i = startSection; i <= endSection; ++i) {
-              this.sections[i].push(resource);
+              this.sections[i].push(entry);
             }
 
             foundPosition = true;
@@ -319,20 +305,19 @@ class PaletteLayer {
     this.scene.updateSelectedGraphic();
   }
 }
-
 class LayerPreload {
   static PRELOAD_PER_FRAME = 5;
 
   constructor(layer) {
     this.layer = layer;
-    this.preloadResources = Array.from(this.layer.resources.values());
+    this.preloadEntries = Array.from(this.layer.entries.values());
   }
 
   update() {
     let pending = this.layer.scene.textureCache.pending;
     let amount = 0;
 
-    for (let resource of this.preloadResources) {
+    for (let resource of this.preloadEntries) {
       if (pending.length >= LayerPreload.PRELOAD_PER_FRAME) {
         break;
       }
@@ -340,11 +325,11 @@ class LayerPreload {
       ++amount;
     }
 
-    this.preloadResources.splice(0, amount);
+    this.preloadEntries.splice(0, amount);
   }
 
   get finished() {
-    return this.preloadResources.length === 0;
+    return this.preloadEntries.length === 0;
   }
 }
 
@@ -389,7 +374,12 @@ export class PaletteScene extends Phaser.Scene {
           return;
         }
 
-        let resource = this.selectedLayer.resources.get(value.graphic + 100);
+        let entryKey = value.graphic;
+        if (this.data.values.selectedLayer < 9) {
+          entryKey += 100;
+        }
+
+        let resource = this.selectedLayer.entries.get(entryKey);
         if (resource) {
           resource.select();
           this.selectedLayer.scroll = resource.y;
@@ -415,9 +405,59 @@ export class PaletteScene extends Phaser.Scene {
   createLayers() {
     let result = [];
     for (let fileID of [3, 4, 5, 6, 6, 7, 3, 22, 5]) {
-      result.push(new PaletteLayer(this, fileID));
+      result.push(this.createResourceLayer(fileID));
     }
+    result.push(this.createSpecLayer());
     return result;
+  }
+
+  createResourceLayer(fileID) {
+    let layer = new PaletteLayer(this);
+    let gfxLoader = this.data.values.gfxLoader;
+    let resourceIDs = gfxLoader.resourceIDs(fileID);
+
+    for (let resourceID of resourceIDs) {
+      if (resourceID < 101) {
+        continue;
+      }
+
+      let info = gfxLoader.resourceInfo(fileID, resourceID);
+      let width = info.width;
+      let height = info.height;
+
+      if (fileID === 3 || fileID === 7) {
+        width = 64;
+        height = 32;
+      }
+
+      if (fileID === 6 && width >= 32 * 4) {
+        width = Math.floor(width / 4);
+      }
+
+      let resource = new PaletteLayerResourceEntry(
+        layer,
+        width,
+        height,
+        fileID,
+        resourceID
+      );
+
+      layer.entries.set(resourceID, resource);
+    }
+
+    return layer;
+  }
+
+  createSpecLayer() {
+    let layer = new PaletteLayer(this);
+
+    for (let tileSpec = 0; tileSpec < 37; ++tileSpec) {
+      let spec = new PaletteLayerSpecEntry(layer, tileSpec);
+
+      layer.entries.set(tileSpec, spec);
+    }
+
+    return layer;
   }
 
   // FIXME: This is a stupid idea.
