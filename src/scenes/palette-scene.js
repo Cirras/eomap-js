@@ -403,10 +403,8 @@ export class PaletteScene extends Phaser.Scene {
     this.data.events.on(
       "changedata-contentScroll",
       (_parent, value, _previousValue) => {
-        if (this.selectedLayer.scroll !== value) {
-          this.cameras.main.scrollY = value;
-          this.selectedLayer.scroll = value;
-        }
+        this.cameras.main.scrollY = value;
+        this.selectedLayer.scroll = value;
       }
     );
 
@@ -550,8 +548,11 @@ export class PaletteScene extends Phaser.Scene {
   }
 
   updateScroll() {
-    this.cameras.main.scrollY = this.selectedLayer.scroll;
-    this.data.set("contentScroll", this.selectedLayer.scroll);
+    this.events.emit(
+      "scroll-changed",
+      this.selectedLayer.scroll,
+      this.data.values.contentScroll
+    );
   }
 
   updateSelectedDrawID() {

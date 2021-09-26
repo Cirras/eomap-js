@@ -269,18 +269,16 @@ export class Palette extends LitElement {
 
   setupContentScrollMirroring(scene) {
     scene.data.set("contentScroll", 0);
-    this.onPaletteContentScroll = (_event) => {
+    this.onPaletteContentScroll = () => {
       scene.data.set("contentScroll", this.paletteScrollContainer.scrollTop);
     };
 
-    scene.data.events.on(
-      "changedata-contentScroll",
-      (_parent, value, previousValue) => {
-        if (value !== previousValue) {
-          this.paletteScrollContainer.scrollTop = value;
-        }
+    scene.events.on("scroll-changed", (value, previousValue) => {
+      if (value !== previousValue) {
+        this.paletteScrollContainer.scrollTop = value;
       }
-    );
+      this.onPaletteContentScroll();
+    });
   }
 
   setupContentHeightListener() {
