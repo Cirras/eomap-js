@@ -7,20 +7,20 @@ const RDG = 0.001; // gap between depth of each row of tiles
 
 // prettier-ignore
 const layerInfo = [
-    { file: 3,  xoff: 0,  yoff: 0,  alpha: 1.0, centered: false, depth:-2.0 + TDG * 1 }, // Ground
-    { file: 4,  xoff:-2,  yoff:-2,  alpha: 1.0, centered: true,  depth: 0.0 + TDG * 4 }, // Objects
-    { file: 5,  xoff:-2,  yoff:-2,  alpha: 1.0, centered: true,  depth: 0.0 + TDG * 6 }, // Overlay
-    { file: 6,  xoff: 0,  yoff:-1,  alpha: 1.0, centered: false, depth: 0.0 + TDG * 5 }, // Down Wall
-    { file: 6,  xoff: 32, yoff:-1,  alpha: 1.0, centered: false, depth:-RDG + TDG * 9 }, // Right Wall
-    { file: 7,  xoff: 0,  yoff:-64, alpha: 1.0, centered: false, depth: 0.0 + TDG * 7 }, // Roof
-    { file: 3,  xoff: 0,  yoff:-32, alpha: 1.0, centered: false, depth: 0.0 + TDG * 2 }, // Top
-    { file: 22, xoff:-24, yoff:-12, alpha: 0.2, centered: false, depth:-1.0 + TDG * 2 }, // Shadow
-    { file: 5,  xoff:-2,  yoff:-2,  alpha: 1.0, centered: true,  depth: 1.0 + TDG * 8 }  // Overlay 2
+    { xoff: 0,  yoff: 0,  alpha: 1.0,  centered: false, bottomOrigin: false, depth:-3.0 + TDG * 1 }, // Ground
+    { xoff:-2,  yoff:-2,  alpha: 1.0,  centered: true,  bottomOrigin: true,  depth: 0.0 + TDG * 1 }, // Objects
+    { xoff:-2,  yoff:-2,  alpha: 1.0,  centered: true,  bottomOrigin: true,  depth: 0.0 + TDG * 3 }, // Overlay
+    { xoff: 0,  yoff:-1,  alpha: 1.0,  centered: false, bottomOrigin: true,  depth: 0.0 + TDG * 2 }, // Down Wall
+    { xoff: 32, yoff:-1,  alpha: 1.0,  centered: false, bottomOrigin: true,  depth:-RDG + TDG * 5 }, // Right Wall
+    { xoff: 0,  yoff:-64, alpha: 1.0,  centered: false, bottomOrigin: true,  depth: 0.0 + TDG * 4 }, // Roof
+    { xoff: 0,  yoff:-32, alpha: 1.0,  centered: false, bottomOrigin: true,  depth: 0.0 + TDG * 2 }, // Top
+    { xoff:-24, yoff:-12, alpha: 0.2,  centered: false, bottomOrigin: false, depth:-1.0 + TDG * 1 }, // Shadow
+    { xoff:-2,  yoff:-2,  alpha: 1.0,  centered: true,  bottomOrigin: true,  depth: 1.0 + TDG * 1 }, // Overlay 2
+    { xoff: 0,  yoff: 0,  alpha: 0.25, centered: false, bottomOrigin: false, depth:-2.0 + TDG * 1 }, // TileSpec
+    { xoff: 0,  yoff: 0,  alpha: 0.25, centered: false, bottomOrigin: false, depth: 3.0 + TDG * 1 }  // TileSpec overlay
 ];
 
-const calcDepth = (x, y, layer) => {
-  return layerInfo[layer].depth + y * RDG + x * layerInfo.length * TDG;
-};
+const layerFiles = [3, 4, 5, 6, 6, 7, 3, 22, 5];
 
 const depthComparator = (a, b) => a.depth - b.depth;
 
@@ -44,14 +44,15 @@ class TileGraphic {
 }
 
 export class EOMap extends Phaser.GameObjects.GameObject {
-  constructor(scene, textureCache, emf, width, height) {
+  constructor(scene, textureCache, emf, width, height, layerVisibility) {
     super(scene, "EOMap");
 
     this.emf = emf;
     this.textureCache = textureCache;
     this.width = width;
     this.height = height;
-    this.layerVisibility = new Array(layerInfo.length).fill(true);
+    this.layerVisibility = layerVisibility;
+    this.selectedLayer = 0;
     this.sectionWidth = Math.ceil((this.emf.width * 64) / SECTION_SIZE);
     this.sectionHeight = Math.ceil((this.emf.height * 32) / SECTION_SIZE);
     this.sections = [];
@@ -77,11 +78,12 @@ export class EOMap extends Phaser.GameObjects.GameObject {
   initTileGraphics() {
     for (let y = 0; y < this.emf.height; ++y) {
       for (let x = 0; x < this.emf.width; ++x) {
-        for (let layer = 0; layer < layerInfo.length; ++layer) {
-          let gfx = this.emf.getTile(x, y).gfx[layer];
-
-          this.setTileGraphic(x, y, gfx, layer);
+        let tile = this.emf.getTile(x, y);
+        for (let layer = 0; layer < 9; ++layer) {
+          let gfx = tile.gfx[layer];
+          this.setGraphic(x, y, gfx, layer);
         }
+        this.setSpec(x, y, tile.spec);
       }
     }
   }
@@ -91,19 +93,33 @@ export class EOMap extends Phaser.GameObjects.GameObject {
     for (let section of this.visibleSections) {
       for (let graphicIndex of section) {
         let layer = this.tileGraphics[graphicIndex].layer;
-        if (this.layerVisibility[layer]) {
+        if (this.layerVisibility.isLayerVisible(layer)) {
           visibleGraphicIndices.add(graphicIndex);
         }
       }
     }
 
-    this.renderList = Array.from(
-      visibleGraphicIndices,
-      (index) => this.tileGraphics[index]
-    );
+    this.renderList = Array.from(visibleGraphicIndices, (index) => {
+      let tileGraphic = this.tileGraphics[index];
+      tileGraphic.alpha = this.calcAlpha(tileGraphic.layer);
+      return tileGraphic;
+    });
+
     this.renderList.sort(depthComparator);
 
     this.dirtyRenderList = false;
+  }
+
+  calcDepth(x, y, layer) {
+    return layerInfo[layer].depth + y * RDG + x * layerInfo.length * TDG;
+  }
+
+  calcAlpha(layer) {
+    let alpha = layerInfo[layer].alpha;
+    if (layer === 9 && this.selectedLayer === 9) {
+      alpha *= 3;
+    }
+    return alpha;
   }
 
   getDisplayGfx(gfx, layer) {
@@ -150,12 +166,73 @@ export class EOMap extends Phaser.GameObjects.GameObject {
     return result;
   }
 
-  setTileGraphic(x, y, gfx, layer, modifyRenderList) {
+  draw(x, y, drawID, layer, modifyRenderList) {
+    if (layer >= 0 && layer <= 8) {
+      this.setGraphic(x, y, drawID, layer, modifyRenderList);
+      return;
+    }
+
+    if (layer === 9) {
+      this.setSpec(x, y, drawID, modifyRenderList);
+      return;
+    }
+
+    throw new Error(`Invalid draw layer: ${layer}`);
+  }
+
+  getDrawID(x, y, layer) {
+    if (layer >= 0 && layer <= 8) {
+      return this.emf.getTile(x, y).gfx[layer];
+    }
+
+    if (layer === 9) {
+      return this.emf.getTile(x, y).spec;
+    }
+
+    throw new Error(`Invalid draw layer: ${layer}`);
+  }
+
+  setGraphic(x, y, gfx, layer, modifyRenderList) {
+    this.emf.getTile(x, y).gfx[layer] = gfx;
+
+    let cacheEntry = null;
+    let displayGfx = this.getDisplayGfx(gfx, layer);
+
+    if (displayGfx !== null) {
+      let fileID = layerFiles[layer];
+      let resourceID = displayGfx + 100;
+
+      cacheEntry = this.textureCache.getResource(fileID, resourceID);
+      if (!cacheEntry) {
+        console.warn("Could not load gfx %d/%d.", displayGfx, file);
+        return;
+      }
+    }
+
+    this.setTileGraphic(x, y, layer, cacheEntry, modifyRenderList);
+  }
+
+  setSpec(x, y, tileSpec, modifyRenderList) {
+    this.emf.getTile(x, y).spec = tileSpec;
+
+    let cacheEntry = null;
+
+    if (tileSpec !== null) {
+      cacheEntry = this.textureCache.getSpec(tileSpec);
+      if (!cacheEntry) {
+        console.warn("Could not load tileSpec %d.", tileSpec);
+        return;
+      }
+    }
+
+    this.setTileGraphic(x, y, 9, cacheEntry, modifyRenderList);
+    this.setTileGraphic(x, y, 10, cacheEntry, modifyRenderList);
+  }
+
+  setTileGraphic(x, y, layer, cacheEntry, modifyRenderList) {
     if (modifyRenderList === undefined) {
       modifyRenderList = true;
     }
-
-    this.emf.getTile(x, y).gfx[layer] = gfx;
 
     let graphicIndex = (y * this.emf.width + x) * layerInfo.length + layer;
     let oldGraphic = this.tileGraphics[graphicIndex];
@@ -168,8 +245,7 @@ export class EOMap extends Phaser.GameObjects.GameObject {
       delete this.tileGraphics[graphicIndex];
     }
 
-    let displayGfx = this.getDisplayGfx(gfx, layer);
-    if (displayGfx === null) {
+    if (cacheEntry === null) {
       if (modifyRenderList && oldGraphic) {
         removeFirst(this.renderList, oldGraphic);
       }
@@ -178,11 +254,7 @@ export class EOMap extends Phaser.GameObjects.GameObject {
 
     let info = layerInfo[layer];
 
-    let resourceID = displayGfx + 100;
-
-    let cacheEntry = this.textureCache.getResource(info.file, resourceID);
     if (!cacheEntry) {
-      console.debug("Could not load gfx %d/%d.", displayGfx, info.file);
       return;
     }
 
@@ -195,7 +267,7 @@ export class EOMap extends Phaser.GameObjects.GameObject {
       tilex -= Math.floor(cacheEntry.asset.width / 2) - 32;
     }
 
-    if (layer !== 0 && layer !== 7) {
+    if (info.bottomOrigin) {
       tiley -= cacheEntry.asset.height - 32;
     }
 
@@ -204,8 +276,8 @@ export class EOMap extends Phaser.GameObjects.GameObject {
       tilex,
       tiley,
       layer,
-      calcDepth(x, y, layer),
-      info.alpha
+      this.calcDepth(x, y, layer),
+      this.calcAlpha(layer)
     );
 
     for (let section of this.findSections(tileGraphic)) {
@@ -282,11 +354,14 @@ export class EOMap extends Phaser.GameObjects.GameObject {
     this.height = height;
   }
 
-  setLayerVisibility(layer, visibility) {
-    if (this.layerVisibility[layer] !== visibility) {
-      this.layerVisibility[layer] = visibility;
-      this.dirtyRenderList = true;
-    }
+  setLayerVisibility(layerVisibility) {
+    this.layerVisibility = layerVisibility;
+    this.dirtyRenderList = true;
+  }
+
+  setSelectedLayer(selectedLayer) {
+    this.selectedLayer = selectedLayer;
+    this.dirtyRenderList = true;
   }
 
   renderWebGL(renderer, src, camera) {

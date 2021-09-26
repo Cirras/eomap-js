@@ -32,7 +32,7 @@ export class Palette extends LitElement {
 
   static PHASER_CONTAINER_ID = "phaser-palette";
 
-  static PHASER_DATA_KEYS = ["selectedGraphic", "contentHeight"];
+  static PHASER_DATA_KEYS = ["selectedDrawID", "contentHeight"];
 
   static COMPONENT_DATA_KEYS = ["gfxLoader", "selectedLayer", "eyedrop"];
 
@@ -188,7 +188,7 @@ export class Palette extends LitElement {
   selectedLayer;
 
   @property({ type: Number })
-  selectedGraphic;
+  selectedDrawID;
 
   @property({ type: Eyedrop })
   eyedrop = null;

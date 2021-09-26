@@ -27,6 +27,7 @@ import { EMF } from "../data/emf";
 import { EOReader } from "../data/eo-reader";
 import { getEMFFilename } from "../utils";
 import { BundledLoadingStrategy } from "../gfx/load/strategy/bundled-loading-strategy";
+import { LayerVisibilityState } from "../layer-visibility-state";
 
 @customElement("eomap-application")
 export class Application extends LitElement {
@@ -97,14 +98,14 @@ export class Application extends LitElement {
   @state({ type: TilePos })
   currentPos = new TilePos();
 
-  @state({ type: Array })
-  layerVisibility = Array(11).fill(true);
+  @state({ type: LayerVisibilityState })
+  layerVisibility = new LayerVisibilityState();
 
   @state({ type: Number })
   selectedLayer = 0;
 
   @state({ type: Number })
-  selectedGraphic = null;
+  selectedDrawID = null;
 
   @state({ type: Eyedrop })
   eyedrop = null;
@@ -201,7 +202,7 @@ export class Application extends LitElement {
       <sp-theme color="darkest" scale="medium">
         <eomap-menubar
           .layerVisibility=${this.layerVisibility}
-          @layer-toggle=${this.onLayerToggle}
+          @visibility-flag-toggle=${this.onVisibilityFlagToggle}
         ></eomap-menubar>
         <eomap-sidebar
           @tool-selected=${this.onToolSelected}
@@ -214,7 +215,7 @@ export class Application extends LitElement {
           .layerVisibility=${this.layerVisibility}
           .tool=${this.tool}
           .selectedLayer=${this.selectedLayer}
-          .selectedGraphic=${this.selectedGraphic}
+          .selectedDrawID=${this.selectedDrawID}
           .inputEnabled=${this.rendererInputEnabled}
           @changedata-currentPos=${this.onCurrentPosChanged}
           @changedata-eyedrop=${this.onEyedropChanged}
@@ -229,7 +230,7 @@ export class Application extends LitElement {
           @resize-start=${this.onPaletteResizeStart}
           @resize-end=${this.onPaletteResizeEnd}
           @layer-selected=${this.onSelectedLayerChanged}
-          @changedata-selectedGraphic=${this.onSelectedGraphicChanged}
+          @changedata-selectedDrawID=${this.onSelectedDrawIDChanged}
         ></eomap-palette>
         <eomap-infobar .tilePos=${this.currentPos}></eomap-infobar>
       </sp-theme>
@@ -246,12 +247,9 @@ export class Application extends LitElement {
     super.disconnectedCallback();
   }
 
-  onLayerToggle(event) {
-    let layer = event.detail;
-    let newLayerVisibility = [...this.layerVisibility];
-    newLayerVisibility[layer] = !newLayerVisibility[layer];
-
-    this.layerVisibility = newLayerVisibility;
+  onVisibilityFlagToggle(event) {
+    let flag = event.detail;
+    this.layerVisibility = this.layerVisibility.withFlagToggled(flag);
   }
 
   onToolSelected(event) {
@@ -276,9 +274,12 @@ export class Application extends LitElement {
 
   onSelectedLayerChanged(event) {
     this.selectedLayer = event.detail;
+    this.layerVisibility = this.layerVisibility.withSelectedLayer(
+      this.selectedLayer
+    );
   }
 
-  onSelectedGraphicChanged(event) {
-    this.selectedGraphic = event.detail;
+  onSelectedDrawIDChanged(event) {
+    this.selectedDrawID = event.detail;
   }
 }

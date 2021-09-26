@@ -84,6 +84,10 @@ class PaletteLayerEntry {
     this.getCacheEntry();
   }
 
+  get id() {
+    throw new Error("PaletteLayerEntry.id() must be implemented");
+  }
+
   get selected() {
     return this.layer.selectedResource === this;
   }
@@ -124,6 +128,10 @@ class PaletteLayerResourceEntry extends PaletteLayerEntry {
       this.resourceID
     );
   }
+
+  get id() {
+    return this.resourceID - 100;
+  }
 }
 
 class PaletteLayerSpecEntry extends PaletteLayerEntry {
@@ -134,6 +142,10 @@ class PaletteLayerSpecEntry extends PaletteLayerEntry {
 
   getCacheEntry() {
     return this.layer.scene.textureCache.getSpec(this.tileSpec);
+  }
+
+  get id() {
+    return this.tileSpec;
   }
 }
 
@@ -161,7 +173,7 @@ class PaletteLayer {
     this.prioritizePreloads();
     this.layout();
     this.scene.updateScroll();
-    this.scene.updateSelectedGraphic();
+    this.scene.updateSelectedDrawID();
   }
 
   prioritizePreloads() {
@@ -302,7 +314,7 @@ class PaletteLayer {
 
   set selectedResource(value) {
     this._selectedResource = value;
-    this.scene.updateSelectedGraphic();
+    this.scene.updateSelectedDrawID();
   }
 }
 class LayerPreload {
@@ -367,14 +379,14 @@ export class PaletteScene extends Phaser.Scene {
     this.data.events.on(
       "changedata-eyedrop",
       (_parent, value, _previousValue) => {
-        if (value.graphic === null) {
+        if (value.drawID === null) {
           if (this.selectedResource) {
             this.selectedResource.unselect();
           }
           return;
         }
 
-        let entryKey = value.graphic;
+        let entryKey = value.drawID;
         if (this.data.values.selectedLayer < 9) {
           entryKey += 100;
         }
@@ -542,12 +554,12 @@ export class PaletteScene extends Phaser.Scene {
     this.data.set("contentScroll", this.selectedLayer.scroll);
   }
 
-  updateSelectedGraphic() {
-    let graphic = null;
+  updateSelectedDrawID() {
+    let id = null;
     if (this.selectedResource) {
-      graphic = this.selectedResource.resourceID - 100;
+      id = this.selectedResource.id;
     }
-    this.data.set("selectedGraphic", graphic);
+    this.data.set("selectedDrawID", id);
   }
 
   get selectedLayer() {

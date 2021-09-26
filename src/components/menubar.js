@@ -10,6 +10,8 @@ import "@spectrum-web-components/theme/theme-dark.js";
 import "@spectrum-web-components/theme/scale-medium.js";
 import "./menubar-button";
 
+import { LayerVisibilityState } from "../layer-visibility-state";
+
 @customElement("eomap-menubar")
 export class MenuBar extends LitElement {
   static get styles() {
@@ -29,7 +31,7 @@ export class MenuBar extends LitElement {
     `;
   }
 
-  @property({ type: Array })
+  @property({ type: LayerVisibilityState })
   layerVisibility;
 
   renderViewMenu() {
@@ -51,7 +53,12 @@ export class MenuBar extends LitElement {
     let menuItems = MENU_ITEM_DATA.map(
       (info, i) =>
         html`
-          <sp-menu-item ?selected=${this.layerVisibility[i]} value=${i} @click=${this.onViewItemClick}">
+          <sp-menu-item
+            ?selected=${this.layerVisibility.isFlagActive(i)}
+            ?disabled=${this.layerVisibility.isFlagOverridden(i)}
+            value=${i}
+            @click=${this.onViewItemClick}"
+          >
             ${info.label}
             <kbd slot="value">${info.kbd}</kbd>
           </sp-menu-item>
@@ -85,7 +92,9 @@ export class MenuBar extends LitElement {
 
   onViewItemClick(event) {
     this.dispatchEvent(
-      new CustomEvent("layer-toggle", { detail: parseInt(event.target.value) })
+      new CustomEvent("visibility-flag-toggle", {
+        detail: parseInt(event.target.value),
+      })
     );
   }
 }

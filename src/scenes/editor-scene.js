@@ -1,5 +1,5 @@
 import { CommandInvoker } from "../command/command";
-import { SetGraphicCommand, FillCommand } from "../command/map-command";
+import { DrawCommand, FillCommand } from "../command/map-command";
 import { TilePos } from "../tilepos";
 import { EvictingTextureCache } from "../gfx/texture-cache";
 
@@ -47,7 +47,8 @@ export class EditorScene extends Phaser.Scene {
       this.textureCache,
       this.data.values.emf,
       this.cameras.main.width,
-      this.cameras.main.height
+      this.cameras.main.height,
+      this.layerVisibility
     );
 
     this.tools = this.createTools();
@@ -106,6 +107,10 @@ export class EditorScene extends Phaser.Scene {
       this.updateLayerVisibility();
     });
 
+    this.data.events.on("changedata-selectedLayer", () => {
+      this.updateSelectedLayer();
+    });
+
     this.data.events.on("changedata-tool", () => {
       this.updateCurrentTool();
     });
@@ -113,6 +118,7 @@ export class EditorScene extends Phaser.Scene {
     this.scale.on("resize", this.resize, this);
 
     this.updateLayerVisibility();
+    this.updateSelectedLayer();
     this.updateCurrentTool();
     this.resize();
 
@@ -216,28 +222,28 @@ export class EditorScene extends Phaser.Scene {
     this.currentTool.pointerUp(this, pointer);
   }
 
-  doSetGraphicCommand(x, y, newGfx) {
-    let oldGfx = this.map.emf.getTile(x, y).gfx[this.selectedLayer];
+  doDrawCommand(x, y, newDrawID) {
+    let oldDrawID = this.map.getDrawID(x, y, this.selectedLayer);
 
-    if (newGfx === oldGfx) {
+    if (newDrawID === oldDrawID) {
       return;
     }
 
     this.commandInvoker.add(
-      new SetGraphicCommand(this.map, x, y, this.selectedLayer, oldGfx, newGfx),
+      new DrawCommand(this.map, x, y, this.selectedLayer, oldDrawID, newDrawID),
       true
     );
   }
 
-  doFillCommand(x, y, newGfx) {
-    let oldGfx = this.map.emf.getTile(x, y).gfx[this.selectedLayer];
+  doFillCommand(x, y, newDrawID) {
+    let oldDrawID = this.map.getDrawID(x, y, this.selectedLayer);
 
-    if (newGfx === oldGfx) {
+    if (newDrawID === oldDrawID) {
       return;
     }
 
     this.commandInvoker.add(
-      new FillCommand(this.map, x, y, this.selectedLayer, oldGfx, newGfx)
+      new FillCommand(this.map, x, y, this.selectedLayer, oldDrawID, newDrawID)
     );
   }
 
@@ -252,10 +258,11 @@ export class EditorScene extends Phaser.Scene {
   }
 
   updateLayerVisibility() {
-    let layerVisibility = this.data.values.layerVisibility;
-    for (let layer = 0; layer < layerVisibility.length; ++layer) {
-      this.map.setLayerVisibility(layer, layerVisibility[layer]);
-    }
+    this.map.setLayerVisibility(this.layerVisibility);
+  }
+
+  updateSelectedLayer() {
+    this.map.setSelectedLayer(this.selectedLayer);
   }
 
   updateCurrentTool() {
@@ -301,7 +308,11 @@ export class EditorScene extends Phaser.Scene {
     return this.data.get("selectedLayer");
   }
 
-  get selectedGraphic() {
-    return this.data.get("selectedGraphic");
+  get selectedDrawID() {
+    return this.data.get("selectedDrawID");
+  }
+
+  get layerVisibility() {
+    return this.data.get("layerVisibility");
   }
 }

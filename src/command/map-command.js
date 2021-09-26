@@ -7,22 +7,22 @@ class MapCommand extends Command {
   }
 }
 
-export class SetGraphicCommand extends MapCommand {
-  constructor(map, x, y, layer, oldGfx, newGfx) {
+export class DrawCommand extends MapCommand {
+  constructor(map, x, y, layer, oldDrawID, newDrawID) {
     super(map);
     this.x = x;
     this.y = y;
     this.layer = layer;
-    this.oldGfx = oldGfx;
-    this.newGfx = newGfx;
+    this.oldDrawID = oldDrawID;
+    this.newDrawID = newDrawID;
   }
 
   execute() {
-    this.map.setTileGraphic(this.x, this.y, this.newGfx, this.layer);
+    this.map.draw(this.x, this.y, this.newDrawID, this.layer);
   }
 
   undo() {
-    this.map.setTileGraphic(this.x, this.y, this.oldGfx, this.layer);
+    this.map.draw(this.x, this.y, this.oldDrawID, this.layer);
   }
 }
 
@@ -34,20 +34,19 @@ class Tile {
 }
 
 export class FillCommand extends MapCommand {
-  constructor(map, x, y, layer, oldGfx, newGfx) {
+  constructor(map, x, y, layer, oldDrawID, newDrawID) {
     super(map);
     this.originX = x;
     this.originY = y;
     this.layer = layer;
-    this.oldGfx = oldGfx;
-    this.newGfx = newGfx;
+    this.oldDrawID = oldDrawID;
+    this.newDrawID = newDrawID;
     this.fillTiles = null;
   }
 
   doFloodFill() {
     let isContiguousTile = (x, y) => {
-      let gfx = this.map.emf.getTile(x, y).gfx[this.layer];
-      return gfx === this.oldGfx;
+      return this.map.getDrawID(x, y, this.layer) === this.oldDrawID;
     };
 
     let stack = [new Tile(this.originX, this.originY)];
@@ -66,7 +65,7 @@ export class FillCommand extends MapCommand {
       let spanUp = false;
       let spanDown = false;
       while (x < width && isContiguousTile(x, y)) {
-        this.map.setTileGraphic(x, y, this.newGfx, this.layer, false);
+        this.map.draw(x, y, this.newDrawID, this.layer, false);
         this.fillTiles.push(new Tile(x, y));
         if (!spanUp && y > 0 && isContiguousTile(x, y - 1)) {
           stack.push(new Tile(x, y - 1));
@@ -90,7 +89,7 @@ export class FillCommand extends MapCommand {
       this.doFloodFill();
     } else {
       for (let tile of this.fillTiles) {
-        this.map.setTileGraphic(tile.x, tile.y, this.newGfx, this.layer, false);
+        this.map.draw(tile.x, tile.y, this.newDrawID, this.layer, false);
       }
     }
     this.map.dirtyRenderList = true;
@@ -98,7 +97,7 @@ export class FillCommand extends MapCommand {
 
   undo() {
     for (let tile of this.fillTiles) {
-      this.map.setTileGraphic(tile.x, tile.y, this.oldGfx, this.layer, false);
+      this.map.draw(tile.x, tile.y, this.oldDrawID, this.layer, false);
     }
     this.map.dirtyRenderList = true;
   }

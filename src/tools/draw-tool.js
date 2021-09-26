@@ -2,19 +2,19 @@ import { Tool } from "./tool";
 
 export class DrawTool extends Tool {
   handleLeftPointerDown(mapEditor) {
-    if (!mapEditor.selectedGraphic && mapEditor.selectedLayer !== 0) {
+    if (mapEditor.selectedDrawID === null && mapEditor.selectedLayer !== 0) {
       return;
     }
 
-    mapEditor.doSetGraphicCommand(
+    mapEditor.doDrawCommand(
       mapEditor.currentPos.x,
       mapEditor.currentPos.y,
-      mapEditor.selectedGraphic
+      mapEditor.selectedDrawID
     );
   }
 
   handleRightPointerDown(mapEditor) {
-    mapEditor.doSetGraphicCommand(
+    mapEditor.doDrawCommand(
       mapEditor.currentPos.x,
       mapEditor.currentPos.y,
       null

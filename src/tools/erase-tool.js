@@ -2,7 +2,7 @@ import { Tool } from "./tool";
 
 export class EraseTool extends Tool {
   handleLeftPointerDown(mapEditor) {
-    mapEditor.doSetGraphicCommand(
+    mapEditor.doDrawCommand(
       mapEditor.currentPos.x,
       mapEditor.currentPos.y,
       null
@@ -10,7 +10,7 @@ export class EraseTool extends Tool {
   }
 
   handleRightPointerDown(mapEditor) {
-    mapEditor.doSetGraphicCommand(
+    mapEditor.doDrawCommand(
       mapEditor.currentPos.x,
       mapEditor.currentPos.y,
       null

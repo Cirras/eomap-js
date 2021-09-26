@@ -1,5 +1,5 @@
 export class Eyedrop {
-  constructor(graphic) {
-    this.graphic = graphic;
+  constructor(drawID) {
+    this.drawID = drawID;
   }
 }

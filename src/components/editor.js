@@ -31,7 +31,7 @@ export class Editor extends LitElement {
     "layerVisibility",
     "gfxLoader",
     "selectedLayer",
-    "selectedGraphic",
+    "selectedDrawID",
   ];
 
   static get styles() {
@@ -111,7 +111,7 @@ export class Editor extends LitElement {
   selectedLayer;
 
   @property({ type: Number })
-  selectedGraphic;
+  selectedDrawID;
 
   @property({ type: Boolean })
   inputEnabled = true;
