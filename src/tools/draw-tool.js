@@ -2,10 +2,6 @@ import { Tool } from "./tool";
 
 export class DrawTool extends Tool {
   handleLeftPointerDown(mapEditor) {
-    if (mapEditor.selectedDrawID === null && mapEditor.selectedLayer !== 0) {
-      return;
-    }
-
     mapEditor.doDrawCommand(
       mapEditor.currentPos.x,
       mapEditor.currentPos.y,
@@ -14,11 +10,7 @@ export class DrawTool extends Tool {
   }
 
   handleRightPointerDown(mapEditor) {
-    mapEditor.doDrawCommand(
-      mapEditor.currentPos.x,
-      mapEditor.currentPos.y,
-      null
-    );
+    mapEditor.doEraseCommand(mapEditor.currentPos.x, mapEditor.currentPos.y);
   }
 
   handleLeftPointerUp(mapEditor) {

@@ -222,28 +222,57 @@ export class EditorScene extends Phaser.Scene {
     this.currentTool.pointerUp(this, pointer);
   }
 
-  doDrawCommand(x, y, newDrawID) {
+  canDraw(drawID) {
+    if (drawID === 0 && this.selectedLayer !== 0 && this.selectedLayer !== 9) {
+      return false;
+    }
+    return drawID !== null;
+  }
+
+  doDrawCommand(x, y, drawID) {
+    if (!this.canDraw(drawID)) {
+      return;
+    }
+
     let oldDrawID = this.map.getDrawID(x, y, this.selectedLayer);
 
-    if (newDrawID === oldDrawID) {
+    if (drawID === oldDrawID) {
       return;
     }
 
     this.commandInvoker.add(
-      new DrawCommand(this.map, x, y, this.selectedLayer, oldDrawID, newDrawID),
+      new DrawCommand(this.map, x, y, this.selectedLayer, oldDrawID, drawID),
       true
     );
   }
 
-  doFillCommand(x, y, newDrawID) {
+  doFillCommand(x, y, drawID) {
+    if (!this.canDraw(drawID)) {
+      return;
+    }
+
     let oldDrawID = this.map.getDrawID(x, y, this.selectedLayer);
 
-    if (newDrawID === oldDrawID) {
+    if (drawID === oldDrawID) {
       return;
     }
 
     this.commandInvoker.add(
-      new FillCommand(this.map, x, y, this.selectedLayer, oldDrawID, newDrawID)
+      new FillCommand(this.map, x, y, this.selectedLayer, oldDrawID, drawID)
+    );
+  }
+
+  doEraseCommand(x, y) {
+    let drawID = this.selectedLayer === 0 ? 0 : null;
+    let oldDrawID = this.map.getDrawID(x, y, this.selectedLayer);
+
+    if (drawID === oldDrawID) {
+      return;
+    }
+
+    this.commandInvoker.add(
+      new DrawCommand(this.map, x, y, this.selectedLayer, oldDrawID, drawID),
+      true
     );
   }
 

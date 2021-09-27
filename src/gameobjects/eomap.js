@@ -122,13 +122,6 @@ export class EOMap extends Phaser.GameObjects.GameObject {
     return alpha;
   }
 
-  getDisplayGfx(gfx, layer) {
-    if (gfx === null && layer === 0) {
-      return this.emf.fillTile;
-    }
-    return gfx;
-  }
-
   getSection(x, y) {
     return this.sections[y * this.sectionWidth + x];
   }
@@ -193,18 +186,20 @@ export class EOMap extends Phaser.GameObjects.GameObject {
   }
 
   setGraphic(x, y, gfx, layer, modifyRenderList) {
+    if (gfx === 0 && layer !== 0) {
+      return;
+    }
+
     this.emf.getTile(x, y).gfx[layer] = gfx;
 
     let cacheEntry = null;
-    let displayGfx = this.getDisplayGfx(gfx, layer);
-
-    if (displayGfx !== null) {
+    if (gfx) {
       let fileID = layerFiles[layer];
-      let resourceID = displayGfx + 100;
+      let resourceID = gfx + 100;
 
       cacheEntry = this.textureCache.getResource(fileID, resourceID);
       if (!cacheEntry) {
-        console.warn("Could not load gfx %d/%d.", displayGfx, file);
+        console.warn("Could not load gfx %d/%d.", gfx, file);
         return;
       }
     }
