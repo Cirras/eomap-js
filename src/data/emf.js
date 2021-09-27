@@ -240,6 +240,7 @@ export class EMF {
     emf.tiles = new Array(tileCount);
     for (let i = 0; i < tileCount; ++i) {
       emf.tiles[i] = new MapTile();
+      emf.tiles[i].gfx[0] = emf.fillTile;
     }
 
     {
