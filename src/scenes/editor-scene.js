@@ -1,5 +1,6 @@
 import { CommandInvoker } from "../command/command";
-import { DrawCommand, FillCommand } from "../command/map-command";
+import { DrawCommand } from "../command/draw-command";
+import { FillCommand } from "../command/fill-command";
 import { TilePos } from "../tilepos";
 import { EvictingTextureCache } from "../gfx/texture-cache";
 
