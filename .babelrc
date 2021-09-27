@@ -1,14 +1,17 @@
 {
+  "plugins": [
+    ["@babel/plugin-proposal-decorators", {"decoratorsBeforeExport": true}],
+    ["@babel/plugin-proposal-class-properties", { "loose": true }]
+  ],
   "presets": [
-    ["@babel/env", {
+    ["@babel/preset-env", {
       "targets": {
         "browsers": [
-          ">0.25%",
-          "not ie 11",
-          "not op_mini all"
+          "last 2 Chrome versions",
+          "Firefox >= 63",
+          "Safari >= 12.1"
         ]
-      },
-      "modules": false
+      }
     }]
-  ],
+  ]
 }

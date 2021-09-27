@@ -13,29 +13,13 @@ module.exports = {
       {
         test: /\.js$/,
         exclude: /node_modules/,
-        use: {
-          loader: "babel-loader",
-          options: {
-            plugins: [
-              ['@babel/plugin-proposal-decorators', {decoratorsBeforeExport: true}],
-              ["@babel/plugin-proposal-class-properties", { "loose": true }]
-            ],
-            presets: ["@babel/preset-env"]
-          }
-        }
+        use: "babel-loader"
       },
       {
         test: /\.worker\.js$/i,
         use: [
-          {
-            loader: "worker-loader",
-          },
-          {
-            loader: "babel-loader",
-            options: {
-              presets: ["@babel/preset-env"],
-            },
-          },
+          { loader: "worker-loader" },
+          { loader: "babel-loader" }
         ],
       },
       {
