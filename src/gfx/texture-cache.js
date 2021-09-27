@@ -139,6 +139,21 @@ export class TextureCache {
     return this.getEntry(key, getDimensions, createAsset);
   }
 
+  getBlackTile() {
+    let key = "black";
+
+    let getDimensions = () => ({
+      width: 64,
+      height: 32,
+    });
+
+    let createAsset = () => {
+      return this.assetFactory.createBlackTile(this.multiTexture.key, key);
+    };
+
+    return this.getEntry(key, getDimensions, createAsset);
+  }
+
   add(key, width, height, createAsset) {
     let cacheEntry = null;
 

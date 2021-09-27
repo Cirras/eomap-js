@@ -134,6 +134,20 @@ class PaletteLayerResourceEntry extends PaletteLayerEntry {
   }
 }
 
+class PaletteLayerBlackTileEntry extends PaletteLayerEntry {
+  constructor(layer) {
+    super(layer, 64, 32);
+  }
+
+  getCacheEntry() {
+    return this.layer.scene.textureCache.getBlackTile();
+  }
+
+  get id() {
+    return 0;
+  }
+}
+
 class PaletteLayerSpecEntry extends PaletteLayerEntry {
   constructor(layer, tileSpec) {
     super(layer, 64, 32);
@@ -425,6 +439,10 @@ export class PaletteScene extends Phaser.Scene {
     let layer = new PaletteLayer(this);
     let gfxLoader = this.data.values.gfxLoader;
     let resourceIDs = gfxLoader.resourceIDs(fileID);
+
+    if (fileID === 3) {
+      layer.entries.set(100, new PaletteLayerBlackTileEntry(layer));
+    }
 
     for (let resourceID of resourceIDs) {
       if (resourceID < 101) {

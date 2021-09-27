@@ -170,6 +170,11 @@ export class AssetFactory {
     return new RawAsset(textureFrame, `entities/${entityType}.png`);
   }
 
+  createBlackTile(textureKey, frameKey) {
+    let textureFrame = this.getTextureFrame(textureKey, frameKey);
+    return new RawAsset(textureFrame, `black.png`);
+  }
+
   createAnimationFrames(texture, frame, frameWidth, frameHeight) {
     let animationFrames = [];
 
