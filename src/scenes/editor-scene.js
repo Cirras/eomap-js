@@ -47,8 +47,6 @@ export class EditorScene extends Phaser.Scene {
       this,
       this.textureCache,
       this.data.values.emf,
-      this.cameras.main.width,
-      this.cameras.main.height,
       this.layerVisibility
     );
 
@@ -186,8 +184,6 @@ export class EditorScene extends Phaser.Scene {
     let centerYDiff = this.cameras.main.scrollY + this.cameras.main.centerY;
     this.cameras.main.scrollX = -this.cameras.main.centerX + centerXDiff;
     this.cameras.main.scrollY = -this.cameras.main.centerY + centerYDiff;
-
-    this.map.setSize(width, height);
   }
 
   moveCursor(tilePos) {

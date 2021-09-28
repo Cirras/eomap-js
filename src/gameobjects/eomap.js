@@ -44,13 +44,11 @@ class TileGraphic {
 }
 
 export class EOMap extends Phaser.GameObjects.GameObject {
-  constructor(scene, textureCache, emf, width, height, layerVisibility) {
+  constructor(scene, textureCache, emf, layerVisibility) {
     super(scene, "EOMap");
 
-    this.emf = emf;
     this.textureCache = textureCache;
-    this.width = width;
-    this.height = height;
+    this.emf = emf;
     this.layerVisibility = layerVisibility;
     this.selectedLayer = 0;
     this.sectionWidth = Math.ceil((this.emf.width * 64) / SECTION_SIZE);
@@ -344,11 +342,6 @@ export class EOMap extends Phaser.GameObjects.GameObject {
     }
   }
 
-  setSize(width, height) {
-    this.width = width;
-    this.height = height;
-  }
-
   setLayerVisibility(layerVisibility) {
     this.layerVisibility = layerVisibility;
     this.dirtyRenderList = true;
@@ -484,8 +477,8 @@ Phaser.Class.mixin(EOMap, [
 
 Phaser.GameObjects.GameObjectFactory.register(
   "eomap",
-  function (scene, textureCache, emf, width, height) {
-    const map = new EOMap(scene, textureCache, emf, width, height);
+  function (scene, textureCache, emf, layerVisibility) {
+    const map = new EOMap(scene, textureCache, emf, layerVisibility);
     this.displayList.add(map);
     return map;
   }
