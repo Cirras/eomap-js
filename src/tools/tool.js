@@ -43,8 +43,8 @@ export class Tool {
         continue;
       }
 
-      if (this.shouldMoveTileCursor(mapEditor, pointer)) {
-        mapEditor.moveTileCursor(mapEditor.currentPos);
+      if (this.shouldMoveCursor(mapEditor, pointer)) {
+        mapEditor.moveCursor(mapEditor.currentPos);
       }
 
       this.handlePointerMove(mapEditor);
@@ -61,8 +61,8 @@ export class Tool {
       mapEditor.updateCurrentPos(pointer);
     }
 
-    if (this.shouldMoveTileCursor(mapEditor, pointer)) {
-      mapEditor.moveTileCursor(mapEditor.currentPos);
+    if (this.shouldMoveCursor(mapEditor, pointer)) {
+      mapEditor.moveCursor(mapEditor.currentPos);
     }
 
     if (pointer.leftButtonDown()) {
@@ -174,7 +174,7 @@ export class Tool {
     return;
   }
 
-  shouldMoveTileCursor(_mapEditor) {
+  shouldMoveCursor(_mapEditor) {
     return true;
   }
 

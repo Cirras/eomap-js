@@ -55,7 +55,7 @@ export class EditorScene extends Phaser.Scene {
     this.tools = this.createTools();
     this.currentTool = null;
 
-    this.cursorSprite = this.createTileCursor();
+    this.cursorSprite = this.createCursor();
 
     this.cursors = this.input.keyboard.createCursorKeys();
     this.yKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Y);
@@ -137,12 +137,8 @@ export class EditorScene extends Phaser.Scene {
     ]);
   }
 
-  getTileCursorAsset() {
-    return this.textureCache.getResource(2, 124).asset;
-  }
-
-  createTileCursor() {
-    let cacheEntry = this.textureCache.getResource(2, 124);
+  createCursor() {
+    let cacheEntry = this.textureCache.getCursor();
     cacheEntry.incRef();
 
     let cursorSprite = this.add.sprite(0, 0);
@@ -194,7 +190,7 @@ export class EditorScene extends Phaser.Scene {
     this.map.setSize(width, height);
   }
 
-  moveTileCursor(tilePos) {
+  moveCursor(tilePos) {
     if (!tilePos.valid) {
       this.cursorSprite.visible = false;
       return false;

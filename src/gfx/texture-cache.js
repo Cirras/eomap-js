@@ -154,6 +154,23 @@ export class TextureCache {
     return this.getEntry(key, getDimensions, createAsset);
   }
 
+  getCursor() {
+    let key = "cursor";
+
+    let getDimensions = () => {
+      return {
+        width: 320,
+        height: 32,
+      };
+    };
+
+    let createAsset = () => {
+      return this.assetFactory.createCursor(this.multiTexture.key, key);
+    };
+
+    return this.getEntry(key, getDimensions, createAsset);
+  }
+
   add(key, width, height, createAsset) {
     let cacheEntry = null;
 

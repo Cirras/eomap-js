@@ -490,7 +490,7 @@ export class PaletteScene extends Phaser.Scene {
 
   // FIXME: This is a stupid idea.
   createMasterAnimation() {
-    let cacheEntry = this.textureCache.getResource(2, 124);
+    let cacheEntry = this.textureCache.getCursor();
     cacheEntry.incRef();
 
     let frames = cacheEntry.asset.frames.map((f) => ({

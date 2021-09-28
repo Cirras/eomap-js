@@ -22,7 +22,7 @@ export class MoveTool extends Tool {
       this.startY = camera.scrollY;
       this.dragging = true;
 
-      let asset = mapEditor.getTileCursorAsset();
+      let asset = mapEditor.textureCache.getCursor().asset;
       mapEditor.cursorSprite.setFrame(asset.frames[1].name);
     }
   }
@@ -30,12 +30,12 @@ export class MoveTool extends Tool {
   handleLeftPointerUp(mapEditor, _pointer) {
     if (this.dragging) {
       this.dragging = false;
-      let asset = mapEditor.getTileCursorAsset();
+      let asset = mapEditor.textureCache.getCursor().asset;
       mapEditor.cursorSprite.setFrame(asset.frames[0].name);
     }
   }
 
-  shouldMoveTileCursor(_mapEditor, _pointer) {
+  shouldMoveCursor(_mapEditor, _pointer) {
     return !this.dragging;
   }
 }

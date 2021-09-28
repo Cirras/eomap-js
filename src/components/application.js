@@ -134,7 +134,7 @@ export class Application extends LitElement {
       require.context("../assets/bundled", true, /\.png$/)
     );
     let gfxLoader = new GFXLoader(egfStrategy, rawStrategy);
-    let promises = [2, 3, 4, 5, 6, 7, 22].map((fileID) =>
+    let promises = [3, 4, 5, 6, 7, 22].map((fileID) =>
       gfxLoader.loadEGF(fileID).catch((error) => {
         ++this.loadFail;
         console.error("Failed to load EGF %d: %s", fileID, error);

@@ -12,13 +12,13 @@ export class EyeDropperTool extends Tool {
       return;
     }
 
-    let asset = mapEditor.getTileCursorAsset();
+    let asset = mapEditor.textureCache.getCursor().asset;
     mapEditor.cursorSprite.play(asset.animation);
 
     mapEditor.data.set("eyedrop", new Eyedrop(drawID));
   }
 
-  shouldMoveTileCursor(_mapEditor) {
+  shouldMoveCursor(_mapEditor) {
     return !this.isLeftPointerDown();
   }
 }
