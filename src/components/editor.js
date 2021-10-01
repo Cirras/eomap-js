@@ -149,6 +149,7 @@ export class Editor extends LitElement {
     let game = new Phaser.Game({
       type: Phaser.AUTO,
       disableContextMenu: true,
+      banner: false,
       scale: {
         width: "100%",
         height: "100%",
