@@ -36,7 +36,6 @@ class LayerPreload {
 export class PaletteScene extends Phaser.Scene {
   constructor() {
     super("palette");
-    this.firstUpdate = true;
     this.textureCache = null;
     this.selectedLayer = null;
     this.layers = [];
@@ -197,11 +196,6 @@ export class PaletteScene extends Phaser.Scene {
     }
 
     this.textureCache.update();
-
-    if (this.firstUpdate) {
-      this.firstUpdate = false;
-      this.events.emit("first-update");
-    }
   }
 
   canDoResizeLayout() {

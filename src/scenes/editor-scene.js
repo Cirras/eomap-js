@@ -17,7 +17,6 @@ export class EditorScene extends Phaser.Scene {
   constructor() {
     super("editor");
     this.commandInvoker = new CommandInvoker();
-    this.firstUpdate = true;
     this.ctrlKeyDown = false;
     this.currentPosDirty = false;
 
@@ -159,11 +158,6 @@ export class EditorScene extends Phaser.Scene {
     if (this.currentPosDirty) {
       this.data.set("currentPos", this.currentPos);
       this.currentPosDirty = false;
-    }
-
-    if (this.firstUpdate) {
-      this.firstUpdate = false;
-      this.events.emit("first-update");
     }
   }
 
