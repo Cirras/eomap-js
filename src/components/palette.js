@@ -1,6 +1,7 @@
 import {
   css,
   customElement,
+  eventOptions,
   html,
   LitElement,
   property,
@@ -436,6 +437,7 @@ export class Palette extends LitElement {
     this.gutterHover = false;
   }
 
+  @eventOptions({ passive: true })
   gutterTouchStart(_event) {
     this.gutterHover = false;
     this.gutterTouch = true;
