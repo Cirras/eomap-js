@@ -419,25 +419,35 @@ export class Palette extends LitElement {
       <div
         class="palette-gutter ${classMap(gutterClasses)}"
         @pointerdown=${this.onGutterPointerDown}
-        @mouseover=${() => {
-          this.gutterHover = !this.gutterTouch;
-        }}
-        @mouseout=${() => {
-          this.gutterHover = false;
-        }}
-        @touchstart=${() => {
-          this.gutterHover = false;
-          this.gutterTouch = true;
-        }}
-        @touchend=${(event) => {
-          event.preventDefault();
-          this.gutterTouch = false;
-        }}
-        @touchcancel=${() => {
-          this.gutterTouch = false;
-        }}
+        @mouseover=${this.gutterMouseOver}
+        @mouseout=${this.gutterMouseOut}
+        @touchstart=${this.gutterTouchStart}
+        @touchend=${this.gutterTouchEnd}
+        @touchcancel=${this.gutterTouchCancel}
       ></div>
     `;
+  }
+
+  gutterMouseOver(_event) {
+    this.gutterHover = !this.gutterTouch;
+  }
+
+  gutterMouseOut(_event) {
+    this.gutterHover = false;
+  }
+
+  gutterTouchStart(_event) {
+    this.gutterHover = false;
+    this.gutterTouch = true;
+  }
+
+  gutterTouchEnd(event) {
+    event.preventDefault();
+    this.gutterTouch = false;
+  }
+
+  gutterTouchCancel(_event) {
+    this.gutterTouch = false;
   }
 
   render() {
