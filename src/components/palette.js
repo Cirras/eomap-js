@@ -44,17 +44,34 @@ export class Palette extends LitElement {
         display: grid;
         grid-template-rows: min-content minmax(0, 1fr);
         background-color: var(--spectrum-global-color-gray-400);
+        --palette-gutter-width: 4px;
+        --palette-gutter-handle-width: calc(var(--palette-gutter-width) * 2);
+      }
+      @media (pointer: coarse) {
+        :host {
+          --palette-gutter-handle-width: calc(var(--palette-gutter-width) * 4);
+        }
       }
       .palette-gutter {
         position: absolute;
         top: 0px;
-        left: -3px;
+        left: calc(1px - var(--palette-gutter-width));
         bottom: 0px;
-        width: 4px;
+        width: var(--palette-gutter-width);
         touch-action: none;
-        cursor: w-resize;
+        pointer-events: none;
         z-index: 1000;
         transition-property: background;
+      }
+      .palette-gutter-handle {
+        position: absolute;
+        top: 0px;
+        left: calc(var(--palette-gutter-handle-width) / -2);
+        bottom: 0px;
+        width: var(--palette-gutter-handle-width);
+        touch-action: none;
+        cursor: w-resize;
+        z-index: 999;
       }
       .palette-gutter-hover {
         background: var(--spectrum-alias-focus-color);
@@ -417,8 +434,9 @@ export class Palette extends LitElement {
     };
 
     return html`
+      <div class="palette-gutter ${classMap(gutterClasses)}"></div>
       <div
-        class="palette-gutter ${classMap(gutterClasses)}"
+        class="palette-gutter-handle"
         @pointerdown=${this.onGutterPointerDown}
         @mouseover=${this.gutterMouseOver}
         @mouseout=${this.gutterMouseOut}
