@@ -54,7 +54,7 @@ export class Palette extends LitElement {
         touch-action: none;
         cursor: w-resize;
         z-index: 1000;
-        transition-property: background, box-shadow;
+        transition-property: background;
       }
       .palette-gutter-hover {
         background: var(--spectrum-alias-focus-color);
