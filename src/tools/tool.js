@@ -13,11 +13,23 @@ class PointerDistance {
   currentX = 0;
   currentY = 0;
 
-  update(pointer) {
-    this.downX = pointer.downX;
-    this.downY = pointer.downY;
+  down(pointer) {
+    this.downX = pointer.x;
+    this.downY = pointer.y;
+    this.currentX = 0;
+    this.currentY = 0;
+  }
+
+  move(pointer) {
     this.currentX = pointer.x;
     this.currentY = pointer.y;
+  }
+
+  up() {
+    this.downX = 0;
+    this.downY = 0;
+    this.currentX = 0;
+    this.currentY = 0;
   }
 
   get x() {
@@ -34,17 +46,17 @@ export class Tool {
   pointerDownDistance = new PointerDistance();
 
   pointerMove(mapEditor, pointer) {
-    this.pointerDownDistance.update(pointer);
+    this.pointerDownDistance.move(pointer);
     for (let pos of pointer.getInterpolatedPosition()) {
       mapEditor.updateCurrentPos(pos);
+
+      if (this.shouldMoveCursor(mapEditor, pointer)) {
+        mapEditor.moveCursor(mapEditor.currentPos);
+      }
 
       if (this.shouldPointerDownOnMove() && pointer.isDown) {
         this.pointerDown(mapEditor, pointer, false);
         continue;
-      }
-
-      if (this.shouldMoveCursor(mapEditor, pointer)) {
-        mapEditor.moveCursor(mapEditor.currentPos);
       }
 
       this.handlePointerMove(mapEditor);
@@ -56,47 +68,44 @@ export class Tool {
       updatePosition = true;
     }
 
-    if (updatePosition) {
-      this.pointerDownDistance.update(pointer);
-      mapEditor.updateCurrentPos(pointer);
-    }
-
-    if (this.shouldMoveCursor(mapEditor, pointer)) {
-      mapEditor.moveCursor(mapEditor.currentPos);
-    }
-
-    if (pointer.leftButtonDown()) {
-      this.updatePointerDownState(PointerDownState.Left, true);
-    }
-
-    if (pointer.middleButtonDown()) {
-      this.updatePointerDownState(PointerDownState.Middle, true);
-    }
-
-    if (pointer.rightButtonDown()) {
-      this.updatePointerDownState(PointerDownState.Right, true);
-    }
-
-    if (mapEditor.currentPos.valid) {
-      switch (this.pointerDownState) {
-        case PointerDownState.Left:
-          this.handleLeftPointerDown(mapEditor, pointer);
-          break;
-
-        case PointerDownState.Middle:
-          this.handleMiddlePointerDown(mapEditor, pointer);
-          break;
-
-        case PointerDownState.Right:
-          this.handleRightPointerDown(mapEditor, pointer);
-          break;
+    const handleButtonDown = (state, down, handler) => {
+      if (down && this.updatePointerDownState(state, true)) {
+        if (updatePosition) {
+          this.pointerDownDistance.down(pointer);
+          mapEditor.updateCurrentPos(pointer);
+          if (this.shouldMoveCursor(mapEditor, pointer)) {
+            mapEditor.moveCursor(mapEditor.currentPos);
+          }
+        }
       }
-    }
+      if (this.pointerDownState === state && mapEditor.currentPos.valid) {
+        handler(mapEditor, pointer);
+      }
+    };
+
+    handleButtonDown(
+      PointerDownState.Left,
+      pointer.leftButtonDown(),
+      this.handleLeftPointerDown.bind(this)
+    );
+
+    handleButtonDown(
+      PointerDownState.Middle,
+      pointer.middleButtonDown(),
+      this.handleMiddlePointerDown.bind(this)
+    );
+
+    handleButtonDown(
+      PointerDownState.Right,
+      pointer.rightButtonDown(),
+      this.handleRightPointerDown.bind(this)
+    );
   }
 
   pointerUp(mapEditor, pointer) {
     const handleButtonUp = (state, down, handler) => {
       if (!down && this.updatePointerDownState(state, false)) {
+        this.pointerDownDistance.up();
         handler(mapEditor, pointer);
       }
     };
