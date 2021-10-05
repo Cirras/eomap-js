@@ -1,7 +1,7 @@
 import { Tool } from "./tool";
 import { Eyedrop } from "./eyedrop";
 
-export class EyeDropperTool extends Tool {
+export class EyedropperTool extends Tool {
   handleLeftPointerDown(mapEditor, _pointer) {
     let x = mapEditor.currentPos.x;
     let y = mapEditor.currentPos.y;

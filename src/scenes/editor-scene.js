@@ -6,7 +6,7 @@ import { EvictingTextureCache } from "../gfx/texture-cache";
 
 import { DrawTool } from "../tools/draw-tool";
 import { EraseTool } from "../tools/erase-tool";
-import { EyeDropperTool } from "../tools/eyedropper-tool";
+import { EyedropperTool } from "../tools/eyedropper-tool";
 import { MoveTool } from "../tools/move-tool";
 import { FillTool } from "../tools/fill-tool";
 import { EntityTool } from "../tools/entity-tool";
@@ -121,7 +121,7 @@ export class EditorScene extends Phaser.Scene {
     return new Map([
       ["draw", new DrawTool()],
       ["erase", new EraseTool()],
-      ["eyedropper", new EyeDropperTool()],
+      ["eyedropper", new EyedropperTool()],
       ["move", new MoveTool()],
       ["fill", new FillTool()],
       ["entity", new EntityTool()],
