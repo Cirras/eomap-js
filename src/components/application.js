@@ -93,7 +93,7 @@ export class Application extends LitElement {
   loadFail = 0;
 
   @state({ type: String })
-  tool = "draw";
+  selectedTool = "draw";
 
   @state({ type: TilePos })
   currentPos = new TilePos();
@@ -206,14 +206,14 @@ export class Application extends LitElement {
         ></eomap-menubar>
         <eomap-sidebar
           @tool-selected=${this.onToolSelected}
-          .tool="${this.tool}"
+          .selectedTool="${this.selectedTool}"
         ></eomap-sidebar>
         <eomap-editor
           .gfxLoader=${this.gfxLoader}
           .loadFail=${this.loadFail}
           .emf=${this.emf}
           .layerVisibility=${this.layerVisibility}
-          .tool=${this.tool}
+          .selectedTool=${this.selectedTool}
           .selectedLayer=${this.selectedLayer}
           .selectedDrawID=${this.selectedDrawID}
           .inputEnabled=${this.rendererInputEnabled}
@@ -253,7 +253,7 @@ export class Application extends LitElement {
   }
 
   onToolSelected(event) {
-    this.tool = event.detail;
+    this.selectedTool = event.detail;
   }
 
   onCurrentPosChanged(event) {

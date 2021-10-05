@@ -43,7 +43,7 @@ export class Sidebar extends LitElement {
   }
 
   @property({ type: String })
-  tool;
+  selectedTool;
 
   render() {
     return html`
@@ -52,7 +52,7 @@ export class Sidebar extends LitElement {
           value="draw"
           label="Draw"
           .icon=${DrawIcon}
-          ?selected=${"draw" === this.tool}
+          ?selected=${"draw" === this.selectedTool}
           @click=${this.onToolClick}
         >
         </eomap-sidebar-button>
@@ -60,7 +60,7 @@ export class Sidebar extends LitElement {
           value="erase"
           label="Erase"
           .icon=${EraseIcon}
-          ?selected=${"erase" === this.tool}
+          ?selected=${"erase" === this.selectedTool}
           @click=${this.onToolClick}
         >
         </eomap-sidebar-button>
@@ -68,7 +68,7 @@ export class Sidebar extends LitElement {
           value="eyedropper"
           label="Eyedropper"
           .icon=${SamplerIcon}
-          ?selected=${"eyedropper" === this.tool}
+          ?selected=${"eyedropper" === this.selectedTool}
           @click=${this.onToolClick}
         >
         </eomap-sidebar-button>
@@ -76,7 +76,7 @@ export class Sidebar extends LitElement {
           value="move"
           label="Move"
           .icon=${HandIcon}
-          ?selected=${"move" === this.tool}
+          ?selected=${"move" === this.selectedTool}
           @click=${this.onToolClick}
         >
         </eomap-sidebar-button>
@@ -84,7 +84,7 @@ export class Sidebar extends LitElement {
           value="fill"
           label="Fill"
           .icon=${ColorFillIcon}
-          ?selected=${"fill" === this.tool}
+          ?selected=${"fill" === this.selectedTool}
           @click=${this.onToolClick}
         >
         </eomap-sidebar-button>
@@ -92,7 +92,7 @@ export class Sidebar extends LitElement {
           value="entity"
           label="Entity"
           .icon=${StarIcon}
-          ?selected=${"entity" === this.tool}
+          ?selected=${"entity" === this.selectedTool}
           @click=${this.onToolClick}
         >
         </eomap-sidebar-button>

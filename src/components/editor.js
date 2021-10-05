@@ -27,7 +27,7 @@ export class Editor extends LitElement {
 
   static COMPONENT_DATA_KEYS = [
     "emf",
-    "tool",
+    "selectedTool",
     "layerVisibility",
     "gfxLoader",
     "selectedLayer",
@@ -102,7 +102,7 @@ export class Editor extends LitElement {
   loadFail;
 
   @property({ type: String })
-  tool;
+  selectedTool;
 
   @property({ type: Array })
   layerVisibility;

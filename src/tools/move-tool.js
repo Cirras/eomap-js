@@ -5,17 +5,10 @@ export class MoveTool extends Tool {
     super();
     this.startX = 0;
     this.startY = 0;
+    this.dragging = false;
   }
 
-  handlePointerMove(mapEditor, pointer) {
-    if (this.dragging) {
-      let camera = mapEditor.cameras.main;
-      camera.scrollX = this.startX + this.pointerDownDistance.x;
-      camera.scrollY = this.startY + this.pointerDownDistance.y;
-    }
-  }
-
-  handleLeftPointerDown(mapEditor, _pointer) {
+  startDragging(mapEditor) {
     if (!this.dragging) {
       let camera = mapEditor.cameras.main;
       this.startX = camera.scrollX;
@@ -27,12 +20,36 @@ export class MoveTool extends Tool {
     }
   }
 
-  handleLeftPointerUp(mapEditor, _pointer) {
+  stopDragging(mapEditor) {
     if (this.dragging) {
       this.dragging = false;
       let asset = mapEditor.textureCache.getCursor().asset;
       mapEditor.cursorSprite.setFrame(asset.frames[0].name);
     }
+  }
+
+  handlePointerMove(mapEditor, _pointer) {
+    if (this.dragging) {
+      let camera = mapEditor.cameras.main;
+      camera.scrollX = this.startX + this.pointerDownDistance.x;
+      camera.scrollY = this.startY + this.pointerDownDistance.y;
+    }
+  }
+
+  handleLeftPointerDown(mapEditor, _pointer) {
+    this.startDragging(mapEditor);
+  }
+
+  handleLeftPointerUp(mapEditor, _pointer) {
+    this.stopDragging(mapEditor);
+  }
+
+  handleMiddlePointerDown(mapEditor, _pointer) {
+    this.startDragging(mapEditor);
+  }
+
+  handleMiddlePointerUp(mapEditor, _pointer) {
+    this.stopDragging(mapEditor);
   }
 
   shouldMoveCursor(_mapEditor, _pointer) {

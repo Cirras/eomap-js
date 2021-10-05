@@ -24,7 +24,7 @@ export class EditorScene extends Phaser.Scene {
     this.textureCache = null;
     this.map = null;
     this.tools = null;
-    this.currentTool = null;
+    this.overrideTool = null;
     this.cursorSprite = null;
     this.cursors = null;
     this.yKey = null;
@@ -50,7 +50,6 @@ export class EditorScene extends Phaser.Scene {
     );
 
     this.tools = this.createTools();
-    this.currentTool = null;
 
     this.cursorSprite = this.createCursor();
 
@@ -109,15 +108,10 @@ export class EditorScene extends Phaser.Scene {
       this.updateSelectedLayer();
     });
 
-    this.data.events.on("changedata-tool", () => {
-      this.updateCurrentTool();
-    });
-
     this.scale.on("resize", this.resize, this);
 
     this.updateLayerVisibility();
     this.updateSelectedLayer();
-    this.updateCurrentTool();
     this.resize();
 
     this.resetCameraPosition();
@@ -196,17 +190,18 @@ export class EditorScene extends Phaser.Scene {
   }
 
   handlePointerMove(pointer) {
-    this.ctrlKeyDown = pointer.event.ctrlKey;
-    this.currentTool.pointerMove(this, pointer);
+    this.updateOverrideTool(pointer);
+    this.tool.pointerMove(this, pointer);
   }
 
   handlePointerDown(pointer) {
-    this.ctrlKeyDown = pointer.event.ctrlKey;
-    this.currentTool.pointerDown(this, pointer);
+    this.updateOverrideTool(pointer);
+    this.tool.pointerDown(this, pointer);
   }
 
   handlePointerUp(pointer) {
-    this.currentTool.pointerUp(this, pointer);
+    this.tool.pointerUp(this, pointer);
+    this.updateOverrideTool(pointer);
   }
 
   canDraw(drawID) {
@@ -263,6 +258,27 @@ export class EditorScene extends Phaser.Scene {
     );
   }
 
+  canUpdateOverrideTool(pointer) {
+    return (
+      this.overrideTool !== null ||
+      (!pointer.leftButtonDown() && !pointer.rightButtonDown())
+    );
+  }
+
+  updateOverrideTool(pointer) {
+    if (!this.canUpdateOverrideTool(pointer)) {
+      return;
+    }
+
+    if (pointer.middleButtonDown()) {
+      this.overrideTool = "move";
+    } else if (pointer.event.ctrlKey) {
+      this.overrideTool = "eyedropper";
+    } else {
+      this.overrideTool = null;
+    }
+  }
+
   updateCurrentPos(pointerPos) {
     let worldPos = this.cameras.main.getWorldPoint(pointerPos.x, pointerPos.y);
     let newPos = this.getTilePosFromWorldPos(worldPos);
@@ -279,10 +295,6 @@ export class EditorScene extends Phaser.Scene {
 
   updateSelectedLayer() {
     this.map.setSelectedLayer(this.selectedLayer);
-  }
-
-  updateCurrentTool() {
-    this.currentTool = this.tools.get(this.data.values.tool);
   }
 
   getTilePosFromPointerPos(pointerPos) {
@@ -318,6 +330,14 @@ export class EditorScene extends Phaser.Scene {
     let scrollY = -64;
 
     this.cameras.main.setScroll(scrollX, scrollY);
+  }
+
+  get tool() {
+    return this.tools.get(this.overrideTool || this.selectedTool);
+  }
+
+  get selectedTool() {
+    return this.data.get("selectedTool");
   }
 
   get selectedLayer() {
