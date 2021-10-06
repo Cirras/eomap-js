@@ -18,6 +18,18 @@ sp-popover {
   filter: none;
 }
 
+sp-menu-item {
+  --spectrum-listitem-selectable-padding-right: calc(
+    var(--spectrum-global-dimension-size-100) +
+      var(--spectrum-icon-checkmark-medium-width) +
+      var(--spectrum-listitem-icon-gap) +
+      var(
+        --spectrum-popover-border-size,
+        var(--spectrum-alias-border-size-thin)
+      )
+  );
+}
+
 kbd {
   font-size: 13px;
   padding-left: 15px;
