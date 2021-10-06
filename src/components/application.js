@@ -116,6 +116,10 @@ export class Application extends LitElement {
   @state({ type: Number })
   maxPaletteWidth = Palette.DEFAULT_WIDTH;
 
+  onWindowKeyDown = (event) => {
+    this.handleLayerVisibilityShortcuts(event);
+  };
+
   onResize = (_event) => {
     this.calculateMaxPaletteWidth();
   };
@@ -161,10 +165,39 @@ export class Application extends LitElement {
         case "PageDown":
           document.activeElement.blur();
           break;
-        default:
-          return;
       }
     });
+  }
+
+  handleLayerVisibilityShortcuts(event) {
+    if (!event.altKey) {
+      return;
+    }
+
+    let flag = [
+      "Digit1",
+      "Digit2",
+      "Digit3",
+      "Digit4",
+      "Digit5",
+      "Digit6",
+      "Digit7",
+      "Digit8",
+      "Digit9",
+      "Digit0",
+      "KeyE",
+    ].indexOf(event.code);
+
+    if (flag === -1) {
+      return;
+    }
+
+    if (this.layerVisibility.isFlagOverridden(flag)) {
+      return;
+    }
+
+    this.layerVisibility = this.layerVisibility.withFlagToggled(flag);
+    event.preventDefault();
   }
 
   async openMap(fileID) {
@@ -239,10 +272,12 @@ export class Application extends LitElement {
 
   connectedCallback() {
     super.connectedCallback();
+    addEventListener("keydown", this.onWindowKeyDown);
     addEventListener("resize", this.onResize);
   }
 
   disconnectedCallback() {
+    removeEventListener("keydown", this.onWindowKeyDown);
     removeEventListener("resize", this.onResize);
     super.disconnectedCallback();
   }
