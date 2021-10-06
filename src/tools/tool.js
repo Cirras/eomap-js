@@ -68,12 +68,13 @@ export class Tool {
       updatePosition = true;
     }
 
+    const moveCursor = this.shouldMoveCursor();
     const handleButtonDown = (state, down, handler) => {
       if (down && this.updatePointerDownState(state, true)) {
         if (updatePosition) {
           this.pointerDownDistance.down(pointer);
           mapEditor.updateCurrentPos(pointer);
-          if (this.shouldMoveCursor(mapEditor, pointer)) {
+          if (moveCursor) {
             mapEditor.moveCursor(mapEditor.currentPos);
           }
         }
@@ -183,7 +184,7 @@ export class Tool {
     return;
   }
 
-  shouldMoveCursor(_mapEditor) {
+  shouldMoveCursor() {
     return true;
   }
 

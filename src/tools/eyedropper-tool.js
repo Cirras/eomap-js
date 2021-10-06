@@ -18,7 +18,7 @@ export class EyedropperTool extends Tool {
     mapEditor.data.set("eyedrop", new Eyedrop(drawID));
   }
 
-  shouldMoveCursor(_mapEditor) {
+  shouldMoveCursor() {
     return !this.isLeftPointerDown();
   }
 }

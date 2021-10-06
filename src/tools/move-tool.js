@@ -52,7 +52,7 @@ export class MoveTool extends Tool {
     this.stopDragging(mapEditor);
   }
 
-  shouldMoveCursor(_mapEditor, _pointer) {
+  shouldMoveCursor() {
     return !this.dragging;
   }
 }
