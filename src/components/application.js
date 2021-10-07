@@ -18,16 +18,18 @@ import "./infobar";
 
 import { Palette } from "./palette";
 
-import { TilePos } from "../tilepos";
 import { GFXLoader } from "../gfx/load/gfx-loader";
+import { BundledLoadingStrategy } from "../gfx/load/strategy/bundled-loading-strategy";
 import { DownloadLoadingStrategy } from "../gfx/load/strategy/download-loading-strategy";
+
+import { TilePos } from "../tilepos";
 import { Eyedrop } from "../tools/eyedrop";
+import { LayerVisibilityState } from "../layer-visibility-state";
+import { CommandInvoker } from "../command/command";
 
 import { EMF } from "../data/emf";
 import { EOReader } from "../data/eo-reader";
 import { getEMFFilename } from "../utils";
-import { BundledLoadingStrategy } from "../gfx/load/strategy/bundled-loading-strategy";
-import { LayerVisibilityState } from "../layer-visibility-state";
 
 @customElement("eomap-application")
 export class Application extends LitElement {
@@ -83,6 +85,9 @@ export class Application extends LitElement {
   @query("eomap-sidebar", true)
   sidebar;
 
+  @state({ type: CommandInvoker })
+  commandInvoker = new CommandInvoker();
+
   @state({ type: GFXLoader })
   gfxLoader = null;
 
@@ -92,14 +97,14 @@ export class Application extends LitElement {
   @state({ type: Number })
   loadFail = 0;
 
-  @state({ type: String })
-  selectedTool = "draw";
-
   @state({ type: TilePos })
   currentPos = new TilePos();
 
   @state({ type: LayerVisibilityState })
   layerVisibility = new LayerVisibilityState();
+
+  @state({ type: String })
+  selectedTool = "draw";
 
   @state({ type: Number })
   selectedLayer = 0;
@@ -118,6 +123,7 @@ export class Application extends LitElement {
 
   onWindowKeyDown = (event) => {
     this.handleLayerVisibilityShortcuts(event);
+    this.handleUndoRedoShortcuts(event);
   };
 
   onResize = (_event) => {
@@ -200,6 +206,35 @@ export class Application extends LitElement {
     event.preventDefault();
   }
 
+  handleUndoRedoShortcuts(event) {
+    if (!event.ctrlKey) {
+      return;
+    }
+
+    switch (event.code) {
+      case "KeyY":
+        this.redo();
+        break;
+      case "KeyZ":
+        if (event.shiftKey) {
+          this.redo();
+        } else {
+          this.undo();
+        }
+        break;
+    }
+  }
+
+  undo() {
+    this.commandInvoker.undo();
+    this.requestUpdate();
+  }
+
+  redo() {
+    this.commandInvoker.redo();
+    this.requestUpdate();
+  }
+
   async openMap(fileID) {
     try {
       let filename = getEMFFilename(fileID);
@@ -242,6 +277,7 @@ export class Application extends LitElement {
           .selectedTool="${this.selectedTool}"
         ></eomap-sidebar>
         <eomap-editor
+          .commandInvoker=${this.commandInvoker}
           .gfxLoader=${this.gfxLoader}
           .loadFail=${this.loadFail}
           .emf=${this.emf}

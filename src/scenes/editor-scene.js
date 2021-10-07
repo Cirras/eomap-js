@@ -16,7 +16,6 @@ import "../gameobjects/eomap";
 export class EditorScene extends Phaser.Scene {
   constructor() {
     super("editor");
-    this.commandInvoker = new CommandInvoker();
     this.ctrlKeyDown = false;
     this.currentPosDirty = false;
 
@@ -54,8 +53,6 @@ export class EditorScene extends Phaser.Scene {
     this.cursorSprite = this.createCursor();
 
     this.cursors = this.input.keyboard.createCursorKeys();
-    this.yKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Y);
-    this.zKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z);
 
     let controlConfig = {
       camera: this.cameras.main,
@@ -78,25 +75,6 @@ export class EditorScene extends Phaser.Scene {
     this.input.on("pointerupoutside", (pointer) =>
       this.handlePointerUp(pointer)
     );
-
-    this.yKey.emitOnRepeat = true;
-    this.zKey.emitOnRepeat = true;
-
-    this.yKey.on("down", () => {
-      if (this.yKey.ctrlKey) {
-        this.commandInvoker.redo();
-      }
-    });
-
-    this.zKey.on("down", () => {
-      if (this.zKey.ctrlKey) {
-        if (this.zKey.shiftKey) {
-          this.commandInvoker.redo();
-        } else {
-          this.commandInvoker.undo();
-        }
-      }
-    });
 
     this.data.set("eyedrop", null);
 
@@ -334,6 +312,10 @@ export class EditorScene extends Phaser.Scene {
 
   get tool() {
     return this.tools.get(this.overrideTool || this.selectedTool);
+  }
+
+  get commandInvoker() {
+    return this.data.get("commandInvoker");
   }
 
   get selectedTool() {

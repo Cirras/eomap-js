@@ -16,6 +16,7 @@ import icon from "../assets/icon.svg";
 
 import { EditorScene } from "../scenes/editor-scene";
 
+import { CommandInvoker } from "../command/command";
 import { GFXLoader } from "../gfx/load/gfx-loader";
 import { EMF } from "../data/emf";
 
@@ -26,6 +27,7 @@ export class Editor extends LitElement {
   static PHASER_DATA_KEYS = ["currentPos", "eyedrop"];
 
   static COMPONENT_DATA_KEYS = [
+    "commandInvoker",
     "emf",
     "selectedTool",
     "layerVisibility",
@@ -91,6 +93,9 @@ export class Editor extends LitElement {
       }
     `;
   }
+
+  @property({ type: CommandInvoker })
+  commandInvoker = new CommandInvoker();
 
   @property({ type: GFXLoader })
   gfxLoader;
