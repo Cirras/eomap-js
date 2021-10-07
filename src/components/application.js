@@ -180,6 +180,10 @@ export class Application extends LitElement {
       return;
     }
 
+    if (event.repeat) {
+      return;
+    }
+
     let flag = [
       "Digit1",
       "Digit2",
