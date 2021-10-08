@@ -273,7 +273,11 @@ export class Application extends LitElement {
     return html`
       <sp-theme color="darkest" scale="medium">
         <eomap-menubar
+          .canUndo=${this.commandInvoker.hasUndoCommands}
+          .canRedo=${this.commandInvoker.hasRedoCommands}
           .layerVisibility=${this.layerVisibility}
+          @undo=${this.undo}
+          @redo=${this.redo}
           @visibility-flag-toggle=${this.onVisibilityFlagToggle}
         ></eomap-menubar>
         <eomap-sidebar

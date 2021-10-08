@@ -18,7 +18,20 @@ sp-popover {
   filter: none;
 }
 
-sp-menu-item {
+kbd {
+  font-size: 13px;
+  padding-left: 15px;
+  color: var(--spectrum-global-color-gray-600);
+  pointer-events: none;
+}
+
+.menu-item {
+  --spectrum-listitem-selectable-padding-right: var(
+    --spectrum-global-dimension-size-150
+  );
+}
+
+.checkable-menu-item {
   --spectrum-listitem-selectable-padding-right: calc(
     var(--spectrum-global-dimension-size-100) +
       var(--spectrum-icon-checkmark-medium-width) +
@@ -28,11 +41,4 @@ sp-menu-item {
         var(--spectrum-alias-border-size-thin)
       )
   );
-}
-
-kbd {
-  font-size: 13px;
-  padding-left: 15px;
-  color: var(--spectrum-global-color-gray-600);
-  pointer-events: none;
 }

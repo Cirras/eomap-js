@@ -34,7 +34,34 @@ export class MenuBar extends LitElement {
   @property({ type: LayerVisibilityState })
   layerVisibility;
 
-  renderViewMenu() {
+  @property({ type: Boolean })
+  canUndo;
+
+  @property({ type: Boolean })
+  canRedo;
+
+  renderEditMenuItems() {
+    return html`
+      <sp-menu-item
+        class="menu-item"
+        ?disabled=${!this.canUndo}
+        @click=${this.onUndoClick}
+      >
+        Undo
+        <kbd slot="value">Ctrl+Z</kbd>
+      </sp-menu-item>
+      <sp-menu-item
+        class="menu-item"
+        ?disabled=${!this.canRedo}
+        @click=${this.onRedoClick}
+      >
+        Redo
+        <kbd slot="value">Ctrl+Y</kbd>
+      </sp-menu-item>
+    `;
+  }
+
+  renderViewMenuItems() {
     // prettier-ignore
     const MENU_ITEM_DATA = [
       { label: "Ground",     kbd: "Alt+1" },
@@ -50,10 +77,11 @@ export class MenuBar extends LitElement {
       { label: "Entities",   kbd: "Alt+E" },
     ];
 
-    let menuItems = MENU_ITEM_DATA.map(
+    return MENU_ITEM_DATA.map(
       (info, i) =>
         html`
           <sp-menu-item
+            class="checkable-menu-item"
             ?selected=${this.layerVisibility.isFlagActive(i)}
             ?disabled=${this.layerVisibility.isFlagOverridden(i)}
             value=${i}
@@ -64,13 +92,6 @@ export class MenuBar extends LitElement {
           </sp-menu-item>
         `
     );
-
-    return html`
-      <eomap-menubar-button>
-        <span slot="label">View</span>
-        ${menuItems}
-      </eomap-menubar-button>
-    `;
   }
 
   render() {
@@ -81,8 +102,12 @@ export class MenuBar extends LitElement {
         </eomap-menubar-button>
         <eomap-menubar-button>
           <span slot="label">Edit</span>
+          ${this.renderEditMenuItems()}
         </eomap-menubar-button>
-        ${this.renderViewMenu()}
+        <eomap-menubar-button>
+          <span slot="label">View</span>
+          ${this.renderViewMenuItems()}
+        </eomap-menubar-button>
         <eomap-menubar-button>
           <span slot="label">Help</span>
         </eomap-menubar-button>
@@ -96,5 +121,13 @@ export class MenuBar extends LitElement {
         detail: parseInt(event.target.value),
       })
     );
+  }
+
+  onUndoClick(_event) {
+    setTimeout(() => this.dispatchEvent(new CustomEvent("undo")));
+  }
+
+  onRedoClick(_event) {
+    setTimeout(() => this.dispatchEvent(new CustomEvent("redo")));
   }
 }
