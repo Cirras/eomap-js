@@ -34,7 +34,7 @@ export class Sidebar extends LitElement {
         padding-bottom: var(--spectrum-global-dimension-size-100);
       }
       sp-action-group:not(:first-child) {
-        border-top: solid 2px var(--spectrum-global-color-gray-500);
+        border-top: solid 1px var(--spectrum-global-color-gray-300);
       }
       sp-menu-item {
         white-space: nowrap;
@@ -44,6 +44,12 @@ export class Sidebar extends LitElement {
 
   @property({ type: String })
   selectedTool;
+
+  @property({ type: Boolean })
+  canUndo;
+
+  @property({ type: Boolean })
+  canRedo;
 
   render() {
     return html`
@@ -98,9 +104,19 @@ export class Sidebar extends LitElement {
         </eomap-sidebar-button>
       </sp-action-group>
       <sp-action-group vertical>
-        <eomap-sidebar-button label="Undo" .icon=${UndoIcon}>
+        <eomap-sidebar-button
+          label="Undo"
+          .icon=${UndoIcon}
+          ?disabled=${!this.canUndo}
+          @click=${this.onUndoClick}
+        >
         </eomap-sidebar-button>
-        <eomap-sidebar-button label="Redo" .icon=${RedoIcon}>
+        <eomap-sidebar-button
+          label="Redo"
+          .icon=${RedoIcon}
+          ?disabled=${!this.canRedo}
+          @click=${this.onRedoClick}
+        >
         </eomap-sidebar-button>
       </sp-action-group>
     `;
@@ -112,5 +128,15 @@ export class Sidebar extends LitElement {
       event.preventDefault();
       this.dispatchEvent(new CustomEvent("tool-selected", { detail: value }));
     }
+  }
+
+  onUndoClick(event) {
+    event.preventDefault();
+    this.dispatchEvent(new CustomEvent("undo"));
+  }
+
+  onRedoClick(event) {
+    event.preventDefault();
+    this.dispatchEvent(new CustomEvent("redo"));
   }
 }

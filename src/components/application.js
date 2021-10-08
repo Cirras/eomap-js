@@ -277,8 +277,12 @@ export class Application extends LitElement {
           @visibility-flag-toggle=${this.onVisibilityFlagToggle}
         ></eomap-menubar>
         <eomap-sidebar
+          .selectedTool=${this.selectedTool}
+          .canUndo=${this.commandInvoker.hasUndoCommands}
+          .canRedo=${this.commandInvoker.hasRedoCommands}
           @tool-selected=${this.onToolSelected}
-          .selectedTool="${this.selectedTool}"
+          @undo=${this.undo}
+          @redo=${this.redo}
         ></eomap-sidebar>
         <eomap-editor
           .commandInvoker=${this.commandInvoker}

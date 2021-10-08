@@ -3,10 +3,20 @@ import "@spectrum-web-components/icon/sp-icon";
 import "@spectrum-web-components/overlay/overlay-trigger";
 import "@spectrum-web-components/overlay/src/popper";
 import "@spectrum-web-components/tooltip/sp-tooltip";
-import { customElement, html, LitElement, property } from "lit-element";
+import { css, customElement, html, LitElement, property } from "lit-element";
 
 @customElement("eomap-sidebar-button")
 export class SidebarButton extends LitElement {
+  static get styles() {
+    return css`
+      sp-action-button {
+        --spectrum-actionbutton-m-icon-color-disabled: var(
+          --spectrum-global-color-gray-300
+        );
+      }
+    `;
+  }
+
   @property()
   label = "";
 
@@ -15,6 +25,9 @@ export class SidebarButton extends LitElement {
 
   @property({ type: Boolean })
   selected = false;
+
+  @property({ type: Boolean })
+  disabled = false;
 
   @property()
   value = "";
@@ -27,6 +40,7 @@ export class SidebarButton extends LitElement {
           label=${this.label}
           slot="trigger"
           ?selected=${this.selected}
+          ?disabled=${this.disabled}
           value=${this.value}
         >
           <sp-icon slot="icon">${this.icon()}</sp-icon>
