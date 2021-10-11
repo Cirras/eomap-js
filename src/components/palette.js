@@ -339,6 +339,7 @@ export class Palette extends LitElement {
         mouse: {
           preventDefaultWheel: false,
           preventDefaultDown: false,
+          preventDefaultMove: false,
           preventDefaultUp: false,
         },
         touch: {

@@ -171,6 +171,17 @@ export class Editor extends LitElement {
         pixelArt: true,
         powerPreference: "high-performance",
       },
+      input: {
+        mouse: {
+          preventDefaultWheel: false,
+          preventDefaultDown: false,
+          preventDefaultMove: false,
+          preventDefaultUp: false,
+        },
+        touch: {
+          capture: false,
+        },
+      },
     });
 
     game.events.once("ready", () => {
