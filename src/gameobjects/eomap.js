@@ -7,17 +7,21 @@ const RDG = 0.001; // gap between depth of each row of tiles
 
 // prettier-ignore
 const layerInfo = [
-    { xoff: 0,  yoff: 0,  alpha: 1.0,  centered: false, bottomOrigin: false, depth:-3.0 + TDG * 1 }, // Ground
-    { xoff:-2,  yoff:-2,  alpha: 1.0,  centered: true,  bottomOrigin: true,  depth: 0.0 + TDG * 1 }, // Objects
-    { xoff:-2,  yoff:-2,  alpha: 1.0,  centered: true,  bottomOrigin: true,  depth: 0.0 + TDG * 3 }, // Overlay
-    { xoff: 0,  yoff:-1,  alpha: 1.0,  centered: false, bottomOrigin: true,  depth: 0.0 + TDG * 2 }, // Down Wall
-    { xoff: 32, yoff:-1,  alpha: 1.0,  centered: false, bottomOrigin: true,  depth:-RDG + TDG * 5 }, // Right Wall
-    { xoff: 0,  yoff:-64, alpha: 1.0,  centered: false, bottomOrigin: true,  depth: 0.0 + TDG * 4 }, // Roof
-    { xoff: 0,  yoff:-32, alpha: 1.0,  centered: false, bottomOrigin: true,  depth: 0.0 + TDG * 2 }, // Top
-    { xoff:-24, yoff:-12, alpha: 0.2,  centered: false, bottomOrigin: false, depth:-1.0 + TDG * 1 }, // Shadow
-    { xoff:-2,  yoff:-2,  alpha: 1.0,  centered: true,  bottomOrigin: true,  depth: 1.0 + TDG * 1 }, // Overlay 2
+    { xoff: 0,  yoff: 0,  alpha: 1.00, centered: false, bottomOrigin: false, depth:-3.0 + TDG * 1 }, // Ground
+    { xoff:-2,  yoff:-2,  alpha: 1.00, centered: true,  bottomOrigin: true,  depth: 0.0 + TDG * 1 }, // Objects
+    { xoff:-2,  yoff:-2,  alpha: 1.00, centered: true,  bottomOrigin: true,  depth: 0.0 + TDG * 3 }, // Overlay
+    { xoff: 0,  yoff:-1,  alpha: 1.00, centered: false, bottomOrigin: true,  depth: 0.0 + TDG * 2 }, // Down Wall
+    { xoff: 32, yoff:-1,  alpha: 1.00, centered: false, bottomOrigin: true,  depth:-RDG + TDG * 5 }, // Right Wall
+    { xoff: 0,  yoff:-64, alpha: 1.00, centered: false, bottomOrigin: true,  depth: 0.0 + TDG * 4 }, // Roof
+    { xoff: 0,  yoff:-32, alpha: 1.00, centered: false, bottomOrigin: true,  depth: 0.0 + TDG * 2 }, // Top
+    { xoff:-24, yoff:-12, alpha: 0.20, centered: false, bottomOrigin: false, depth:-1.0 + TDG * 1 }, // Shadow
+    { xoff:-2,  yoff:-2,  alpha: 1.00, centered: true,  bottomOrigin: true,  depth: 1.0 + TDG * 1 }, // Overlay 2
     { xoff: 0,  yoff: 0,  alpha: 0.25, centered: false, bottomOrigin: false, depth:-2.0 + TDG * 1 }, // TileSpec
-    { xoff: 0,  yoff: 0,  alpha: 0.25, centered: false, bottomOrigin: false, depth: 3.0 + TDG * 1 }  // TileSpec overlay
+    { xoff: 0,  yoff: 0,  alpha: 0.25, centered: false, bottomOrigin: false, depth: 3.0 + TDG * 1 }, // TileSpec overlay
+    { xoff: 0,  yoff: 0,  alpha: 0.50, centered: false, bottomOrigin: true,  depth: 4.0 + TDG * 1 }, // Warp
+    { xoff: 0,  yoff: 0,  alpha: 0.50, centered: false, bottomOrigin: true,  depth: 4.0 + TDG * 2 }, // Sign
+    { xoff: 0,  yoff: 0,  alpha: 0.50, centered: false, bottomOrigin: true,  depth: 4.0 + TDG * 3 }, // Item
+    { xoff: 0,  yoff: 0,  alpha: 0.50, centered: false, bottomOrigin: true,  depth: 4.0 + TDG * 4 }, // NPC
 ];
 
 const layerFiles = [3, 4, 5, 6, 6, 7, 3, 22, 5];
@@ -43,6 +47,43 @@ class TileGraphic {
   }
 }
 
+class EntityMap {
+  constructor(width, height) {
+    this.width = width;
+    this.height = height;
+    this.sparseArray = {};
+  }
+
+  get(x, y) {
+    let index = this.getIndex(x, y);
+    let entities = this.sparseArray[index];
+    if (entities === undefined) {
+      entities = [];
+    }
+    return entities;
+  }
+
+  set(x, y, entities) {
+    let index = this.getIndex(x, y);
+    this.sparseArray[index] = entities;
+    if (entities.length === 0) {
+      delete this.sparseArray[index];
+    }
+  }
+
+  add(entity) {
+    let index = this.getIndex(entity.x, entity.y);
+    if (this.sparseArray[index] === undefined) {
+      this.sparseArray[index] = [];
+    }
+    this.sparseArray[index].push(entity);
+  }
+
+  getIndex(x, y) {
+    return y * this.width + x;
+  }
+}
+
 export class EOMap extends Phaser.GameObjects.GameObject {
   constructor(scene, textureCache, emf, layerVisibility) {
     super(scene, "EOMap");
@@ -55,12 +96,15 @@ export class EOMap extends Phaser.GameObjects.GameObject {
     this.sectionHeight = Math.ceil((this.emf.height * 32) / SECTION_SIZE);
     this.sections = [];
     this.visibleSections = [];
+    this.items = new EntityMap(this.emf.width, this.emf.height);
+    this.npcs = new EntityMap(this.emf.width, this.emf.height);
     this.tileGraphics = {};
     this.renderList = [];
     this.dirtyRenderList = false;
     this.animationFrame = 0;
 
     this.initSections();
+    this.initEntityMaps();
     this.initTileGraphics();
 
     this.initPipeline();
@@ -73,6 +117,16 @@ export class EOMap extends Phaser.GameObjects.GameObject {
     }
   }
 
+  initEntityMaps() {
+    for (let item of this.emf.items) {
+      this.items.add(item);
+    }
+
+    for (let npc of this.emf.npcs) {
+      this.npcs.add(npc);
+    }
+  }
+
   initTileGraphics() {
     for (let y = 0; y < this.emf.height; ++y) {
       for (let x = 0; x < this.emf.width; ++x) {
@@ -82,6 +136,10 @@ export class EOMap extends Phaser.GameObjects.GameObject {
           this.setGraphic(x, y, gfx, layer);
         }
         this.setSpec(x, y, tile.spec);
+        this.setWarp(x, y, tile.warp);
+        this.setSign(x, y, tile.sign);
+        this.setItems(x, y, this.items.get(x, y));
+        this.setNPCs(x, y, this.npcs.get(x, y));
       }
     }
   }
@@ -222,12 +280,85 @@ export class EOMap extends Phaser.GameObjects.GameObject {
     this.setTileGraphic(x, y, 10, cacheEntry, modifyRenderList);
   }
 
+  setWarp(x, y, warp) {
+    let tile = this.emf.getTile(x, y);
+    tile.warp = warp;
+
+    let cacheEntry = null;
+
+    if (warp) {
+      let entityType;
+      switch (warp.door) {
+        case 0:
+          entityType = "warp";
+          break;
+        case 1:
+          entityType = "door";
+          break;
+        default:
+          entityType = "lockeddoor";
+      }
+      cacheEntry = this.textureCache.getEntity(entityType);
+    }
+
+    this.setTileGraphic(x, y, 11, cacheEntry);
+    this.updateEntityOffsets(x, y);
+  }
+
+  setSign(x, y, sign) {
+    let tile = this.emf.getTile(x, y);
+    tile.sign = sign;
+
+    let cacheEntry = null;
+
+    if (sign) {
+      cacheEntry = this.textureCache.getEntity("sign");
+    }
+
+    this.setTileGraphic(x, y, 12, cacheEntry);
+    this.updateEntityOffsets(x, y);
+  }
+
+  setItems(x, y, items) {
+    this.items.set(x, y, items);
+
+    let cacheEntry = null;
+
+    if (items.length > 0) {
+      let entityKey = "items";
+      if (items.some((item) => item.key > 0)) {
+        entityKey = "chest";
+      }
+      cacheEntry = this.textureCache.getEntity(entityKey);
+    }
+
+    this.setTileGraphic(x, y, 13, cacheEntry);
+    this.updateEntityOffsets(x, y);
+  }
+
+  setNPCs(x, y, npcs) {
+    this.npcs.set(x, y, npcs);
+
+    let cacheEntry = null;
+
+    if (npcs.length > 0) {
+      cacheEntry = this.textureCache.getEntity("npc");
+    }
+
+    this.setTileGraphic(x, y, 14, cacheEntry);
+    this.updateEntityOffsets(x, y);
+  }
+
+  getTileGraphicIndex(x, y, layer) {
+    return (y * this.emf.width + x) * layerInfo.length + layer;
+  }
+
   setTileGraphic(x, y, layer, cacheEntry, modifyRenderList) {
     if (modifyRenderList === undefined) {
       modifyRenderList = true;
     }
 
-    let graphicIndex = (y * this.emf.width + x) * layerInfo.length + layer;
+    let graphicIndex = this.getTileGraphicIndex(x, y, layer);
     let oldGraphic = this.tileGraphics[graphicIndex];
 
     if (oldGraphic) {
@@ -238,21 +369,21 @@ export class EOMap extends Phaser.GameObjects.GameObject {
       delete this.tileGraphics[graphicIndex];
     }
 
-    if (cacheEntry === null) {
+    if (!cacheEntry) {
+      if (layer === 1) {
+        this.updateEntityOffsets(x, y);
+      }
+
       if (modifyRenderList && oldGraphic) {
         removeFirst(this.renderList, oldGraphic);
       }
-      return;
-    }
 
-    let info = layerInfo[layer];
-
-    if (!cacheEntry) {
       return;
     }
 
     cacheEntry.incRef();
 
+    let info = layerInfo[layer];
     let tilex = info.xoff + x * 32 - y * 32;
     let tiley = info.yoff + x * 16 + y * 16;
 
@@ -281,6 +412,28 @@ export class EOMap extends Phaser.GameObjects.GameObject {
 
     if (modifyRenderList) {
       binaryInsert(this.renderList, tileGraphic, depthComparator);
+    }
+
+    if (layer === 1) {
+      this.updateEntityOffsets(x, y);
+    }
+  }
+
+  updateEntityOffsets(x, y) {
+    let offset = -10;
+
+    let object = this.tileGraphics[this.getTileGraphicIndex(x, y, 1)];
+    if (object) {
+      offset = Math.min(offset, 10 - object.height);
+    }
+
+    for (let layer = 11; layer <= 14; ++layer) {
+      let graphicIndex = this.getTileGraphicIndex(x, y, layer);
+      let entityGraphic = this.tileGraphics[graphicIndex];
+      if (entityGraphic) {
+        entityGraphic.y = x * 16 + y * 16 + offset;
+        offset -= 28;
+      }
     }
   }
 

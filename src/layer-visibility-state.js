@@ -11,7 +11,7 @@ export class LayerVisibilityState {
       /* [7]  Shadow     */ true,
       /* [8]  Overlay 2  */ true,
       /* [9]  Tilespec   */ false,
-      /* [10] Entity     */ false,
+      /* [10] Entity     */ true,
     ];
     this._selectedLayer = 0;
   }
@@ -48,6 +48,12 @@ export class LayerVisibilityState {
       case 10:
         // Visibility flag 9 covers both of the Tilespec layers
         return this.isLayerVisible(9);
+      case 11:
+      case 12:
+      case 13:
+      case 14:
+        // Visibility flag 10 covers all Entity layers
+        return this._flags[10];
       default:
         return this._flags[layer] || this._selectedLayer === layer;
     }
