@@ -137,6 +137,7 @@ export class Application extends LitElement {
   }
 
   initializeGFXLoader() {
+    // TODO: Electron build, remove hardcoded URL
     let egfStrategy = new DownloadLoadingStrategy(
       "https://game.bones-underground.org/gfx"
     );
@@ -242,6 +243,7 @@ export class Application extends LitElement {
   async openMap(fileID) {
     try {
       let filename = getEMFFilename(fileID);
+      // TODO: Electron build, map loading strategy, remove hardcoded URL
       let url = "https://game.bones-underground.org/maps/" + filename;
       let response = await fetch(url);
       if (!response.ok) {
