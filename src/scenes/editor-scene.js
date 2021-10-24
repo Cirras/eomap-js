@@ -238,7 +238,7 @@ export class EditorScene extends Phaser.Scene {
 
   canUpdateOverrideTool(pointer) {
     return (
-      this.overrideTool !== null ||
+      this.overrideTool === null ||
       (!pointer.leftButtonDown() && !pointer.rightButtonDown())
     );
   }
