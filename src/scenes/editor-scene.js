@@ -1,4 +1,3 @@
-import { CommandInvoker } from "../command/command";
 import { DrawCommand } from "../command/draw-command";
 import { FillCommand } from "../command/fill-command";
 import { TilePos } from "../tilepos";
@@ -12,6 +11,8 @@ import { FillTool } from "../tools/fill-tool";
 import { EntityTool } from "../tools/entity-tool";
 
 import "../gameobjects/eomap";
+import { EntityState } from "../entity-state";
+import { EntityCommand } from "../command/entity-command";
 
 export class EditorScene extends Phaser.Scene {
   constructor() {
@@ -84,6 +85,10 @@ export class EditorScene extends Phaser.Scene {
 
     this.data.events.on("changedata-selectedLayer", () => {
       this.updateSelectedLayer();
+    });
+
+    this.data.events.on("changedata-entityState", () => {
+      this.updateEntityState();
     });
 
     this.scale.on("resize", this.resize, this);
@@ -273,6 +278,25 @@ export class EditorScene extends Phaser.Scene {
 
   updateSelectedLayer() {
     this.map.setSelectedLayer(this.selectedLayer);
+  }
+
+  updateEntityState() {
+    let newEntityState = this.data.get("entityState");
+    let x = newEntityState.x;
+    let y = newEntityState.y;
+
+    let oldEntityState = new EntityState(
+      x,
+      y,
+      this.map.getWarp(x, y),
+      this.map.getSign(x, y),
+      this.map.getNPCs(x, y),
+      this.map.getItems(x, y)
+    );
+
+    this.commandInvoker.add(
+      new EntityCommand(this.map, x, y, oldEntityState, newEntityState)
+    );
   }
 
   getTilePosFromPointerPos(pointerPos) {

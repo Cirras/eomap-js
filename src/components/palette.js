@@ -212,7 +212,7 @@ export class Palette extends LitElement {
   eyedrop = null;
 
   @property({ type: Boolean })
-  inputEnabled = true;
+  pointerEnabled = true;
 
   @property({ type: Number })
   maxWidth = Palette.MIN_WIDTH;
@@ -311,7 +311,8 @@ export class Palette extends LitElement {
 
   updateInputEnabledState() {
     if (this.game) {
-      this.game.input.enabled = this.inputEnabled;
+      this.game.input.mouse.enabled = this.pointerEnabled;
+      this.game.input.touch.enabled = this.pointerEnabled;
     }
   }
 
@@ -385,7 +386,7 @@ export class Palette extends LitElement {
       this.checkLayerButtonsArrows();
     }
 
-    if (changedProperties.has("inputEnabled")) {
+    if (changedProperties.has("pointerEnabled")) {
       this.updateInputEnabledState();
     }
 

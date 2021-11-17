@@ -1,13 +1,13 @@
 import { decodeString } from "./eo-decode";
 
-const MapEffect = {
+export const MapEffect = {
   None: 0,
   HPDrain: 1,
   TPDrain: 2,
   Quake: 3,
 };
 
-const TileSpec = {
+export const TileSpec = {
   Wall: 0,
   ChairDown: 1,
   ChairLeft: 2,
@@ -40,7 +40,7 @@ const TileSpec = {
   Spikes3: 36,
 };
 
-const MapType = {
+export const MapType = {
   Default: 0,
   PK: 3,
 };

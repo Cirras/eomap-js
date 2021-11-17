@@ -15,6 +15,7 @@ import "./menubar";
 import "./sidebar";
 import "./editor";
 import "./infobar";
+import "./entity-editor";
 
 import { Palette } from "./palette";
 
@@ -30,6 +31,7 @@ import { CommandInvoker } from "../command/command";
 import { EMF } from "../data/emf";
 import { EOReader } from "../data/eo-reader";
 import { getEMFFilename } from "../utils";
+import { EntityState } from "../entity-state";
 
 @customElement("eomap-application")
 export class Application extends LitElement {
@@ -85,6 +87,9 @@ export class Application extends LitElement {
   @query("eomap-sidebar", true)
   sidebar;
 
+  @query("eomap-entity-editor")
+  entityEditor;
+
   @state({ type: CommandInvoker })
   commandInvoker = new CommandInvoker();
 
@@ -115,15 +120,20 @@ export class Application extends LitElement {
   @state({ type: Eyedrop })
   eyedrop = null;
 
+  @state({ type: EntityState })
+  entityState = null;
+
   @state({ type: Boolean })
-  rendererInputEnabled = true;
+  paletteResizing = false;
 
   @state({ type: Number })
   maxPaletteWidth = Palette.DEFAULT_WIDTH;
 
   onWindowKeyDown = (event) => {
-    this.handleLayerVisibilityShortcuts(event);
-    this.handleUndoRedoShortcuts(event);
+    if (this.keyboardEnabled()) {
+      this.handleLayerVisibilityShortcuts(event);
+      this.handleUndoRedoShortcuts(event);
+    }
   };
 
   onResize = (_event) => {
@@ -299,16 +309,20 @@ export class Application extends LitElement {
           .selectedTool=${this.selectedTool}
           .selectedLayer=${this.selectedLayer}
           .selectedDrawID=${this.selectedDrawID}
-          .inputEnabled=${this.rendererInputEnabled}
+          .entityState=${this.entityState}
+          .pointerEnabled=${this.pointerEnabled()}
+          .keyboardEnabled=${this.keyboardEnabled()}
           @changedata-currentPos=${this.onCurrentPosChanged}
           @changedata-eyedrop=${this.onEyedropChanged}
+          @request-entity-editor=${this.onEntityEditorRequested}
         ></eomap-editor>
         <eomap-palette
           .gfxLoader=${this.gfxLoader}
           .loadFail=${this.loadFail}
           .eyedrop=${this.eyedrop}
           .selectedLayer=${this.selectedLayer}
-          .inputEnabled=${this.rendererInputEnabled}
+          .pointerEnabled=${this.pointerEnabled()}
+          .keyboardEnabled=${this.keyboardEnabled()}
           .maxWidth=${this.maxPaletteWidth}
           @resize-start=${this.onPaletteResizeStart}
           @resize-end=${this.onPaletteResizeEnd}
@@ -316,6 +330,11 @@ export class Application extends LitElement {
           @changedata-selectedDrawID=${this.onSelectedDrawIDChanged}
         ></eomap-palette>
         <eomap-infobar .tilePos=${this.currentPos}></eomap-infobar>
+        <eomap-entity-editor
+          .tilePos=${this.currentPos}
+          @close=${this.onEntityEditorClose}
+          @save=${this.onEntityEditorSave}
+        ></eomap-entity-editor>
       </sp-theme>
     `;
   }
@@ -350,11 +369,11 @@ export class Application extends LitElement {
   }
 
   onPaletteResizeStart(_event) {
-    this.rendererInputEnabled = false;
+    this.paletteResizing = true;
   }
 
   onPaletteResizeEnd(_event) {
-    this.rendererInputEnabled = true;
+    this.paletteResizing = false;
   }
 
   onSelectedLayerChanged(event) {
@@ -366,5 +385,27 @@ export class Application extends LitElement {
 
   onSelectedDrawIDChanged(event) {
     this.selectedDrawID = event.detail;
+  }
+
+  onEntityEditorRequested(event) {
+    this.entityEditor.entityState = event.detail;
+    this.entityEditor.open = true;
+    this.requestUpdate();
+  }
+
+  onEntityEditorClose(_event) {
+    this.requestUpdate();
+  }
+
+  onEntityEditorSave(event) {
+    this.entityState = event.detail;
+  }
+
+  pointerEnabled() {
+    return !this.paletteResizing;
+  }
+
+  keyboardEnabled() {
+    return !this.entityEditor || !this.entityEditor.open;
   }
 }

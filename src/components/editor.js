@@ -19,6 +19,7 @@ import { EditorScene } from "../scenes/editor-scene";
 import { CommandInvoker } from "../command/command";
 import { GFXLoader } from "../gfx/load/gfx-loader";
 import { EMF } from "../data/emf";
+import { EntityState } from "../entity-state";
 
 @customElement("eomap-editor")
 export class Editor extends LitElement {
@@ -34,6 +35,7 @@ export class Editor extends LitElement {
     "gfxLoader",
     "selectedLayer",
     "selectedDrawID",
+    "entityState",
   ];
 
   static get styles() {
@@ -118,8 +120,14 @@ export class Editor extends LitElement {
   @property({ type: Number })
   selectedDrawID;
 
+  @property({ type: EntityState })
+  entityState;
+
   @property({ type: Boolean })
-  inputEnabled = true;
+  pointerEnabled = true;
+
+  @property({ type: Boolean })
+  keyboardEnabled = true;
 
   @state({ type: Phaser.Game })
   game;
@@ -135,6 +143,14 @@ export class Editor extends LitElement {
     }
   }
 
+  setupEntityToolEvents(scene) {
+    scene.events.on("request-entity-editor", (entityState) => {
+      this.dispatchEvent(
+        new CustomEvent("request-entity-editor", { detail: entityState })
+      );
+    });
+  }
+
   setupComponentDataForwardingToPhaser(scene) {
     for (let key of Editor.COMPONENT_DATA_KEYS) {
       scene.data.set(key, this[key]);
@@ -146,7 +162,9 @@ export class Editor extends LitElement {
 
   updateInputEnabledState() {
     if (this.game) {
-      this.game.input.enabled = this.inputEnabled;
+      this.game.input.mouse.enabled = this.pointerEnabled;
+      this.game.input.touch.enabled = this.pointerEnabled;
+      this.game.input.keyboard.enabled = this.keyboardEnabled;
     }
   }
 
@@ -191,6 +209,7 @@ export class Editor extends LitElement {
       scene.sys.events.once("ready", () => {
         this.setupPhaserChangeDataEvents(scene);
         this.setupComponentDataForwardingToPhaser(scene);
+        this.setupEntityToolEvents(scene);
         this.game = game;
         this.updateInputEnabledState();
       });
@@ -204,7 +223,10 @@ export class Editor extends LitElement {
       this.setupPhaser();
     }
 
-    if (changedProperties.has("inputEnabled")) {
+    if (
+      changedProperties.has("pointerEnabled") ||
+      changedProperties.has("keyboardEnabled")
+    ) {
       this.updateInputEnabledState();
     }
 

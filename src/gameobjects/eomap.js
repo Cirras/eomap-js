@@ -1,4 +1,5 @@
 import { arrayEquals, binaryInsert, removeFirst } from "../utils";
+import { TileSpec } from "../data/emf";
 
 const SECTION_SIZE = 256;
 
@@ -264,7 +265,14 @@ export class EOMap extends Phaser.GameObjects.GameObject {
   }
 
   setSpec(x, y, tileSpec, modifyRenderList) {
-    this.emf.getTile(x, y).spec = tileSpec;
+    let tile = this.emf.getTile(x, y);
+    let oldTileSpec = tile.spec;
+
+    tile.spec = tileSpec;
+
+    if (oldTileSpec === TileSpec.Chest || tile.spec === TileSpec.Chest) {
+      this.updateItemGraphic(x, y);
+    }
 
     let cacheEntry = null;
 
@@ -278,6 +286,10 @@ export class EOMap extends Phaser.GameObjects.GameObject {
 
     this.setTileGraphic(x, y, 9, cacheEntry, modifyRenderList);
     this.setTileGraphic(x, y, 10, cacheEntry, modifyRenderList);
+  }
+
+  getWarp(x, y) {
+    return this.emf.getTile(x, y).warp;
   }
 
   setWarp(x, y, warp) {
@@ -305,6 +317,10 @@ export class EOMap extends Phaser.GameObjects.GameObject {
     this.updateEntityOffsets(x, y);
   }
 
+  getSign(x, y) {
+    return this.emf.getTile(x, y).sign;
+  }
+
   setSign(x, y, sign) {
     let tile = this.emf.getTile(x, y);
     tile.sign = sign;
@@ -319,14 +335,17 @@ export class EOMap extends Phaser.GameObjects.GameObject {
     this.updateEntityOffsets(x, y);
   }
 
-  setItems(x, y, items) {
-    this.items.set(x, y, items);
+  getItems(x, y) {
+    return [...this.items.get(x, y)];
+  }
 
+  updateItemGraphic(x, y) {
+    let items = this.items.get(x, y);
     let cacheEntry = null;
 
     if (items.length > 0) {
       let entityKey = "items";
-      if (items.some((item) => item.key > 0)) {
+      if (this.emf.getTile(x, y).spec === TileSpec.Chest) {
         entityKey = "chest";
       }
       cacheEntry = this.textureCache.getEntity(entityKey);
@@ -336,8 +355,23 @@ export class EOMap extends Phaser.GameObjects.GameObject {
     this.updateEntityOffsets(x, y);
   }
 
+  setItems(x, y, items) {
+    let oldItems = this.items.get(x, y);
+    this.items.set(x, y, items);
+    this.emf.items = this.emf.items.filter((item) => !oldItems.includes(item));
+    this.emf.items = this.emf.items.concat(items);
+    this.updateItemGraphic(x, y);
+  }
+
+  getNPCs(x, y) {
+    return [...this.npcs.get(x, y)];
+  }
+
   setNPCs(x, y, npcs) {
+    let oldNPCs = this.npcs.get(x, y);
     this.npcs.set(x, y, npcs);
+    this.emf.npcs = this.emf.npcs.filter((npc) => !oldNPCs.includes(npc));
+    this.emf.npcs = this.emf.npcs.concat(npcs);
 
     let cacheEntry = null;
 
