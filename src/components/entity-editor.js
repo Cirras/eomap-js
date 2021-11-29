@@ -197,10 +197,10 @@ export class EntityEditor extends LitElement {
                 }}
               >
                 <td class="spectrum-Table-cell spectrum-Table-cell--divider">
-                  ${sign.title}
+                  &ZeroWidthSpace;${sign.title}
                 </td>
                 <td class="spectrum-Table-cell spectrum-Table-cell--divider">
-                  ${sign.message}
+                  &ZeroWidthSpace;${sign.message}
                 </td>
               </tr>
               ${this.renderDeleteButton(() => {
