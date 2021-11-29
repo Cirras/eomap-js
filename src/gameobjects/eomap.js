@@ -196,7 +196,9 @@ export class EOMap extends Phaser.GameObjects.GameObject {
     let left = Math.trunc(x / SECTION_SIZE);
     let right = Math.trunc((x + width) / SECTION_SIZE);
 
+    top = Math.min(this.sectionHeight - 1, top);
     bottom = Math.min(this.sectionHeight - 1, bottom);
+    left = Math.min(this.sectionWidth - 1, left);
     right = Math.min(this.sectionWidth - 1, right);
 
     top = Math.max(0, top);
