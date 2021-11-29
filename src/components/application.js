@@ -285,9 +285,16 @@ export class Application extends LitElement {
     return html`
       <sp-theme color="darkest" scale="medium">
         <eomap-menubar
+          .layerVisibility=${this.layerVisibility}
+          .emf=${this.emf}
           .canUndo=${this.commandInvoker.hasUndoCommands}
           .canRedo=${this.commandInvoker.hasRedoCommands}
-          .layerVisibility=${this.layerVisibility}
+          @new=${this.onNew}
+          @open=${this.onOpen}
+          @save=${this.onSave}
+          @save-as=${this.onSaveAs}
+          @map-properties=${this.onMapProperties}
+          @settings=${this.onSettings}
           @undo=${this.undo}
           @redo=${this.redo}
           @visibility-flag-toggle=${this.onVisibilityFlagToggle}
@@ -349,6 +356,30 @@ export class Application extends LitElement {
     removeEventListener("keydown", this.onWindowKeyDown);
     removeEventListener("resize", this.onResize);
     super.disconnectedCallback();
+  }
+
+  onNew(_event) {
+    // TODO
+  }
+
+  onOpen() {
+    // TODO
+  }
+
+  onSave() {
+    // TODO
+  }
+
+  onSaveAs() {
+    // TODO
+  }
+
+  onMapProperties() {
+    // TODO
+  }
+
+  onSettings() {
+    // TODO
   }
 
   onVisibilityFlagToggle(event) {

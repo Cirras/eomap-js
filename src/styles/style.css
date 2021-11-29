@@ -62,6 +62,11 @@ kbd {
   pointer-events: none;
 }
 
+sp-menu-divider {
+  --spectrum-listitem-m-divider-color: var(--spectrum-global-color-gray-300);
+  --spectrum-listitem-divider-size: var(--spectrum-global-dimension-size-10);
+}
+
 .menu-item {
   --spectrum-listitem-selectable-padding-right: var(
     --spectrum-global-dimension-size-150

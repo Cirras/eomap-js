@@ -11,6 +11,7 @@ import "@spectrum-web-components/theme/scale-medium.js";
 import "./menubar-button";
 
 import { LayerVisibilityState } from "../layer-visibility-state";
+import { EMF } from "../data/emf";
 
 @customElement("eomap-menubar")
 export class MenuBar extends LitElement {
@@ -32,13 +33,68 @@ export class MenuBar extends LitElement {
   }
 
   @property({ type: LayerVisibilityState })
-  layerVisibility;
+  layerVisibility = new LayerVisibilityState();
+
+  @property({ type: EMF })
+  emf = null;
 
   @property({ type: Boolean })
-  canUndo;
+  canUndo = false;
 
   @property({ type: Boolean })
-  canRedo;
+  canRedo = false;
+
+  renderFileMenuItems() {
+    return html`
+      <sp-menu-item
+        class="menu-item"
+        @click=${this.onNewClick}"
+      >
+        New
+        <kbd slot="value">Ctrl+Alt+N</kbd>
+      </sp-menu-item>
+      <sp-menu-item
+        class="menu-item"
+        @click=${this.onOpenClick}"
+      >
+        Open
+        <kbd slot="value">Ctrl+O</kbd>
+      </sp-menu-item>
+      <sp-menu-divider></sp-menu-divider>
+      <sp-menu-item
+        class="menu-item"
+        ?disabled=${this.emf === null}
+        @click=${this.onSaveClick}"
+      >
+        Save
+        <kbd slot="value">Ctrl+S</kbd>
+      </sp-menu-item>
+      <sp-menu-item
+        class="menu-item"
+        ?disabled=${this.emf === null}
+        @click=${this.onSaveAsClick}"
+      >
+        Save As
+        <kbd slot="value">Ctrl+Shift+S</kbd>
+      </sp-menu-item>
+      <sp-menu-divider></sp-menu-divider>
+      <sp-menu-item
+        class="menu-item"
+        style="min-width: 250px"
+        ?disabled=${this.emf === null}
+        @click=${this.onMapPropertiesClick}"
+      >
+        Map Properties
+      </sp-menu-item>
+      <sp-menu-divider></sp-menu-divider>
+      <sp-menu-item
+        class="menu-item"
+        @click=${this.onSettingsClick}"
+      >
+        Settings
+      </sp-menu-item>
+    `;
+  }
 
   renderEditMenuItems() {
     return html`
@@ -99,6 +155,7 @@ export class MenuBar extends LitElement {
       <header>
         <eomap-menubar-button>
           <span slot="label">File</span>
+          ${this.renderFileMenuItems()}
         </eomap-menubar-button>
         <eomap-menubar-button>
           <span slot="label">Edit</span>
@@ -113,6 +170,30 @@ export class MenuBar extends LitElement {
         </eomap-menubar-button>
       </header>
     `;
+  }
+
+  onNewClick(_event) {
+    this.dispatchEvent(new CustomEvent("new"));
+  }
+
+  onOpenClick(_event) {
+    this.dispatchEvent(new CustomEvent("open"));
+  }
+
+  onSaveClick(_event) {
+    this.dispatchEvent(new CustomEvent("save"));
+  }
+
+  onSaveAsClick(_event) {
+    this.dispatchEvent(new CustomEvent("save-as"));
+  }
+
+  onMapPropertiesClick(_event) {
+    this.dispatchEvent(new CustomEvent("map-properties"));
+  }
+
+  onSettingsClick(_event) {
+    this.dispatchEvent(new CustomEvent("settings"));
   }
 
   onViewItemClick(event) {
