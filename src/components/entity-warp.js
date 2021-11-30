@@ -102,6 +102,7 @@ export class EntityWarp extends LitElement {
             <div>
               <sp-field-label for="door">Door</sp-field-label>
               <sp-checkbox
+                id="door"
                 style="width: var(--spectrum-global-dimension-size-1200);"
                 emphasized
                 .checked=${this.isDoor}

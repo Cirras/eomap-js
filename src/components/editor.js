@@ -20,6 +20,7 @@ import { CommandInvoker } from "../command/command";
 import { GFXLoader } from "../gfx/load/gfx-loader";
 import { EMF } from "../data/emf";
 import { EntityState } from "../entity-state";
+import { MapPropertiesState } from "../map-properties-state";
 
 @customElement("eomap-editor")
 export class Editor extends LitElement {
@@ -36,6 +37,7 @@ export class Editor extends LitElement {
     "selectedLayer",
     "selectedDrawID",
     "entityState",
+    "mapPropertiesState",
   ];
 
   static get styles() {
@@ -122,6 +124,9 @@ export class Editor extends LitElement {
 
   @property({ type: EntityState })
   entityState;
+
+  @property({ type: MapPropertiesState })
+  mapPropertiesState;
 
   @property({ type: Boolean })
   pointerEnabled = true;

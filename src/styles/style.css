@@ -10,14 +10,6 @@ body {
   user-select: none;
 }
 
-sp-popover {
-  --spectrum-popover-background-color: var(--spectrum-global-color-gray-200);
-  --spectrum-overlay-animation-distance: 0px;
-  border-color: var(--spectrum-global-color-gray-100);
-  border-radius: 0px;
-  filter: none;
-}
-
 eomap-modal {
   --spectrum-dialog-confirm-overlay-background-color: rgba(0, 0, 0, 0.75);
   --spectrum-button-secondary-m-background-color: var(
@@ -65,6 +57,12 @@ kbd {
 sp-menu-divider {
   --spectrum-listitem-m-divider-color: var(--spectrum-global-color-gray-300);
   --spectrum-listitem-divider-size: var(--spectrum-global-dimension-size-10);
+}
+
+sp-switch {
+  width: 26px;
+  --spectrum-switch-cursor-hit-x: 0px;
+  --spectrum-switch-m-handle-border-size: 1px;
 }
 
 .menu-item {

@@ -1,10 +1,28 @@
 import { decodeString } from "./eo-decode";
 
+export const MapType = {
+  Normal: 0,
+  PK: 3,
+};
+
 export const MapEffect = {
   None: 0,
   HPDrain: 1,
   TPDrain: 2,
-  Quake: 3,
+  Quake1: 3,
+  Quake2: 4,
+  Quake3: 5,
+  Quake4: 6,
+};
+
+export const MusicControl = {
+  InterruptIfDifferentPlayOnce: 0,
+  InterruptPlayOnce: 1,
+  FinishPlayOnce: 2,
+  InterruptIfDifferentPlayRepeat: 3,
+  InterruptPlayRepeat: 4,
+  FinishPlayRepeat: 5,
+  InterruptPlayNothing: 6,
 };
 
 export const TileSpec = {
@@ -38,11 +56,6 @@ export const TileSpec = {
   Spikes1: 34,
   Spikes2: 35,
   Spikes3: 36,
-};
-
-export const MapType = {
-  Default: 0,
-  PK: 3,
 };
 
 function readString(bytes) {
@@ -174,16 +187,16 @@ export class MapTile {
 export class EMF {
   constructor() {
     this.name = "";
-    this.type = MapType.Default;
+    this.type = MapType.Normal;
     this.effect = MapEffect.None;
     this.musicID = 0;
-    this.musicControl = 0;
+    this.musicControl = MusicControl.InterruptIfDifferentPlayOnce;
     this.ambientSoundID = 0;
     this.width = 0;
     this.height = 0;
     this.fillTile = 0;
-    this.mapAvailable = 1;
-    this.canScroll = 1;
+    this.mapAvailable = true;
+    this.canScroll = true;
     this.relogX = 0;
     this.relogY = 0;
 
@@ -214,8 +227,8 @@ export class EMF {
     emf.width = reader.getChar() + 1;
     emf.height = reader.getChar() + 1;
     emf.fillTile = reader.getShort();
-    emf.mapAvailable = reader.getChar();
-    emf.canScroll = reader.getChar();
+    emf.mapAvailable = !!reader.getChar();
+    emf.canScroll = !!reader.getChar();
     emf.relogX = reader.getChar();
     emf.relogY = reader.getChar();
 

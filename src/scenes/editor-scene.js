@@ -13,6 +13,8 @@ import { EntityTool } from "../tools/entity-tool";
 import "../gameobjects/eomap";
 import { EntityState } from "../entity-state";
 import { EntityCommand } from "../command/entity-command";
+import { MapPropertiesState } from "../map-properties-state";
+import { PropertiesCommand } from "../command/properties-command";
 
 export class EditorScene extends Phaser.Scene {
   constructor() {
@@ -89,6 +91,10 @@ export class EditorScene extends Phaser.Scene {
 
     this.data.events.on("changedata-entityState", () => {
       this.updateEntityState();
+    });
+
+    this.data.events.on("changedata-mapPropertiesState", () => {
+      this.updateMapPropertiesState();
     });
 
     this.scale.on("resize", this.resize, this);
@@ -299,6 +305,33 @@ export class EditorScene extends Phaser.Scene {
     );
   }
 
+  updateMapPropertiesState() {
+    let newMapPropertiesState = this.data.get("mapPropertiesState");
+
+    let oldMapPropertiesState = new MapPropertiesState(
+      this.emf.name,
+      this.emf.width,
+      this.emf.height,
+      this.emf.type,
+      this.emf.effect,
+      this.emf.minimap,
+      this.emf.scrolls,
+      this.emf.music,
+      this.emf.ambientSound,
+      this.emf.musicControl,
+      this.emf.respawnX,
+      this.emf.respawnY
+    );
+
+    this.commandInvoker.add(
+      new PropertiesCommand(
+        this.map,
+        oldMapPropertiesState,
+        newMapPropertiesState
+      )
+    );
+  }
+
   getTilePosFromPointerPos(pointerPos) {
     let worldPos = this.cameras.main.getWorldPoint(pointerPos.x, pointerPos.y);
 
@@ -312,9 +345,9 @@ export class EditorScene extends Phaser.Scene {
 
     tilePos.valid =
       tilePos.x >= 0 &&
-      tilePos.x < this.map.emf.width &&
+      tilePos.x < this.emf.width &&
       tilePos.y >= 0 &&
-      tilePos.y < this.map.emf.height;
+      tilePos.y < this.emf.height;
 
     return tilePos;
   }
@@ -336,6 +369,10 @@ export class EditorScene extends Phaser.Scene {
 
   get tool() {
     return this.tools.get(this.overrideTool || this.selectedTool);
+  }
+
+  get emf() {
+    return this.data.get("emf");
   }
 
   get commandInvoker() {

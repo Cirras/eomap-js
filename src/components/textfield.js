@@ -14,6 +14,19 @@ export class Textfield extends SpectrumTextfield {
 
   maxlength = SHORT_MAX - 1;
 
+  constructor() {
+    super();
+    this.addEventListener("keydown", this.onKeyDown);
+  }
+
+  onKeyDown(event) {
+    if (event.code === "Enter" || event.code === "Space") {
+      // This may seem a bit random, but it prevents accordian items from
+      // swallowing Enter and Space inputs
+      event.stopPropagation();
+    }
+  }
+
   renderSizer() {
     if (this.grows && !this.quiet) {
       return html`<div id="sizer">&ZeroWidthSpace;${this.value}</div>`;

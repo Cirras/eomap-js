@@ -16,6 +16,7 @@ import "./sidebar";
 import "./editor";
 import "./infobar";
 import "./entity-editor";
+import "./properties";
 
 import { Palette } from "./palette";
 
@@ -32,6 +33,7 @@ import { EMF } from "../data/emf";
 import { EOReader } from "../data/eo-reader";
 import { getEMFFilename } from "../utils";
 import { EntityState } from "../entity-state";
+import { MapPropertiesState } from "../map-properties-state";
 
 @customElement("eomap-application")
 export class Application extends LitElement {
@@ -90,6 +92,9 @@ export class Application extends LitElement {
   @query("eomap-entity-editor")
   entityEditor;
 
+  @query("eomap-properties")
+  properties;
+
   @state({ type: CommandInvoker })
   commandInvoker = new CommandInvoker();
 
@@ -122,6 +127,9 @@ export class Application extends LitElement {
 
   @state({ type: EntityState })
   entityState = null;
+
+  @state({ type: MapPropertiesState })
+  MapPropertiesState = null;
 
   @state({ type: Boolean })
   paletteResizing = false;
@@ -317,6 +325,7 @@ export class Application extends LitElement {
           .selectedLayer=${this.selectedLayer}
           .selectedDrawID=${this.selectedDrawID}
           .entityState=${this.entityState}
+          .mapPropertiesState=${this.mapPropertiesState}
           .pointerEnabled=${this.pointerEnabled()}
           .keyboardEnabled=${this.keyboardEnabled()}
           @changedata-currentPos=${this.onCurrentPosChanged}
@@ -339,9 +348,13 @@ export class Application extends LitElement {
         <eomap-infobar .tilePos=${this.currentPos}></eomap-infobar>
         <eomap-entity-editor
           .tilePos=${this.currentPos}
-          @close=${this.onEntityEditorClose}
+          @close=${this.onModalClose}
           @save=${this.onEntityEditorSave}
         ></eomap-entity-editor>
+        <eomap-properties
+          @close=${this.onModalClose}
+          @save=${this.onPropertiesSave}
+        ></eomap-properties>
       </sp-theme>
     `;
   }
@@ -375,7 +388,9 @@ export class Application extends LitElement {
   }
 
   onMapProperties() {
-    // TODO
+    this.properties.populate(this.emf);
+    this.properties.open = true;
+    this.requestUpdate();
   }
 
   onSettings() {
@@ -424,7 +439,7 @@ export class Application extends LitElement {
     this.requestUpdate();
   }
 
-  onEntityEditorClose(_event) {
+  onModalClose(_event) {
     this.requestUpdate();
   }
 
@@ -432,11 +447,21 @@ export class Application extends LitElement {
     this.entityState = event.detail;
   }
 
+  onPropertiesSave(event) {
+    this.mapPropertiesState = event.detail;
+  }
+
   pointerEnabled() {
     return !this.paletteResizing;
   }
 
+  modalNotOpen(modal) {
+    return !modal || !modal.open;
+  }
+
   keyboardEnabled() {
-    return !this.entityEditor || !this.entityEditor.open;
+    return (
+      this.modalNotOpen(this.entityEditor) && this.modalNotOpen(this.properties)
+    );
   }
 }

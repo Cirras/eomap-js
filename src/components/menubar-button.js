@@ -55,6 +55,28 @@ export class MenuBarButton extends PickerBase {
     `;
   }
 
+  get renderPopover() {
+    return html`
+      <sp-popover
+        open
+        id="popover"
+        style="
+          --spectrum-popover-background-color: var(
+            --spectrum-global-color-gray-200
+          );
+          --spectrum-overlay-animation-distance: 0px;
+          border-color: var(--spectrum-global-color-gray-100);
+          border-radius: 0px;
+          filter: none;
+        "
+        @click=${this.onClick}
+        @sp-overlay-closed=${this.onOverlayClosed}
+      >
+        <sp-menu id="menu" role="${this.listRole}"></sp-menu>
+      </sp-popover>
+    `;
+  }
+
   updated(changedProperties) {
     super.updated(changedProperties);
     if (changedProperties.has("invalid")) {
