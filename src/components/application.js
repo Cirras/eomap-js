@@ -274,11 +274,15 @@ export class Application extends LitElement {
         throw new Error(`HTTP error. Status: ${response.status}`);
       }
       let buffer = await response.arrayBuffer();
-      let reader = new EOReader(buffer);
-      this.emf = EMF.read(reader);
+      this.readMap(buffer);
     } catch (e) {
       console.error("Failed to load EMF %d: %s", fileID, e);
     }
+  }
+
+  readMap(buffer) {
+    let reader = new EOReader(buffer);
+    this.emf = EMF.read(reader);
   }
 
   async firstUpdated(changes) {
@@ -381,13 +385,39 @@ export class Application extends LitElement {
     super.disconnectedCallback();
   }
 
+  emfPickerOptions() {
+    return {
+      types: [
+        {
+          description: "Endless Map File",
+          accept: {
+            "*/*": [".emf"],
+          },
+        },
+      ],
+    };
+  }
+
   onNew(_event) {
     this.newMap.open = true;
     this.requestUpdate();
   }
 
-  onOpen() {
-    // TODO
+  async onOpen() {
+    try {
+      [this.fileHandle] = await showOpenFilePicker(this.emfPickerOptions());
+    } catch {
+      return;
+    }
+
+    try {
+      let file = await this.fileHandle.getFile();
+      let buffer = await file.arrayBuffer();
+      this.readMap(buffer);
+      this.commandInvoker = new CommandInvoker();
+    } catch (e) {
+      console.error("Failed to load EMF", e);
+    }
   }
 
   onSave() {
