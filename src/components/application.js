@@ -16,6 +16,7 @@ import "./sidebar";
 import "./editor";
 import "./infobar";
 import "./entity-editor";
+import "./new-map";
 import "./properties";
 
 import { Palette } from "./palette";
@@ -92,6 +93,9 @@ export class Application extends LitElement {
   @query("eomap-entity-editor")
   entityEditor;
 
+  @query("eomap-new-map")
+  newMap;
+
   @query("eomap-properties")
   properties;
 
@@ -136,6 +140,8 @@ export class Application extends LitElement {
 
   @state({ type: Number })
   maxPaletteWidth = Palette.DEFAULT_WIDTH;
+
+  fileHandle = null;
 
   onWindowKeyDown = (event) => {
     if (this.keyboardEnabled()) {
@@ -351,6 +357,10 @@ export class Application extends LitElement {
           @close=${this.onModalClose}
           @save=${this.onEntityEditorSave}
         ></eomap-entity-editor>
+        <eomap-new-map
+          @close=${this.onModalClose}
+          @confirm=${this.onNewMapConfirm}
+        ></eomap-new-map>
         <eomap-properties
           @close=${this.onModalClose}
           @save=${this.onPropertiesSave}
@@ -372,7 +382,8 @@ export class Application extends LitElement {
   }
 
   onNew(_event) {
-    // TODO
+    this.newMap.open = true;
+    this.requestUpdate();
   }
 
   onOpen() {
@@ -447,6 +458,16 @@ export class Application extends LitElement {
     this.entityState = event.detail;
   }
 
+  onNewMapConfirm(event) {
+    this.emf = EMF.new(
+      event.detail.width,
+      event.detail.height,
+      event.detail.name
+    );
+    this.fileHandle = null;
+    this.commandInvoker = new CommandInvoker();
+  }
+
   onPropertiesSave(event) {
     this.mapPropertiesState = event.detail;
   }
@@ -461,7 +482,9 @@ export class Application extends LitElement {
 
   keyboardEnabled() {
     return (
-      this.modalNotOpen(this.entityEditor) && this.modalNotOpen(this.properties)
+      this.modalNotOpen(this.entityEditor) &&
+      this.modalNotOpen(this.newMap) &&
+      this.modalNotOpen(this.properties)
     );
   }
 }

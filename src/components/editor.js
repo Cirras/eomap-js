@@ -157,6 +157,7 @@ export class Editor extends LitElement {
   }
 
   setupComponentDataForwardingToPhaser(scene) {
+    this.componentDataForwarders = new Map();
     for (let key of Editor.COMPONENT_DATA_KEYS) {
       scene.data.set(key, this[key]);
       this.componentDataForwarders.set(key, () => {
@@ -174,6 +175,11 @@ export class Editor extends LitElement {
   }
 
   async setupPhaser() {
+    if (this.game) {
+      this.game.destroy(true);
+      this.game = null;
+    }
+
     let game = new Phaser.Game({
       type: Phaser.AUTO,
       disableContextMenu: true,

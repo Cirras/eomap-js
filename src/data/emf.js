@@ -207,6 +207,22 @@ export class EMF {
     this.tiles = [];
   }
 
+  static new(width, height, name) {
+    let emf = new EMF();
+
+    emf.width = width;
+    emf.height = height;
+    emf.name = name;
+
+    let tileCount = width * height;
+    emf.tiles = new Array(tileCount);
+    for (let i = 0; i < tileCount; ++i) {
+      emf.tiles[i] = new MapTile();
+    }
+
+    return emf;
+  }
+
   static read(reader) {
     let emf = new EMF();
 
