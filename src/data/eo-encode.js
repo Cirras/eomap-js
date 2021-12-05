@@ -2,34 +2,23 @@ import { CHAR_MAX, SHORT_MAX, THREE_MAX } from "./eo-numeric-limits";
 
 import { reverse } from "../utils";
 
-function getByteValue(byte) {
-  if (byte === undefined) {
-    byte = 254;
-  }
+export function encodeNumber(number) {
+  let d = Math.trunc(number / THREE_MAX) + 1;
+  number %= THREE_MAX;
 
-  if (byte === 254) {
-    byte = 1;
-  }
+  let c = Math.trunc(number / SHORT_MAX) + 1;
+  number %= SHORT_MAX;
 
-  --byte;
+  let b = Math.trunc(number / CHAR_MAX) + 1;
+  number %= CHAR_MAX;
 
-  return byte & 0xff;
+  let a = number + 1;
+
+  return Uint8Array.from([a, b, c, d]);
 }
 
-export function decodeNumber(a, b, c, d) {
-  a = getByteValue(a);
-  b = getByteValue(b);
-  c = getByteValue(c);
-  d = getByteValue(d);
-
-  return d * THREE_MAX + c * SHORT_MAX + b * CHAR_MAX + a;
-}
-
-export function decodeString(bytes) {
+export function encodeString(bytes) {
   let length = bytes.length;
-
-  reverse(bytes);
-
   let flippy = length % 2 === 1;
 
   for (let i = 0; i < length; ++i) {
@@ -49,4 +38,8 @@ export function decodeString(bytes) {
 
     flippy = !flippy;
   }
+
+  reverse(bytes);
+
+  return bytes;
 }

@@ -58,6 +58,32 @@ export function swap(array, indexA, indexB) {
   array[indexB] = element;
 }
 
+export function reverse(array) {
+  let length = array.length;
+  let halfLength = Math.trunc(length / 2);
+  for (let i = 0; i < halfLength; ++i) {
+    swap(array, i, length - i - 1);
+  }
+}
+
+export function findMostFrequent(array) {
+  const map = array.reduce((accumulator, value) => {
+    accumulator.set(value, (accumulator.get(value) || 0) + 1);
+    return accumulator;
+  }, new Map());
+
+  let result = 0;
+  let highestCount = 0;
+  for (let [key, value] of map.entries()) {
+    if (value > highestCount) {
+      result = key;
+      highestCount = value;
+    }
+  }
+
+  return result;
+}
+
 export function getEGFFilename(fileID) {
   return "gfx" + fileID.toString().padStart(3, "0") + ".egf";
 }

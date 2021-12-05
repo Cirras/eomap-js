@@ -23,6 +23,7 @@
     "@babel/preset-env": "^7.7.1",
     "babel-loader": "^8.0.6",
     "clean-webpack-plugin": "^3.0.0",
+    "crc-32": "^1.2.0",
     "css-loader": "^5.2.6",
     "html-webpack-plugin": "^3.2.0",
     "mini-css-extract-plugin": "^1.6.2",
@@ -42,6 +43,7 @@
     "@mapbox/shelf-pack": "^3.2.0",
     "@spectrum-css/table": "^4.0.0",
     "@spectrum-web-components/bundle": "^0.22.2",
-    "phaser": "^3.55.2"
+    "phaser": "^3.55.2",
+    "windows-1252": "^3.0.3"
   }
 }

@@ -35,6 +35,7 @@ import { EOReader } from "../data/eo-reader";
 import { getEMFFilename } from "../utils";
 import { EntityState } from "../entity-state";
 import { MapPropertiesState } from "../map-properties-state";
+import { EOBuilder } from "../data/eo-builder";
 
 @customElement("eomap-application")
 export class Application extends LitElement {
@@ -420,8 +421,21 @@ export class Application extends LitElement {
     }
   }
 
-  onSave() {
-    // TODO
+  async onSave() {
+    if (this.fileHandle === null) {
+      await this.onSaveAs();
+    } else {
+      let builder = new EOBuilder();
+      this.emf.write(builder);
+      let data = builder.build();
+      try {
+        const writable = await this.fileHandle.createWritable();
+        await writable.write(data);
+        await writable.close();
+      } catch (e) {
+        console.error("Failed to save EMF", e);
+      }
+    }
   }
 
   onSaveAs() {
