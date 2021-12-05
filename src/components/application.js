@@ -148,6 +148,7 @@ export class Application extends LitElement {
     if (this.keyboardEnabled()) {
       this.handleLayerVisibilityShortcuts(event);
       this.handleUndoRedoShortcuts(event);
+      this.handleFileShortcuts(event);
     }
   };
 
@@ -251,6 +252,35 @@ export class Application extends LitElement {
         } else {
           this.undo();
         }
+        break;
+    }
+  }
+
+  handleFileShortcuts(event) {
+    if (!event.ctrlKey) {
+      return;
+    }
+
+    switch (event.code) {
+      case "KeyN":
+        if (event.altKey) {
+          this.onNew();
+          event.preventDefault();
+        }
+        break;
+      case "KeyO":
+        this.onOpen();
+        event.preventDefault();
+        break;
+      case "KeyS":
+        if (this.emf) {
+          if (event.shiftKey) {
+            this.onSaveAs();
+          } else {
+            this.onSave();
+          }
+        }
+        event.preventDefault();
         break;
     }
   }
