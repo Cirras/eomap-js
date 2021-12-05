@@ -438,8 +438,13 @@ export class Application extends LitElement {
     }
   }
 
-  onSaveAs() {
-    // TODO
+  async onSaveAs() {
+    try {
+      this.fileHandle = await showSaveFilePicker(this.emfPickerOptions());
+    } catch (e) {
+      return;
+    }
+    this.onSave();
   }
 
   onMapProperties() {
