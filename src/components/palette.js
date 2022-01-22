@@ -377,7 +377,7 @@ export class Palette extends LitElement {
     if (
       changedProperties.has("gfxLoader") &&
       this.gfxLoader &&
-      this.loadFail === 0
+      this.gfxErrors === 0
     ) {
       this.setupPhaser();
     }

@@ -13,6 +13,7 @@ import "@spectrum-web-components/theme/sp-theme.js";
 
 import "./menubar";
 import "./sidebar";
+import "./startup";
 import "./editor";
 import "./infobar";
 import "./entity-editor";
@@ -32,7 +33,6 @@ import { CommandInvoker } from "../command/command";
 
 import { EMF } from "../data/emf";
 import { EOReader } from "../data/eo-reader";
-import { getEMFFilename } from "../utils";
 import { EntityState } from "../entity-state";
 import { MapPropertiesState } from "../map-properties-state";
 import { EOBuilder } from "../data/eo-builder";
@@ -66,6 +66,11 @@ export class Application extends LitElement {
       eomap-sidebar {
         grid-row: 2 / 5;
         grid-column: 1;
+      }
+
+      eomap-startup {
+        grid-row: 2 / 4;
+        grid-column: 2;
       }
 
       eomap-editor {
@@ -110,7 +115,10 @@ export class Application extends LitElement {
   emf = null;
 
   @state({ type: Number })
-  loadFail = 0;
+  gfxErrors = 0;
+
+  @state({ type: Error })
+  emfError = null;
 
   @state({ type: TilePos })
   currentPos = new TilePos();
@@ -173,15 +181,12 @@ export class Application extends LitElement {
     let gfxLoader = new GFXLoader(egfStrategy, rawStrategy);
     let promises = [3, 4, 5, 6, 7, 22].map((fileID) =>
       gfxLoader.loadEGF(fileID).catch((error) => {
-        ++this.loadFail;
+        ++this.gfxErrors;
         console.error("Failed to load EGF %d: %s", fileID, error);
       })
     );
     Promise.allSettled(promises).then(() => {
       this.gfxLoader = gfxLoader;
-      if (this.loadFail === 0) {
-        this.openMap(660);
-      }
     });
   }
 
@@ -295,25 +300,13 @@ export class Application extends LitElement {
     this.requestUpdate();
   }
 
-  async openMap(fileID) {
-    try {
-      let filename = getEMFFilename(fileID);
-      // TODO: Electron build, map loading strategy, remove hardcoded URL
-      let url = "https://game.bones-underground.org/maps/" + filename;
-      let response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`HTTP error. Status: ${response.status}`);
-      }
-      let buffer = await response.arrayBuffer();
-      this.readMap(buffer);
-    } catch (e) {
-      console.error("Failed to load EMF %d: %s", fileID, e);
-    }
-  }
-
   readMap(buffer) {
-    let reader = new EOReader(buffer);
-    this.emf = EMF.read(reader);
+    try {
+      let reader = new EOReader(buffer);
+      this.emf = EMF.read(reader);
+    } catch (e) {
+      this.emfError = e;
+    }
   }
 
   async firstUpdated(changes) {
@@ -328,6 +321,37 @@ export class Application extends LitElement {
   calculateMaxPaletteWidth() {
     let width = this.theme.clientWidth - this.sidebar.offsetWidth - 2;
     this.maxPaletteWidth = Math.max(Palette.MIN_WIDTH, width);
+  }
+
+  renderEditor() {
+    if (this.emf) {
+      return html`
+        <eomap-editor
+          .commandInvoker=${this.commandInvoker}
+          .gfxLoader=${this.gfxLoader}
+          .emf=${this.emf}
+          .layerVisibility=${this.layerVisibility}
+          .selectedTool=${this.selectedTool}
+          .selectedLayer=${this.selectedLayer}
+          .selectedDrawID=${this.selectedDrawID}
+          .entityState=${this.entityState}
+          .mapPropertiesState=${this.mapPropertiesState}
+          .pointerEnabled=${this.pointerEnabled()}
+          .keyboardEnabled=${this.keyboardEnabled()}
+          @changedata-currentPos=${this.onCurrentPosChanged}
+          @changedata-eyedrop=${this.onEyedropChanged}
+          @request-entity-editor=${this.onEntityEditorRequested}
+        ></eomap-editor>
+      `;
+    }
+
+    return html`
+      <eomap-startup
+        .loading=${this.isLoading()}
+        .loadingLabel=${this.loadingLabel()}
+        .loadingError=${this.loadingError()}
+      ></eomap-startup>
+    `;
   }
 
   render() {
@@ -356,26 +380,10 @@ export class Application extends LitElement {
           @undo=${this.undo}
           @redo=${this.redo}
         ></eomap-sidebar>
-        <eomap-editor
-          .commandInvoker=${this.commandInvoker}
-          .gfxLoader=${this.gfxLoader}
-          .loadFail=${this.loadFail}
-          .emf=${this.emf}
-          .layerVisibility=${this.layerVisibility}
-          .selectedTool=${this.selectedTool}
-          .selectedLayer=${this.selectedLayer}
-          .selectedDrawID=${this.selectedDrawID}
-          .entityState=${this.entityState}
-          .mapPropertiesState=${this.mapPropertiesState}
-          .pointerEnabled=${this.pointerEnabled()}
-          .keyboardEnabled=${this.keyboardEnabled()}
-          @changedata-currentPos=${this.onCurrentPosChanged}
-          @changedata-eyedrop=${this.onEyedropChanged}
-          @request-entity-editor=${this.onEntityEditorRequested}
-        ></eomap-editor>
+        ${this.renderEditor()}
         <eomap-palette
           .gfxLoader=${this.gfxLoader}
-          .loadFail=${this.loadFail}
+          .gfxErrors=${this.gfxErrors}
           .eyedrop=${this.eyedrop}
           .selectedLayer=${this.selectedLayer}
           .pointerEnabled=${this.pointerEnabled()}
@@ -440,6 +448,9 @@ export class Application extends LitElement {
     } catch {
       return;
     }
+
+    this.emf = null;
+    this.emfError = null;
 
     try {
       let file = await this.fileHandle.getFile();
@@ -543,6 +554,7 @@ export class Application extends LitElement {
       event.detail.height,
       event.detail.name
     );
+    this.emfError = null;
     this.fileHandle = null;
     this.commandInvoker = new CommandInvoker();
   }
@@ -565,5 +577,30 @@ export class Application extends LitElement {
       this.modalNotOpen(this.newMap) &&
       this.modalNotOpen(this.properties)
     );
+  }
+
+  isLoading() {
+    return !this.gfxLoader || (this.fileHandle && !this.emf);
+  }
+
+  loadingLabel() {
+    if (!this.gfxLoader) {
+      if (this.gfxErrors > 0) {
+        return `Failed to load ${this.gfxErrors} GFX file(s).`;
+      }
+      return "Loading GFX...";
+    }
+
+    if (this.emfError) {
+      return this.emfError.message;
+    }
+
+    if (this.fileHandle) {
+      return `Loading ${this.fileHandle.name}...`;
+    }
+  }
+
+  loadingError() {
+    return this.gfxErrors > 0 || this.emfError;
   }
 }

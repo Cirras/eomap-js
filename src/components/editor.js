@@ -7,12 +7,7 @@ import {
   state,
 } from "lit-element";
 
-import "@spectrum-web-components/banner/sp-banner.js";
-import "@spectrum-web-components/progress-bar/sp-progress-bar.js";
-
 import "phaser";
-
-import icon from "../assets/icon.svg";
 
 import { EditorScene } from "../scenes/editor-scene";
 
@@ -48,52 +43,9 @@ export class Editor extends LitElement {
         grid-template-rows: 100%;
         grid-template-columns: 100%;
       }
-      .loading {
-        background-color: var(--spectrum-global-color-gray-75);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        grid-column: 1;
-        grid-row: 1;
-        z-index: 100;
-      }
       .editor {
         grid-column: 1;
         grid-row: 1;
-      }
-      .icon-container {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        padding-bottom: 64px;
-      }
-      .icon {
-        width: 150px;
-        height: 150px;
-        padding-bottom: 30px;
-      }
-      .positive-progress-bar {
-        --spectrum-fieldlabel-m-text-color: var(
-          --spectrum-global-color-gray-700
-        );
-        --spectrum-progressbar-m-over-background-track-fill-color: var(
-          --spectrum-global-color-gray-700
-        );
-      }
-      .negative-progress-bar {
-        --spectrum-fieldlabel-m-text-color: var(
-          --spectrum-semantic-negative-color-status
-        );
-        --spectrum-progressbar-m-over-background-track-color: var(
-          --spectrum-semantic-negative-color-status
-        );
-        --spectrum-progressbar-m-over-background-track-fill-color: var(
-          --spectrum-semantic-negative-color-status
-        );
-        --spectrum-progressbar-m-over-background-track-fill-color: var(
-          --spectrum-semantic-negative-color-status
-        );
       }
     `;
   }
@@ -106,9 +58,6 @@ export class Editor extends LitElement {
 
   @property({ type: EMF })
   emf;
-
-  @property({ type: Number })
-  loadFail;
 
   @property({ type: String })
   selectedTool;
@@ -249,46 +198,16 @@ export class Editor extends LitElement {
     }
   }
 
-  renderLogoWith(content) {
-    return html`
-      <div class="icon-container">
-        <img src=${icon} class="icon"></img>
-        ${content}
-      </div>
-    `;
-  }
-
-  renderLoadingContent() {
-    let failed = this.loadFail > 0;
-    let progressBarClass = failed
-      ? "negative-progress-bar"
-      : "positive-progress-bar";
-    let label = failed
-      ? `Failed to load ${this.loadFail} gfx file(s).`
-      : "Loading...";
-
-    return this.renderLogoWith(
-      html`
-        <sp-progress-bar
-          class="${progressBarClass}"
-          label="${label}"
-          indeterminate
-          over-background
-        ></sp-progress-bar>
-      `
-    );
-  }
-
-  renderLoading() {
-    if (!this.game) {
-      return html` <div class="loading">${this.renderLoadingContent()}</div>`;
-    }
-  }
-
   render() {
-    return html`
-      ${this.renderLoading()}
-      <div id="${Editor.EDITOR_ID}" class="editor"></div>
-    `;
+    return html` <div id="${Editor.EDITOR_ID}" class="editor"></div> `;
+  }
+
+  disconnectedCallback() {
+    if (this.game) {
+      this.game.destroy(true);
+      this.game = null;
+    }
+    this.componentDataForwarders.clear();
+    super.disconnectedCallback();
   }
 }
