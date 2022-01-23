@@ -8,10 +8,10 @@ import "@spectrum-web-components/menu/sp-menu-item.js";
 import "@spectrum-web-components/menu/sp-menu-divider.js";
 import "@spectrum-web-components/theme/theme-dark.js";
 import "@spectrum-web-components/theme/scale-medium.js";
+
 import "./menubar-button";
 
 import { LayerVisibilityState } from "../layer-visibility-state";
-import { EMF } from "../data/emf";
 
 @customElement("eomap-menubar")
 export class MenuBar extends LitElement {
@@ -35,8 +35,11 @@ export class MenuBar extends LitElement {
   @property({ type: LayerVisibilityState })
   layerVisibility = new LayerVisibilityState();
 
-  @property({ type: EMF })
-  emf = null;
+  @property({ type: Boolean })
+  canOpenMaps = false;
+
+  @property({ type: Boolean })
+  canDoMapOperations = false;
 
   @property({ type: Boolean })
   canUndo = false;
@@ -48,6 +51,7 @@ export class MenuBar extends LitElement {
     return html`
       <sp-menu-item
         class="menu-item"
+        ?disabled=${!this.canOpenMaps}
         @click=${this.onNewClick}"
       >
         New
@@ -55,6 +59,7 @@ export class MenuBar extends LitElement {
       </sp-menu-item>
       <sp-menu-item
         class="menu-item"
+        ?disabled=${!this.canOpenMaps}
         @click=${this.onOpenClick}"
       >
         Open
@@ -63,7 +68,7 @@ export class MenuBar extends LitElement {
       <sp-menu-divider></sp-menu-divider>
       <sp-menu-item
         class="menu-item"
-        ?disabled=${this.emf === null}
+        ?disabled=${!this.canDoMapOperations}
         @click=${this.onSaveClick}"
       >
         Save
@@ -71,7 +76,7 @@ export class MenuBar extends LitElement {
       </sp-menu-item>
       <sp-menu-item
         class="menu-item"
-        ?disabled=${this.emf === null}
+        ?disabled=${!this.canDoMapOperations}
         @click=${this.onSaveAsClick}"
       >
         Save As
@@ -81,7 +86,7 @@ export class MenuBar extends LitElement {
       <sp-menu-item
         class="menu-item"
         style="min-width: 250px"
-        ?disabled=${this.emf === null}
+        ?disabled=${!this.canDoMapOperations}
         @click=${this.onMapPropertiesClick}"
       >
         Map Properties

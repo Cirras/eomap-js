@@ -269,12 +269,16 @@ export class Application extends LitElement {
     switch (event.code) {
       case "KeyN":
         if (event.altKey) {
-          this.onNew();
+          if (this.validGfx()) {
+            this.onNew();
+          }
           event.preventDefault();
         }
         break;
       case "KeyO":
-        this.onOpen();
+        if (this.validGfx()) {
+          this.onOpen();
+        }
         event.preventDefault();
         break;
       case "KeyS":
@@ -359,7 +363,8 @@ export class Application extends LitElement {
       <sp-theme color="darkest" scale="medium">
         <eomap-menubar
           .layerVisibility=${this.layerVisibility}
-          .emf=${this.emf}
+          .canOpenMaps=${this.validGfx()}
+          .canDoMapOperations=${this.emf !== null}
           .canUndo=${this.commandInvoker.hasUndoCommands}
           .canRedo=${this.commandInvoker.hasRedoCommands}
           @new=${this.onNew}
@@ -602,5 +607,9 @@ export class Application extends LitElement {
 
   loadingError() {
     return this.gfxErrors > 0 || this.emfError;
+  }
+
+  validGfx() {
+    return this.gfxLoader && this.gfxErrors === 0;
   }
 }
