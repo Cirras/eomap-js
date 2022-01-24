@@ -124,10 +124,7 @@ export class Editor extends LitElement {
   }
 
   async setupPhaser() {
-    if (this.game) {
-      this.game.destroy(true);
-      this.game = null;
-    }
+    this.destroyGame();
 
     let game = new Phaser.Game({
       type: Phaser.AUTO,
@@ -203,11 +200,26 @@ export class Editor extends LitElement {
   }
 
   disconnectedCallback() {
+    this.destroyGame();
+    this.componentDataForwarders.clear();
+    super.disconnectedCallback();
+  }
+
+  destroyGame() {
     if (this.game) {
+      // The canvas and WebGLRendererContext won't be cleaned up properly
+      // unless this touchcancel event listener is removed.
+      //
+      // Fixed in Phaser 3.60.
+      // See: https://github.com/photonstorm/phaser/pull/5921
+      if (window) {
+        window.removeEventListener(
+          "touchcancel",
+          this.game.input.touch.onTouchCancelWindow
+        );
+      }
       this.game.destroy(true);
       this.game = null;
     }
-    this.componentDataForwarders.clear();
-    super.disconnectedCallback();
   }
 }
