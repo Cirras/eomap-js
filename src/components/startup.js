@@ -74,7 +74,7 @@ export class Startup extends LitElement {
   loadingError = false;
 
   renderContent() {
-    if (this.loading) {
+    if (this.loading || this.loadingError) {
       return html`
         <sp-progress-bar
           class="${this.loadingError

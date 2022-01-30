@@ -589,10 +589,11 @@ export class Application extends LitElement {
   }
 
   loadingLabel() {
+    if (this.gfxErrors > 0) {
+      return `Failed to load ${this.gfxErrors} GFX file(s).`;
+    }
+
     if (!this.gfxLoader) {
-      if (this.gfxErrors > 0) {
-        return `Failed to load ${this.gfxErrors} GFX file(s).`;
-      }
       return "Loading GFX...";
     }
 
