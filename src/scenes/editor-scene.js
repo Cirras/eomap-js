@@ -314,13 +314,13 @@ export class EditorScene extends Phaser.Scene {
       this.emf.height,
       this.emf.type,
       this.emf.effect,
-      this.emf.minimap,
-      this.emf.scrolls,
-      this.emf.music,
-      this.emf.ambientSound,
+      this.emf.mapAvailable,
+      this.emf.canScroll,
+      this.emf.musicID,
+      this.emf.ambientSoundID,
       this.emf.musicControl,
-      this.emf.respawnX,
-      this.emf.respawnY
+      this.emf.relogX,
+      this.emf.relogY
     );
 
     this.commandInvoker.add(
