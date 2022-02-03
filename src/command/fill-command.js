@@ -8,8 +8,8 @@ class Tile {
 }
 
 export class FillCommand extends MapCommand {
-  constructor(map, x, y, layer, oldDrawID, newDrawID) {
-    super(map);
+  constructor(mapState, x, y, layer, oldDrawID, newDrawID) {
+    super(mapState);
     this.originX = x;
     this.originY = y;
     this.layer = layer;

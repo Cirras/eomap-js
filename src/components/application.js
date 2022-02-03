@@ -7,35 +7,38 @@ import {
   state,
 } from "lit-element";
 
+import { get, set } from "idb-keyval";
+
 import "@spectrum-web-components/theme/theme-darkest.js";
 import "@spectrum-web-components/theme/scale-medium.js";
 import "@spectrum-web-components/theme/sp-theme.js";
 
 import "./menubar";
 import "./sidebar";
-import "./startup";
 import "./editor";
 import "./infobar";
 import "./entity-editor";
 import "./new-map";
 import "./properties";
+import "./settings";
 
+import { Startup } from "./startup";
 import { Palette } from "./palette";
 
 import { GFXLoader } from "../gfx/load/gfx-loader";
-import { BundledLoadingStrategy } from "../gfx/load/strategy/bundled-loading-strategy";
-import { DownloadLoadingStrategy } from "../gfx/load/strategy/download-loading-strategy";
+import { LocalLoadingStrategy } from "../gfx/load/strategy/local-loading-strategy";
 
 import { TilePos } from "../tilepos";
 import { Eyedrop } from "../tools/eyedrop";
 import { LayerVisibilityState } from "../layer-visibility-state";
-import { CommandInvoker } from "../command/command";
 
 import { EMF } from "../data/emf";
 import { EOReader } from "../data/eo-reader";
 import { EntityState } from "../entity-state";
 import { MapPropertiesState } from "../map-properties-state";
+import { SettingsState } from "../settings-state";
 import { EOBuilder } from "../data/eo-builder";
+import { MapState } from "../map-state";
 
 @customElement("eomap-application")
 export class Application extends LitElement {
@@ -105,20 +108,20 @@ export class Application extends LitElement {
   @query("eomap-properties")
   properties;
 
-  @state({ type: CommandInvoker })
-  commandInvoker = new CommandInvoker();
+  @query("eomap-settings")
+  settings;
+
+  @state({ type: Number })
+  startupStatus = Startup.Status.LOADING_SETTINGS;
 
   @state({ type: GFXLoader })
   gfxLoader = null;
 
-  @state({ type: EMF })
-  emf = null;
+  @state({ type: MapState })
+  mapState = new MapState();
 
   @state({ type: Number })
   gfxErrors = 0;
-
-  @state({ type: Error })
-  emfError = null;
 
   @state({ type: TilePos })
   currentPos = new TilePos();
@@ -142,15 +145,16 @@ export class Application extends LitElement {
   entityState = null;
 
   @state({ type: MapPropertiesState })
-  MapPropertiesState = null;
+  mapPropertiesState = null;
+
+  @state({ type: SettingsState })
+  settingsState = null;
 
   @state({ type: Boolean })
   paletteResizing = false;
 
   @state({ type: Number })
   maxPaletteWidth = Palette.DEFAULT_WIDTH;
-
-  fileHandle = null;
 
   onWindowKeyDown = (event) => {
     if (this.keyboardEnabled()) {
@@ -166,28 +170,17 @@ export class Application extends LitElement {
 
   constructor() {
     super();
-    this.initializeGFXLoader();
+    this.loadSettings();
     this.preventSpecialInputsFromBeingSwallowed();
   }
 
-  initializeGFXLoader() {
-    // TODO: Electron build, remove hardcoded URL
-    let egfStrategy = new DownloadLoadingStrategy(
-      "https://game.bones-underground.org/gfx"
-    );
-    let rawStrategy = new BundledLoadingStrategy(
-      require.context("../assets/bundled", true, /\.png$/)
-    );
-    let gfxLoader = new GFXLoader(egfStrategy, rawStrategy);
-    let promises = [3, 4, 5, 6, 7, 22].map((fileID) =>
-      gfxLoader.loadEGF(fileID).catch((error) => {
-        ++this.gfxErrors;
-        console.error("Failed to load EGF %d: %s", fileID, error);
-      })
-    );
-    Promise.allSettled(promises).then(() => {
-      this.gfxLoader = gfxLoader;
-    });
+  async loadSettings() {
+    try {
+      let settings = await get("settings");
+      this.settingsState = SettingsState.fromIDB(settings);
+    } catch (e) {
+      console.error("Failed to load settings", e);
+    }
   }
 
   preventSpecialInputsFromBeingSwallowed() {
@@ -269,26 +262,24 @@ export class Application extends LitElement {
     switch (event.code) {
       case "KeyN":
         if (event.altKey) {
-          if (this.validGfx()) {
-            this.onNew();
-          }
+          this.onNew();
           event.preventDefault();
         }
         break;
       case "KeyO":
-        if (this.validGfx()) {
-          this.onOpen();
-        }
+        this.onOpen();
         event.preventDefault();
         break;
       case "KeyS":
-        if (this.emf) {
-          if (event.shiftKey) {
-            this.onSaveAs();
-          } else {
-            this.onSave();
-          }
+        if (event.shiftKey) {
+          this.onSaveAs();
+        } else {
+          this.onSave();
         }
+        event.preventDefault();
+        break;
+      case "Comma":
+        this.onSettings();
         event.preventDefault();
         break;
     }
@@ -305,12 +296,33 @@ export class Application extends LitElement {
   }
 
   readMap(buffer) {
-    try {
-      let reader = new EOReader(buffer);
-      this.emf = EMF.read(reader);
-    } catch (e) {
-      this.emfError = e;
-    }
+    let reader = new EOReader(buffer);
+    let emf = EMF.read(reader);
+    this.mapState = this.mapState.withEMF(emf);
+  }
+
+  async loadGFX() {
+    this.destroyGFXLoader();
+
+    let loadingStrategy = new LocalLoadingStrategy(
+      this.settingsState.gfxDirectory,
+      this.settingsState.customAssetsDirectory
+    );
+
+    let gfxLoader = new GFXLoader(loadingStrategy);
+
+    await Promise.allSettled(
+      [3, 4, 5, 6, 7, 22].map(async (fileID) => {
+        try {
+          await gfxLoader.loadEGF(fileID);
+        } catch (e) {
+          ++this.gfxErrors;
+          console.error("Failed to load EGF %d: %s", fileID, e);
+        }
+      })
+    );
+
+    this.gfxLoader = gfxLoader;
   }
 
   async firstUpdated(changes) {
@@ -322,18 +334,34 @@ export class Application extends LitElement {
     this.calculateMaxPaletteWidth();
   }
 
+  updated(changes) {
+    if (changes.has("settingsState") && this.settingsState) {
+      this.manageSettings();
+    }
+    this.updateStartupStatus();
+  }
+
+  async manageSettings() {
+    this.destroyGFXLoader();
+    if (
+      this.settingsState.gfxDirectory &&
+      !(await this.needGFXDirectoryPermission())
+    ) {
+      this.loadGFX();
+    }
+  }
+
   calculateMaxPaletteWidth() {
     let width = this.theme.clientWidth - this.sidebar.offsetWidth - 2;
     this.maxPaletteWidth = Math.max(Palette.MIN_WIDTH, width);
   }
 
   renderEditor() {
-    if (this.emf) {
+    if (this.validGfx() && this.mapState.loaded()) {
       return html`
         <eomap-editor
-          .commandInvoker=${this.commandInvoker}
           .gfxLoader=${this.gfxLoader}
-          .emf=${this.emf}
+          .mapState=${this.mapState}
           .layerVisibility=${this.layerVisibility}
           .selectedTool=${this.selectedTool}
           .selectedLayer=${this.selectedLayer}
@@ -351,9 +379,14 @@ export class Application extends LitElement {
 
     return html`
       <eomap-startup
-        .loading=${this.isLoading()}
-        .loadingLabel=${this.loadingLabel()}
-        .loadingError=${this.loadingError()}
+        .status=${this.startupStatus}
+        .mapState=${this.mapState}
+        .gfxErrors=${this.gfxErrors}
+        @settings=${this.onSettings}
+        @request-gfx-directory-permission=${this
+          .onRequestGFXDirectoryPermission}
+        @request-assets-directory-permission=${this
+          .onRequestAssetsDirectoryPermission}
       ></eomap-startup>
     `;
   }
@@ -364,9 +397,11 @@ export class Application extends LitElement {
         <eomap-menubar
           .layerVisibility=${this.layerVisibility}
           .canOpenMaps=${this.validGfx()}
-          .canDoMapOperations=${this.emf !== null}
-          .canUndo=${this.commandInvoker.hasUndoCommands}
-          .canRedo=${this.commandInvoker.hasRedoCommands}
+          .canSaveMaps=${this.mapState.loaded()}
+          .canAccessMapProperties=${this.validGfx() && this.mapState.loaded()}
+          .canAccessSettings=${this.settingsState != null}
+          .canUndo=${this.canUndo()}
+          .canRedo=${this.canRedo()}
           @new=${this.onNew}
           @open=${this.onOpen}
           @save=${this.onSave}
@@ -379,8 +414,8 @@ export class Application extends LitElement {
         ></eomap-menubar>
         <eomap-sidebar
           .selectedTool=${this.selectedTool}
-          .canUndo=${this.commandInvoker.hasUndoCommands}
-          .canRedo=${this.commandInvoker.hasRedoCommands}
+          .canUndo=${this.canUndo()}
+          .canRedo=${this.canRedo()}
           @tool-selected=${this.onToolSelected}
           @undo=${this.undo}
           @redo=${this.redo}
@@ -413,6 +448,10 @@ export class Application extends LitElement {
           @close=${this.onModalClose}
           @save=${this.onPropertiesSave}
         ></eomap-properties>
+        <eomap-settings
+          @close=${this.onModalClose}
+          @save=${this.onSettingsSave}
+        ></eomap-settings>
       </sp-theme>
     `;
   }
@@ -443,39 +482,50 @@ export class Application extends LitElement {
   }
 
   onNew(_event) {
+    if (!this.validGfx()) {
+      return;
+    }
     this.newMap.open = true;
     this.requestUpdate();
   }
 
   async onOpen() {
+    if (!this.validGfx()) {
+      return;
+    }
+
+    let fileHandle;
     try {
-      [this.fileHandle] = await showOpenFilePicker(this.emfPickerOptions());
+      [fileHandle] = await showOpenFilePicker(this.emfPickerOptions());
     } catch {
       return;
     }
 
-    this.emf = null;
-    this.emfError = null;
+    this.mapState = MapState.fromFileHandle(fileHandle);
 
     try {
-      let file = await this.fileHandle.getFile();
+      let file = await fileHandle.getFile();
       let buffer = await file.arrayBuffer();
       this.readMap(buffer);
-      this.commandInvoker = new CommandInvoker();
     } catch (e) {
+      this.mapState = this.mapState.withError(e);
       console.error("Failed to load EMF", e);
     }
   }
 
   async onSave() {
-    if (this.fileHandle === null) {
+    if (!this.mapState.loaded()) {
+      return;
+    }
+
+    if (this.mapState.fileHandle === null) {
       await this.onSaveAs();
     } else {
       let builder = new EOBuilder();
-      this.emf.write(builder);
+      this.mapState.emf.write(builder);
       let data = builder.build();
       try {
-        const writable = await this.fileHandle.createWritable();
+        const writable = await this.mapState.fileHandle.createWritable();
         await writable.write(data);
         await writable.close();
       } catch (e) {
@@ -485,6 +535,10 @@ export class Application extends LitElement {
   }
 
   async onSaveAs() {
+    if (!this.mapState.loaded()) {
+      return;
+    }
+
     try {
       this.fileHandle = await showSaveFilePicker(this.emfPickerOptions());
     } catch (e) {
@@ -494,13 +548,18 @@ export class Application extends LitElement {
   }
 
   onMapProperties() {
-    this.properties.populate(this.emf);
+    this.properties.populate(this.mapState.emf);
     this.properties.open = true;
     this.requestUpdate();
   }
 
   onSettings() {
-    // TODO
+    if (!this.settingsState) {
+      return;
+    }
+    this.settings.populate(this.settingsState);
+    this.settings.open = true;
+    this.requestUpdate();
   }
 
   onVisibilityFlagToggle(event) {
@@ -554,18 +613,25 @@ export class Application extends LitElement {
   }
 
   onNewMapConfirm(event) {
-    this.emf = EMF.new(
+    let emf = EMF.new(
       event.detail.width,
       event.detail.height,
       event.detail.name
     );
-    this.emfError = null;
-    this.fileHandle = null;
-    this.commandInvoker = new CommandInvoker();
+    this.mapState = MapState.fromEMF(emf);
   }
 
   onPropertiesSave(event) {
     this.mapPropertiesState = event.detail;
+  }
+
+  async onSettingsSave(event) {
+    try {
+      await set("settings", event.detail);
+      this.settingsState = event.detail;
+    } catch (e) {
+      console.error("Failed to save settings", e);
+    }
   }
 
   pointerEnabled() {
@@ -580,37 +646,121 @@ export class Application extends LitElement {
     return (
       this.modalNotOpen(this.entityEditor) &&
       this.modalNotOpen(this.newMap) &&
-      this.modalNotOpen(this.properties)
+      this.modalNotOpen(this.properties) &&
+      this.modalNotOpen(this.settings)
     );
   }
 
-  isLoading() {
-    return !this.gfxLoader || (this.fileHandle && !this.emf);
+  canUndo() {
+    return (
+      this.validGfx() &&
+      this.commandInvoker &&
+      this.commandInvoker.hasUndoCommands
+    );
   }
 
-  loadingLabel() {
+  canRedo() {
+    return (
+      this.validGfx() &&
+      this.commandInvoker &&
+      this.commandInvoker.hasRedoCommands
+    );
+  }
+
+  async updateStartupStatus() {
+    this.startupStatus = await this.getStartupStatus();
+  }
+
+  async getStartupStatus() {
+    if (!this.settingsState) {
+      return Startup.Status.LOADING_SETTINGS;
+    }
+
+    if (!this.settingsState.gfxDirectory) {
+      return Startup.Status.NEED_GFX_DIRECTORY;
+    }
+
+    if (await this.needGFXDirectoryPermission()) {
+      return Startup.Status.NEED_GFX_DIRECTORY_PERMISSION;
+    }
+
+    if (
+      this.settingsState.customAssetsDirectory &&
+      (await this.needAssetsDirectoryPermission())
+    ) {
+      return Startup.Status.NEED_ASSETS_DIRECTORY_PERMISSION;
+    }
+
     if (this.gfxErrors > 0) {
-      return `Failed to load ${this.gfxErrors} GFX file(s).`;
+      return Startup.Status.ERROR_GFX;
     }
 
     if (!this.gfxLoader) {
-      return "Loading GFX...";
+      return Startup.Status.LOADING_GFX;
     }
 
-    if (this.emfError) {
-      return this.emfError.message;
+    if (this.mapState.error) {
+      return Startup.Status.ERROR_EMF;
     }
 
-    if (this.fileHandle) {
-      return `Loading ${this.fileHandle.name}...`;
+    if (this.mapState.loading()) {
+      return Startup.Status.LOADING_EMF;
+    }
+
+    return Startup.Status.READY;
+  }
+
+  async onRequestGFXDirectoryPermission() {
+    await this.settingsState.gfxDirectory.requestPermission();
+    this.requestUpdate();
+    this.tryLoadingGFX();
+  }
+
+  async onRequestAssetsDirectoryPermission() {
+    await this.settingsState.customAssetsDirectory.requestPermission();
+    this.requestUpdate();
+    this.tryLoadingGFX();
+  }
+
+  async tryLoadingGFX() {
+    if (
+      !(await this.needGFXDirectoryPermission()) &&
+      !(await this.needAssetsDirectoryPermission())
+    ) {
+      this.loadGFX();
     }
   }
 
-  loadingError() {
-    return this.gfxErrors > 0 || this.emfError;
+  async needGFXDirectoryPermission() {
+    return (
+      this.settingsState &&
+      this.settingsState.gfxDirectory &&
+      (await this.settingsState.gfxDirectory.queryPermission()) !== "granted"
+    );
+  }
+
+  async needAssetsDirectoryPermission() {
+    return (
+      this.settingsState &&
+      this.settingsState.customAssetsDirectory &&
+      (await this.settingsState.customAssetsDirectory.queryPermission()) !==
+        "granted"
+    );
   }
 
   validGfx() {
     return this.gfxLoader && this.gfxErrors === 0;
+  }
+
+  destroyGFXLoader() {
+    if (this.gfxLoader) {
+      this.gfxLoader.destroy();
+    }
+    this.gfxLoader = null;
+    this.gfxErrors = 0;
+  }
+
+  get commandInvoker() {
+    return this.mapState.commandInvoker;
   }
 }

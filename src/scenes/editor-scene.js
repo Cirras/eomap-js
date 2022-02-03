@@ -47,9 +47,11 @@ export class EditorScene extends Phaser.Scene {
     this.map = this.add.eomap(
       this,
       this.textureCache,
-      this.data.values.emf,
+      this.emf,
       this.layerVisibility
     );
+
+    this.mapState.gameObject = this.map;
 
     this.tools = this.createTools();
 
@@ -103,7 +105,7 @@ export class EditorScene extends Phaser.Scene {
     this.updateSelectedLayer();
     this.resize();
 
-    this.resetCameraPosition();
+    this.initCameraPosition();
   }
 
   createTools() {
@@ -137,6 +139,12 @@ export class EditorScene extends Phaser.Scene {
     this.cameraControls.update(delta);
     this.textureCache.update();
     this.map.update(time, delta);
+
+    let camera = this.cameras.main;
+    if (camera.dirty) {
+      this.mapState.scrollX = camera.scrollX;
+      this.mapState.scrollY = camera.scrollY;
+    }
 
     if (this.currentPosDirty) {
       this.data.set("currentPos", this.currentPos);
@@ -212,7 +220,14 @@ export class EditorScene extends Phaser.Scene {
     }
 
     this.commandInvoker.add(
-      new DrawCommand(this.map, x, y, this.selectedLayer, oldDrawID, drawID),
+      new DrawCommand(
+        this.mapState,
+        x,
+        y,
+        this.selectedLayer,
+        oldDrawID,
+        drawID
+      ),
       true
     );
   }
@@ -229,7 +244,14 @@ export class EditorScene extends Phaser.Scene {
     }
 
     this.commandInvoker.add(
-      new FillCommand(this.map, x, y, this.selectedLayer, oldDrawID, drawID)
+      new FillCommand(
+        this.mapState,
+        x,
+        y,
+        this.selectedLayer,
+        oldDrawID,
+        drawID
+      )
     );
   }
 
@@ -242,7 +264,14 @@ export class EditorScene extends Phaser.Scene {
     }
 
     this.commandInvoker.add(
-      new DrawCommand(this.map, x, y, this.selectedLayer, oldDrawID, drawID),
+      new DrawCommand(
+        this.mapState,
+        x,
+        y,
+        this.selectedLayer,
+        oldDrawID,
+        drawID
+      ),
       true
     );
   }
@@ -301,7 +330,7 @@ export class EditorScene extends Phaser.Scene {
     );
 
     this.commandInvoker.add(
-      new EntityCommand(this.map, x, y, oldEntityState, newEntityState)
+      new EntityCommand(this.mapState, x, y, oldEntityState, newEntityState)
     );
   }
 
@@ -325,7 +354,7 @@ export class EditorScene extends Phaser.Scene {
 
     this.commandInvoker.add(
       new PropertiesCommand(
-        this.map,
+        this.mapState,
         oldMapPropertiesState,
         newMapPropertiesState
       )
@@ -360,9 +389,14 @@ export class EditorScene extends Phaser.Scene {
     return -Math.floor((worldPos.x + 32) / 64 - worldPos.y / 32);
   }
 
-  resetCameraPosition() {
-    let scrollX = -this.cameras.main.centerX + 32;
-    let scrollY = -64;
+  initCameraPosition() {
+    let scrollX = this.mapState.scrollX;
+    let scrollY = this.mapState.scrollY;
+
+    if (scrollX === null || scrollY === null) {
+      scrollX = -this.cameras.main.centerX + 32;
+      scrollY = -64;
+    }
 
     this.cameras.main.setScroll(scrollX, scrollY);
   }
@@ -372,11 +406,15 @@ export class EditorScene extends Phaser.Scene {
   }
 
   get emf() {
-    return this.data.get("emf");
+    return this.mapState.emf;
   }
 
   get commandInvoker() {
-    return this.data.get("commandInvoker");
+    return this.mapState.commandInvoker;
+  }
+
+  get mapState() {
+    return this.data.get("mapState");
   }
 
   get selectedTool() {

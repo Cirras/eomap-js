@@ -1,8 +1,8 @@
 import { MapCommand } from "./map-command";
 
 export class DrawCommand extends MapCommand {
-  constructor(map, x, y, layer, oldDrawID, newDrawID) {
-    super(map);
+  constructor(mapState, x, y, layer, oldDrawID, newDrawID) {
+    super(mapState);
     this.x = x;
     this.y = y;
     this.layer = layer;

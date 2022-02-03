@@ -12,9 +12,8 @@ class PendingPromise {
   }
 }
 export class GFXLoader {
-  constructor(egfStrategy, rawStrategy) {
-    this.egfStrategy = egfStrategy;
-    this.rawStrategy = rawStrategy;
+  constructor(loadingStrategy) {
+    this.loadingStrategy = loadingStrategy;
     this.egfs = new Map();
     this.worker = this.setupWorker();
     this.pendingEGFs = new Map();
@@ -88,7 +87,7 @@ export class GFXLoader {
       this.pendingEGFs.set(fileID, pending);
 
       let filename = getEGFFilename(fileID);
-      let buffer = await this.egfStrategy.load(filename);
+      let buffer = await this.loadingStrategy.loadEGF(filename);
 
       this.worker.postMessage(
         {
@@ -164,10 +163,20 @@ export class GFXLoader {
 
   async loadRaw(path) {
     try {
-      return await this.rawStrategy.load(path);
+      return await this.loadingStrategy.loadRaw(path);
     } catch (e) {
       console.error("Failed to load %s: %s", path, e);
     }
     return this.errorGfx();
+  }
+
+  destroy() {
+    this.worker.terminate();
+
+    this.loadingStrategy = null;
+    this.egfs = null;
+    this.worker = null;
+    this.pendingEGFs = null;
+    this.pendingResources = null;
   }
 }

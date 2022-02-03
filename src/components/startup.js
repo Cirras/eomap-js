@@ -1,13 +1,28 @@
 import { css, customElement, html, LitElement, property } from "lit-element";
 
 import "@spectrum-web-components/progress-bar/sp-progress-bar.js";
+import "@spectrum-web-components/button/sp-button.js";
 
 import icon from "../assets/icon.svg";
 
 import { Keybinding } from "./keybindings";
+import { MapState } from "../map-state";
 
 @customElement("eomap-startup")
 export class Startup extends LitElement {
+  static Status = {
+    UNKNOWN: 0,
+    LOADING_SETTINGS: 1,
+    NEED_GFX_DIRECTORY: 2,
+    NEED_GFX_DIRECTORY_PERMISSION: 3,
+    NEED_ASSETS_DIRECTORY_PERMISSION: 4,
+    ERROR_GFX: 5,
+    LOADING_GFX: 6,
+    ERROR_EMF: 7,
+    LOADING_EMF: 8,
+    READY: 9,
+  };
+
   static get styles() {
     return css`
       :host {
@@ -36,6 +51,15 @@ export class Startup extends LitElement {
         height: 150px;
         padding-bottom: 30px;
       }
+      .stalled-progress-bar {
+        --spectrum-fieldlabel-m-text-color: var(
+          --spectrum-global-color-gray-700
+        );
+        --spectrum-progressbar-m-over-background-track-fill-color: var(
+          --spectrum-global-color-gray-700
+        );
+        --spectrum-progressbar-indeterminate-duration: 0ms;
+      }
       .positive-progress-bar {
         --spectrum-fieldlabel-m-text-color: var(
           --spectrum-global-color-gray-700
@@ -58,34 +82,47 @@ export class Startup extends LitElement {
           --spectrum-semantic-negative-color-status
         );
       }
+      .action-button {
+        margin-top: 25px;
+      }
       .content-container {
         height: 150px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
       }
     `;
   }
 
-  @property({ type: Boolean })
-  loading = false;
+  @property({ type: Number })
+  status = Startup.Status.UNKNOWN;
 
-  @property({ type: String })
-  loadingLabel = "Loading...";
+  @property({ type: MapState })
+  mapState = null;
 
-  @property({ type: Boolean })
-  loadingError = false;
+  @property({ type: Number })
+  gfxErrors = 0;
+
+  renderActionButton() {
+    if (this.actionLabel) {
+      return html`
+        <sp-button
+          class="action-button"
+          style="--spectrum-button-primary-text-padding-top: 0px;"
+          variant="cta"
+          size="s"
+          @click=${() => {
+            this.dispatchEvent(new CustomEvent(this.actionEventName));
+          }}
+        >
+          ${this.actionLabel}
+        </sp-button>
+      `;
+    }
+  }
 
   renderContent() {
-    if (this.loading || this.loadingError) {
-      return html`
-        <sp-progress-bar
-          class="${this.loadingError
-            ? "negative-progress-bar"
-            : "positive-progress-bar"}"
-          label="${this.loadingLabel}"
-          indeterminate
-          over-background
-        ></sp-progress-bar>
-      `;
-    } else {
+    if (this.status === Startup.Status.READY) {
       return html`
         <eomap-keybindings
           .bindings=${[
@@ -95,6 +132,16 @@ export class Startup extends LitElement {
           ]}
         >
         </eomap-keybindings>
+      `;
+    } else {
+      return html`
+        <sp-progress-bar
+          class="${this.progressBarClass}"
+          label="${this.loadingLabel}"
+          indeterminate
+          over-background
+        ></sp-progress-bar>
+        ${this.renderActionButton()}
       `;
     }
   }
@@ -110,5 +157,74 @@ export class Startup extends LitElement {
         </div>
       </div>
     `;
+  }
+
+  get loadingLabel() {
+    switch (this.status) {
+      case Startup.Status.UNKNOWN:
+        return "???";
+      case Startup.Status.LOADING_SETTINGS:
+        return "Loading settings...";
+      case Startup.Status.NEED_GFX_DIRECTORY:
+        return "Path to GFX must be provided...";
+      case Startup.Status.NEED_GFX_DIRECTORY_PERMISSION:
+        return "Need permission to access GFX...";
+      case Startup.Status.NEED_ASSETS_DIRECTORY_PERMISSION:
+        return "Need permission to access Assets...";
+      case Startup.Status.ERROR_GFX:
+        return `Failed to load ${this.gfxErrors} GFX file(s).`;
+      case Startup.Status.LOADING_GFX:
+        return "Loading GFX...";
+      case Startup.Status.ERROR_EMF:
+        return this.mapState.error.message;
+      case Startup.Status.LOADING_EMF:
+        return `Loading ${this.mapState.fileHandle.name}...`;
+      default:
+        throw new Error("Unhandled Startup Status");
+    }
+  }
+
+  get progressBarClass() {
+    switch (this.status) {
+      case Startup.Status.UNKNOWN:
+      case Startup.Status.LOADING_SETTINGS:
+      case Startup.Status.LOADING_GFX:
+      case Startup.Status.LOADING_EMF:
+        return "positive-progress-bar";
+      case Startup.Status.NEED_GFX_DIRECTORY:
+      case Startup.Status.NEED_GFX_DIRECTORY_PERMISSION:
+      case Startup.Status.NEED_ASSETS_DIRECTORY_PERMISSION:
+        return "stalled-progress-bar";
+      case Startup.Status.ERROR_GFX:
+      case Startup.Status.ERROR_EMF:
+        return "negative-progress-bar";
+      default:
+        throw new Error("Unhandled Startup Status");
+    }
+  }
+
+  get actionLabel() {
+    switch (this.status) {
+      case Startup.Status.NEED_GFX_DIRECTORY:
+        return "Open Settings";
+      case Startup.Status.NEED_GFX_DIRECTORY_PERMISSION:
+      case Startup.Status.NEED_ASSETS_DIRECTORY_PERMISSION:
+        return "Grant Permission";
+      default:
+        return null;
+    }
+  }
+
+  get actionEventName() {
+    switch (this.status) {
+      case Startup.Status.NEED_GFX_DIRECTORY:
+        return "settings";
+      case Startup.Status.NEED_GFX_DIRECTORY_PERMISSION:
+        return "request-gfx-directory-permission";
+      case Startup.Status.NEED_ASSETS_DIRECTORY_PERMISSION:
+        return "request-assets-directory-permission";
+      default:
+        return null;
+    }
   }
 }

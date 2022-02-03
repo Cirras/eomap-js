@@ -1,8 +1,12 @@
 import { Command } from "./command";
 
 export class MapCommand extends Command {
-  constructor(map) {
+  constructor(mapState) {
     super();
-    this.map = map;
+    this.mapState = mapState;
+  }
+
+  get map() {
+    return this.mapState.gameObject;
   }
 }

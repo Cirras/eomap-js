@@ -1,8 +1,8 @@
 import { MapCommand } from "./map-command";
 
 export class EntityCommand extends MapCommand {
-  constructor(map, x, y, oldEntityState, newEntityState) {
-    super(map);
+  constructor(mapState, x, y, oldEntityState, newEntityState) {
+    super(mapState);
     this.x = x;
     this.y = y;
     this.oldEntityState = oldEntityState;

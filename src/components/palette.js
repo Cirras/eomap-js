@@ -374,12 +374,11 @@ export class Palette extends LitElement {
   }
 
   updated(changedProperties) {
-    if (
-      changedProperties.has("gfxLoader") &&
-      this.gfxLoader &&
-      this.gfxErrors === 0
-    ) {
-      this.setupPhaser();
+    if (changedProperties.has("gfxLoader")) {
+      this.destroyPhaser();
+      if (this.gfxLoader && this.gfxErrors === 0) {
+        this.setupPhaser();
+      }
     }
 
     if (changedProperties.has("width")) {
@@ -627,5 +626,29 @@ export class Palette extends LitElement {
         detail: parseInt(event.target.value),
       })
     );
+  }
+
+  disconnectedCallback() {
+    this.destroyPhaser();
+    this.componentDataForwarders.clear();
+    super.disconnectedCallback();
+  }
+
+  destroyPhaser() {
+    if (this.game) {
+      // The canvas and WebGLRendererContext won't be cleaned up properly
+      // unless this touchcancel event listener is removed.
+      //
+      // Fixed in Phaser 3.60.
+      // See: https://github.com/photonstorm/phaser/pull/5921
+      if (window) {
+        window.removeEventListener(
+          "touchcancel",
+          this.game.input.touch.onTouchCancelWindow
+        );
+      }
+      this.game.destroy(true);
+      this.game = null;
+    }
   }
 }

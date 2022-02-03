@@ -11,11 +11,10 @@ import "phaser";
 
 import { EditorScene } from "../scenes/editor-scene";
 
-import { CommandInvoker } from "../command/command";
 import { GFXLoader } from "../gfx/load/gfx-loader";
-import { EMF } from "../data/emf";
 import { EntityState } from "../entity-state";
 import { MapPropertiesState } from "../map-properties-state";
+import { MapState } from "../map-state";
 
 @customElement("eomap-editor")
 export class Editor extends LitElement {
@@ -24,8 +23,7 @@ export class Editor extends LitElement {
   static PHASER_DATA_KEYS = ["currentPos", "eyedrop"];
 
   static COMPONENT_DATA_KEYS = [
-    "commandInvoker",
-    "emf",
+    "mapState",
     "selectedTool",
     "layerVisibility",
     "gfxLoader",
@@ -50,14 +48,11 @@ export class Editor extends LitElement {
     `;
   }
 
-  @property({ type: CommandInvoker })
-  commandInvoker = new CommandInvoker();
-
   @property({ type: GFXLoader })
   gfxLoader;
 
-  @property({ type: EMF })
-  emf;
+  @property({ type: MapState })
+  mapState;
 
   @property({ type: String })
   selectedTool;
@@ -123,9 +118,7 @@ export class Editor extends LitElement {
     }
   }
 
-  async setupPhaser() {
-    this.destroyGame();
-
+  setupPhaser() {
     let game = new Phaser.Game({
       type: Phaser.AUTO,
       disableContextMenu: true,
@@ -175,9 +168,30 @@ export class Editor extends LitElement {
     });
   }
 
+  destroyPhaser() {
+    if (this.game) {
+      // The canvas and WebGLRendererContext won't be cleaned up properly
+      // unless this touchcancel event listener is removed.
+      //
+      // Fixed in Phaser 3.60.
+      // See: https://github.com/photonstorm/phaser/pull/5921
+      if (window) {
+        window.removeEventListener(
+          "touchcancel",
+          this.game.input.touch.onTouchCancelWindow
+        );
+      }
+      this.game.destroy(true);
+      this.game = null;
+    }
+  }
+
   updated(changedProperties) {
-    if (changedProperties.has("emf") && this.emf) {
-      this.setupPhaser();
+    if (changedProperties.has("mapState")) {
+      this.destroyPhaser();
+      if (this.mapState.loaded) {
+        this.setupPhaser();
+      }
     }
 
     if (
@@ -200,26 +214,8 @@ export class Editor extends LitElement {
   }
 
   disconnectedCallback() {
-    this.destroyGame();
+    this.destroyPhaser();
     this.componentDataForwarders.clear();
     super.disconnectedCallback();
-  }
-
-  destroyGame() {
-    if (this.game) {
-      // The canvas and WebGLRendererContext won't be cleaned up properly
-      // unless this touchcancel event listener is removed.
-      //
-      // Fixed in Phaser 3.60.
-      // See: https://github.com/photonstorm/phaser/pull/5921
-      if (window) {
-        window.removeEventListener(
-          "touchcancel",
-          this.game.input.touch.onTouchCancelWindow
-        );
-      }
-      this.game.destroy(true);
-      this.game = null;
-    }
   }
 }

@@ -2,8 +2,8 @@ import { MapTile } from "../data/emf";
 import { MapCommand } from "./map-command";
 
 export class PropertiesCommand extends MapCommand {
-  constructor(map, oldProperties, newProperties) {
-    super(map);
+  constructor(mapState, oldProperties, newProperties) {
+    super(mapState);
     this.oldProperties = oldProperties;
     this.newProperties = newProperties;
     this.shouldResize =

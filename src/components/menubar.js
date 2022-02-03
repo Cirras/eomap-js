@@ -39,7 +39,13 @@ export class MenuBar extends LitElement {
   canOpenMaps = false;
 
   @property({ type: Boolean })
-  canDoMapOperations = false;
+  canSaveMaps = false;
+
+  @property({ type: Boolean })
+  canAccessMapProperties = false;
+
+  @property({ type: Boolean })
+  canAccessSettings = false;
 
   @property({ type: Boolean })
   canUndo = false;
@@ -68,7 +74,7 @@ export class MenuBar extends LitElement {
       <sp-menu-divider></sp-menu-divider>
       <sp-menu-item
         class="menu-item"
-        ?disabled=${!this.canDoMapOperations}
+        ?disabled=${!this.canSaveMaps}
         @click=${this.onSaveClick}"
       >
         Save
@@ -76,7 +82,7 @@ export class MenuBar extends LitElement {
       </sp-menu-item>
       <sp-menu-item
         class="menu-item"
-        ?disabled=${!this.canDoMapOperations}
+        ?disabled=${!this.canSaveMaps}
         @click=${this.onSaveAsClick}"
       >
         Save As
@@ -86,7 +92,7 @@ export class MenuBar extends LitElement {
       <sp-menu-item
         class="menu-item"
         style="min-width: 250px"
-        ?disabled=${!this.canDoMapOperations}
+        ?disabled=${!this.canAccessMapProperties}
         @click=${this.onMapPropertiesClick}"
       >
         Map Properties
@@ -94,9 +100,11 @@ export class MenuBar extends LitElement {
       <sp-menu-divider></sp-menu-divider>
       <sp-menu-item
         class="menu-item"
+        ?disabled=${!this.canAccessSettings}
         @click=${this.onSettingsClick}"
       >
         Settings
+        <kbd slot="value">Ctrl+,</kbd>
       </sp-menu-item>
     `;
   }
