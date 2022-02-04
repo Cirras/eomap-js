@@ -29,6 +29,22 @@ module.exports = {
       {
         test: /\.(gif|png|jpe?g|svg|xml)$/i,
         use: "url-loader"
+      },
+      {
+        test: /\.html$/i,
+        loader: 'html-loader',
+        options: {
+          attributes: {
+            list: [
+              '...',
+              {
+                tag: 'link',
+                attribute: 'href',
+                type: 'src',
+              }
+            ]
+          }
+        }
       }
     ]
   },
