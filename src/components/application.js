@@ -27,6 +27,7 @@ import { Palette } from "./palette";
 
 import { GFXLoader } from "../gfx/load/gfx-loader";
 import { LocalLoadingStrategy } from "../gfx/load/strategy/local-loading-strategy";
+import { RemoteLoadingStrategy } from "../gfx/load/strategy/remote-loading-strategy";
 
 import { TilePos } from "../tilepos";
 import { Eyedrop } from "../tools/eyedrop";
@@ -155,6 +156,8 @@ export class Application extends LitElement {
 
   @state({ type: Number })
   maxPaletteWidth = Palette.DEFAULT_WIDTH;
+
+  pendingGFXLoader = null;
 
   onWindowKeyDown = (event) => {
     if (this.keyboardEnabled()) {
@@ -301,20 +304,44 @@ export class Application extends LitElement {
     this.mapState = this.mapState.withEMF(emf);
   }
 
+  isConnectedMode() {
+    return (
+      !!FORCE_CONNECTED_MODE_URL || this.settingsState.connectedModeEnabled
+    );
+  }
+
+  async tryLoadingGFX() {
+    if (
+      this.settingsState.gfxDirectory &&
+      !(await this.needGFXDirectoryPermission()) &&
+      !(await this.needAssetsDirectoryPermission())
+    ) {
+      this.loadGFX();
+    }
+  }
+
   async loadGFX() {
     this.destroyGFXLoader();
 
-    let loadingStrategy = new LocalLoadingStrategy(
-      this.settingsState.gfxDirectory,
-      this.settingsState.customAssetsDirectory
-    );
+    let loadingStrategy;
 
-    let gfxLoader = new GFXLoader(loadingStrategy);
+    if (this.isConnectedMode()) {
+      loadingStrategy = new RemoteLoadingStrategy(
+        FORCE_CONNECTED_MODE_URL || this.settingsState.connectedModeURL
+      );
+    } else {
+      loadingStrategy = new LocalLoadingStrategy(
+        this.settingsState.gfxDirectory,
+        this.settingsState.customAssetsDirectory
+      );
+    }
+
+    this.pendingGFXLoader = new GFXLoader(loadingStrategy);
 
     await Promise.allSettled(
       [3, 4, 5, 6, 7, 22].map(async (fileID) => {
         try {
-          await gfxLoader.loadEGF(fileID);
+          await this.pendingGFXLoader.loadEGF(fileID);
         } catch (e) {
           ++this.gfxErrors;
           console.error("Failed to load EGF %d: %s", fileID, e);
@@ -322,7 +349,8 @@ export class Application extends LitElement {
       })
     );
 
-    this.gfxLoader = gfxLoader;
+    this.gfxLoader = this.pendingGFXLoader;
+    this.pendingGFXLoader = null;
   }
 
   async firstUpdated(changes) {
@@ -336,19 +364,56 @@ export class Application extends LitElement {
 
   updated(changes) {
     if (changes.has("settingsState") && this.settingsState) {
-      this.manageSettings();
+      this.manageSettings(changes.get("settingsState"));
     }
     this.updateStartupStatus();
   }
 
-  async manageSettings() {
-    this.destroyGFXLoader();
-    if (
-      this.settingsState.gfxDirectory &&
-      !(await this.needGFXDirectoryPermission())
-    ) {
-      this.loadGFX();
+  async manageSettings(previous) {
+    if (!this.settingsChangeRequiresGFXReload(previous)) {
+      return;
     }
+    this.destroyGFXLoader();
+    if (this.isConnectedMode()) {
+      this.loadGFX();
+    } else if (this.settingsState.gfxDirectory) {
+      this.tryLoadingGFX();
+    }
+  }
+
+  settingsChangeRequiresGFXReload(previous) {
+    if (!previous) {
+      return true;
+    }
+
+    if (!!FORCE_CONNECTED_MODE_URL) {
+      return false;
+    }
+
+    if (
+      previous.connectedModeEnabled !== this.settingsState.connectedModeEnabled
+    ) {
+      return true;
+    }
+
+    if (this.isConnectedMode()) {
+      return previous.connectedModeURL !== this.settingsState.connectedModeURL;
+    } else {
+      return (
+        this.isDifferentHandle(
+          previous.gfxDirectory,
+          this.settingsState.gfxDirectory
+        ) ||
+        this.isDifferentHandle(
+          previous.customAssetsDirectory,
+          this.settingsState.customAssetsDirectory
+        )
+      );
+    }
+  }
+
+  isDifferentHandle(a, b) {
+    return !!a !== !!b || !a.isSameEntry(b);
   }
 
   calculateMaxPaletteWidth() {
@@ -676,19 +741,21 @@ export class Application extends LitElement {
       return Startup.Status.LOADING_SETTINGS;
     }
 
-    if (!this.settingsState.gfxDirectory) {
-      return Startup.Status.NEED_GFX_DIRECTORY;
-    }
+    if (!this.isConnectedMode()) {
+      if (!this.settingsState.gfxDirectory) {
+        return Startup.Status.NEED_GFX_DIRECTORY;
+      }
 
-    if (await this.needGFXDirectoryPermission()) {
-      return Startup.Status.NEED_GFX_DIRECTORY_PERMISSION;
-    }
+      if (await this.needGFXDirectoryPermission()) {
+        return Startup.Status.NEED_GFX_DIRECTORY_PERMISSION;
+      }
 
-    if (
-      this.settingsState.customAssetsDirectory &&
-      (await this.needAssetsDirectoryPermission())
-    ) {
-      return Startup.Status.NEED_ASSETS_DIRECTORY_PERMISSION;
+      if (
+        this.settingsState.customAssetsDirectory &&
+        (await this.needAssetsDirectoryPermission())
+      ) {
+        return Startup.Status.NEED_ASSETS_DIRECTORY_PERMISSION;
+      }
     }
 
     if (this.gfxErrors > 0) {
@@ -722,15 +789,6 @@ export class Application extends LitElement {
     this.tryLoadingGFX();
   }
 
-  async tryLoadingGFX() {
-    if (
-      !(await this.needGFXDirectoryPermission()) &&
-      !(await this.needAssetsDirectoryPermission())
-    ) {
-      this.loadGFX();
-    }
-  }
-
   async needGFXDirectoryPermission() {
     return (
       this.settingsState &&
@@ -753,9 +811,13 @@ export class Application extends LitElement {
   }
 
   destroyGFXLoader() {
+    if (this.pendingGFXLoader) {
+      this.pendingGFXLoader.destroy();
+    }
     if (this.gfxLoader) {
       this.gfxLoader.destroy();
     }
+    this.pendingGFXLoader = null;
     this.gfxLoader = null;
     this.gfxErrors = 0;
   }

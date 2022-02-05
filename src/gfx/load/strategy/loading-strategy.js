@@ -6,4 +6,8 @@ export class LoadingStrategy {
   async loadRaw(_path) {
     throw new Error("LoadingStrategy.loadRaw() must be implemented");
   }
+
+  abort() {
+    // do nothing
+  }
 }

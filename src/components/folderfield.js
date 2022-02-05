@@ -137,11 +137,11 @@ export class Folderfield extends LitElement {
   @property({ type: String })
   placeholder = "";
 
+  @property({ type: Boolean })
+  invalid = false;
+
   @property({ type: FileSystemDirectoryHandle })
   selected = null;
-
-  @property({ type: Boolean })
-  required = false;
 
   render() {
     return html`
@@ -153,8 +153,8 @@ export class Folderfield extends LitElement {
           id="textfield"
           readonly
           .placeholder=${this.placeholder}
-          .valid=${this.valid}
-          .invalid=${!this.valid}
+          .valid=${!this.invalid}
+          .invalid=${this.invalid}
           @click=${this.select}
         ></eomap-folder-textfield>
         <sp-action-button
@@ -185,6 +185,7 @@ export class Folderfield extends LitElement {
   async select(_event) {
     try {
       this.selected = await showDirectoryPicker();
+      this.invalid = false;
     } catch {
       // do nothing
     }
@@ -193,12 +194,5 @@ export class Folderfield extends LitElement {
 
   remove(_event) {
     this.selected = null;
-  }
-
-  get valid() {
-    if (this.required) {
-      return !!this.selected;
-    }
-    return true;
   }
 }

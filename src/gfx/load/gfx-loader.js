@@ -171,6 +171,7 @@ export class GFXLoader {
   }
 
   destroy() {
+    this.loadingStrategy.abort();
     this.worker.terminate();
 
     this.loadingStrategy = null;
