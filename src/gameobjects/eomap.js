@@ -485,8 +485,16 @@ export class EOMap extends Phaser.GameObjects.GameObject {
       let graphicIndex = this.getTileGraphicIndex(x, y, layer);
       let entityGraphic = this.tileGraphics[graphicIndex];
       if (entityGraphic) {
+        for (let section of this.findSections(entityGraphic)) {
+          section.delete(graphicIndex);
+        }
+
         entityGraphic.y = x * 16 + y * 16 + offset;
         offset -= 28;
+
+        for (let section of this.findSections(entityGraphic)) {
+          section.add(graphicIndex);
+        }
       }
     }
   }
