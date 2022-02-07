@@ -118,3 +118,7 @@ export function getEGFFilename(fileID) {
 export function getEMFFilename(fileID) {
   return fileID.toString().padStart(5, "0") + ".emf";
 }
+
+export function fileSystemAccessSupported() {
+  return self && "showOpenFilePicker" in self;
+}

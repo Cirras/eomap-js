@@ -32,14 +32,16 @@ import { RemoteLoadingStrategy } from "../gfx/load/strategy/remote-loading-strat
 import { TilePos } from "../tilepos";
 import { Eyedrop } from "../tools/eyedrop";
 import { LayerVisibilityState } from "../layer-visibility-state";
-
-import { EMF } from "../data/emf";
-import { EOReader } from "../data/eo-reader";
 import { EntityState } from "../entity-state";
 import { MapPropertiesState } from "../map-properties-state";
 import { SettingsState } from "../settings-state";
-import { EOBuilder } from "../data/eo-builder";
 import { MapState } from "../map-state";
+
+import { EMF } from "../data/emf";
+import { EOReader } from "../data/eo-reader";
+import { EOBuilder } from "../data/eo-builder";
+
+import { fileSystemAccessSupported } from "../utils";
 
 @customElement("eomap-application")
 export class Application extends LitElement {
@@ -370,10 +372,16 @@ export class Application extends LitElement {
   }
 
   async manageSettings(previous) {
+    if (!fileSystemAccessSupported()) {
+      return;
+    }
+
     if (!this.settingsChangeRequiresGFXReload(previous)) {
       return;
     }
+
     this.destroyGFXLoader();
+
     if (this.isConnectedMode()) {
       this.loadGFX();
     } else if (this.settingsState.gfxDirectory) {
@@ -737,6 +745,10 @@ export class Application extends LitElement {
   }
 
   async getStartupStatus() {
+    if (!fileSystemAccessSupported()) {
+      return Startup.Status.UNSUPPORTED;
+    }
+
     if (!this.settingsState) {
       return Startup.Status.LOADING_SETTINGS;
     }

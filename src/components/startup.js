@@ -12,15 +12,16 @@ import { MapState } from "../map-state";
 export class Startup extends LitElement {
   static Status = {
     UNKNOWN: 0,
-    LOADING_SETTINGS: 1,
-    NEED_GFX_DIRECTORY: 2,
-    NEED_GFX_DIRECTORY_PERMISSION: 3,
-    NEED_ASSETS_DIRECTORY_PERMISSION: 4,
-    ERROR_GFX: 5,
-    LOADING_GFX: 6,
-    ERROR_EMF: 7,
-    LOADING_EMF: 8,
-    READY: 9,
+    UNSUPPORTED: 1,
+    LOADING_SETTINGS: 2,
+    NEED_GFX_DIRECTORY: 3,
+    NEED_GFX_DIRECTORY_PERMISSION: 4,
+    NEED_ASSETS_DIRECTORY_PERMISSION: 5,
+    ERROR_GFX: 6,
+    LOADING_GFX: 7,
+    ERROR_EMF: 8,
+    LOADING_EMF: 9,
+    READY: 10,
   };
 
   static get styles() {
@@ -163,6 +164,8 @@ export class Startup extends LitElement {
     switch (this.status) {
       case Startup.Status.UNKNOWN:
         return "???";
+      case Startup.Status.UNSUPPORTED:
+        return "Unsupported browser.";
       case Startup.Status.LOADING_SETTINGS:
         return "Loading settings...";
       case Startup.Status.NEED_GFX_DIRECTORY:
@@ -195,6 +198,7 @@ export class Startup extends LitElement {
       case Startup.Status.NEED_GFX_DIRECTORY_PERMISSION:
       case Startup.Status.NEED_ASSETS_DIRECTORY_PERMISSION:
         return "stalled-progress-bar";
+      case Startup.Status.UNSUPPORTED:
       case Startup.Status.ERROR_GFX:
       case Startup.Status.ERROR_EMF:
         return "negative-progress-bar";

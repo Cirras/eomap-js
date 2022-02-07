@@ -140,7 +140,7 @@ export class Folderfield extends LitElement {
   @property({ type: Boolean })
   invalid = false;
 
-  @property({ type: FileSystemDirectoryHandle })
+  @property()
   selected = null;
 
   render() {
