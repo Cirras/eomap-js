@@ -3,6 +3,7 @@ import {
   customElement,
   html,
   LitElement,
+  property,
   query,
   state,
 } from "lit-element";
@@ -12,6 +13,7 @@ import { get, set } from "idb-keyval";
 import "@spectrum-web-components/theme/theme-darkest.js";
 import "@spectrum-web-components/theme/scale-medium.js";
 import "@spectrum-web-components/theme/sp-theme.js";
+import "@spectrum-web-components/dropzone/sp-dropzone.js";
 
 import "./menubar";
 import "./sidebar";
@@ -84,6 +86,24 @@ export class Application extends LitElement {
         grid-column: 2;
       }
 
+      sp-dropzone {
+        --spectrum-dropzone-border-width: 0px;
+        --spectrum-dropzone-border-radius: 0px;
+        --spectrum-dropzone-padding: 0px;
+        grid-row: 2 / 4;
+        grid-column: 2;
+        z-index: 101;
+        pointer-events: none;
+      }
+
+      sp-dropzone[dragged] {
+        --spectrum-dropzone-border-width: unset;
+      }
+
+      :host([dragged]) sp-dropzone {
+        pointer-events: all;
+      }
+
       eomap-palette {
         grid-row: 2 / 5;
         grid-column: 3;
@@ -99,6 +119,9 @@ export class Application extends LitElement {
   @query("sp-theme", true)
   theme;
 
+  @query("sp-dropzone", true)
+  dropzone;
+
   @query("eomap-sidebar", true)
   sidebar;
 
@@ -113,6 +136,9 @@ export class Application extends LitElement {
 
   @query("eomap-settings")
   settings;
+
+  @property({ type: Boolean, reflect: true, attribute: "dragged" })
+  isDragged = false;
 
   @state({ type: Number })
   startupStatus = Startup.Status.LOADING_SETTINGS;
@@ -494,6 +520,10 @@ export class Application extends LitElement {
           @redo=${this.redo}
         ></eomap-sidebar>
         ${this.renderEditor()}
+        <sp-dropzone
+          @sp-dropzone-should-accept=${this.onDropzoneShouldAccept}
+          @sp-dropzone-drop=${this.onDropzoneDrop}
+        ></sp-dropzone>
         <eomap-palette
           .gfxLoader=${this.gfxLoader}
           .gfxErrors=${this.gfxErrors}
@@ -531,14 +561,34 @@ export class Application extends LitElement {
 
   connectedCallback() {
     super.connectedCallback();
-    addEventListener("keydown", this.onWindowKeyDown);
-    addEventListener("resize", this.onResize);
+    window.addEventListener("keydown", this.onWindowKeyDown);
+    window.addEventListener("resize", this.onResize);
+    this.addEventListener("dragover", this.onDragOver);
+    this.addEventListener("dragleave", this.onDragLeave);
+    this.addEventListener("drop", this.onDrop);
   }
 
   disconnectedCallback() {
-    removeEventListener("keydown", this.onWindowKeyDown);
-    removeEventListener("resize", this.onResize);
+    window.removeEventListener("keydown", this.onWindowKeyDown);
+    window.removeEventListener("resize", this.onResize);
+    this.removeEventListener("dragover", this.onDragOver);
+    this.removeEventListener("dragleave", this.onDragLeave);
+    this.removeEventListener("drop", this.onDrop);
     super.disconnectedCallback();
+  }
+
+  onDragOver(event) {
+    event.preventDefault();
+    this.isDragged = true;
+  }
+
+  onDragLeave(_event) {
+    this.isDragged = false;
+  }
+
+  onDrop(event) {
+    event.preventDefault();
+    event.stopPropagation();
   }
 
   emfPickerOptions() {
@@ -574,8 +624,12 @@ export class Application extends LitElement {
       return;
     }
 
-    this.mapState = MapState.fromFileHandle(fileHandle);
+    await this.openFile(fileHandle);
+  }
 
+  async openFile(fileHandle) {
+    this.mapState = MapState.fromFileHandle(fileHandle);
+    this.startupStatus = Startup.Status.LOADING_EMF;
     try {
       let file = await fileHandle.getFile();
       let buffer = await file.arrayBuffer();
@@ -642,6 +696,32 @@ export class Application extends LitElement {
 
   onToolSelected(event) {
     this.selectedTool = event.detail;
+  }
+
+  isValidDataTransfer(dataTransfer) {
+    return (
+      dataTransfer &&
+      dataTransfer.items.length === 1 &&
+      dataTransfer.items[0].kind === "file"
+    );
+  }
+
+  onDropzoneShouldAccept(event) {
+    let dataTransfer = event.detail.dataTransfer;
+    if (!this.validGfx() || !this.isValidDataTransfer(dataTransfer)) {
+      event.preventDefault();
+    }
+  }
+
+  async onDropzoneDrop(event) {
+    this.isDragged = false;
+    let dataTransfer = event.detail.dataTransfer;
+    if (this.isValidDataTransfer(dataTransfer)) {
+      let fileHandle = await dataTransfer.items[0].getAsFileSystemHandle();
+      if (fileHandle.kind === "file") {
+        await this.openFile(fileHandle);
+      }
+    }
   }
 
   onCurrentPosChanged(event) {
