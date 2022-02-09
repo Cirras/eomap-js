@@ -10,9 +10,9 @@ export class PropertiesCommand extends MapCommand {
       oldProperties.width !== newProperties.width ||
       oldProperties.height !== newProperties.height;
     if (this.shouldResize) {
-      this.oldNpcs = [...map.emf.npcs];
-      this.oldItems = [...map.emf.items];
-      this.oldTiles = [...map.emf.tiles];
+      this.oldNpcs = [...this.map.emf.npcs];
+      this.oldItems = [...this.map.emf.items];
+      this.oldTiles = [...this.map.emf.tiles];
     }
   }
 
