@@ -106,7 +106,12 @@ class WebGLTexturePage {
   }
 
   draw(imageData, x, y) {
+    if (!this.source) {
+      return;
+    }
+
     let gl = this.source.renderer.gl;
+
     if (imageData.width > 0 && imageData.height > 0) {
       gl.activeTexture(gl.TEXTURE0);
       let currentTexture = gl.getParameter(gl.TEXTURE_BINDING_2D);
@@ -174,6 +179,10 @@ class CanvasTexturePage {
   }
 
   draw(imageData, x, y) {
+    if (!this.context) {
+      return;
+    }
+
     this.context.putImageData(
       imageData,
       x,
