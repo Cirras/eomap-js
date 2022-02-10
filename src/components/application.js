@@ -447,7 +447,13 @@ export class Application extends LitElement {
   }
 
   isDifferentHandle(a, b) {
-    return !!a !== !!b || !a.isSameEntry(b);
+    if (!a && !b) {
+      return false;
+    }
+    if (!!a !== !!b) {
+      return true;
+    }
+    return !a.isSameEntry(b);
   }
 
   calculateMaxPaletteWidth() {
@@ -486,6 +492,7 @@ export class Application extends LitElement {
           .onRequestGFXDirectoryPermission}
         @request-assets-directory-permission=${this
           .onRequestAssetsDirectoryPermission}
+        @retry-gfx=${this.loadGFX}
       ></eomap-startup>
     `;
   }
@@ -498,6 +505,7 @@ export class Application extends LitElement {
           .canOpenMaps=${this.validGfx()}
           .canSaveMaps=${this.mapState.loaded()}
           .canAccessMapProperties=${this.validGfx() && this.mapState.loaded()}
+          .canReloadGraphics=${this.canReloadGraphics()}
           .canAccessSettings=${this.settingsState != null}
           .canUndo=${this.canUndo()}
           .canRedo=${this.canRedo()}
@@ -507,6 +515,9 @@ export class Application extends LitElement {
           @save-as=${this.onSaveAs}
           @map-properties=${this.onMapProperties}
           @settings=${this.onSettings}
+          @reload-gfx=${() => {
+            setTimeout(() => this.loadGFX(), 0);
+          }}
           @undo=${this.undo}
           @redo=${this.redo}
           @visibility-flag-toggle=${this.onVisibilityFlagToggle}
@@ -802,6 +813,18 @@ export class Application extends LitElement {
       this.modalNotOpen(this.properties) &&
       this.modalNotOpen(this.settings)
     );
+  }
+
+  canReloadGraphics() {
+    switch (this.startupStatus) {
+      case Startup.Status.ERROR_GFX:
+      case Startup.Status.ERROR_EMF:
+      case Startup.Status.LOADING_EMF:
+      case Startup.Status.READY:
+        return true;
+      default:
+        return false;
+    }
   }
 
   canUndo() {

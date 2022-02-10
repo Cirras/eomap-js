@@ -45,6 +45,9 @@ export class MenuBar extends LitElement {
   canAccessMapProperties = false;
 
   @property({ type: Boolean })
+  canReloadGraphics = false;
+
+  @property({ type: Boolean })
   canAccessSettings = false;
 
   @property({ type: Boolean })
@@ -105,6 +108,14 @@ export class MenuBar extends LitElement {
       >
         Settings
         <kbd slot="value">Ctrl+,</kbd>
+      </sp-menu-item>
+      <sp-menu-divider></sp-menu-divider>
+      <sp-menu-item
+        class="menu-item"
+        ?disabled=${!this.canReloadGraphics}
+        @click=${this.onReloadGraphicsClick}"
+      >
+        Reload Graphics
       </sp-menu-item>
     `;
   }
@@ -203,6 +214,10 @@ export class MenuBar extends LitElement {
 
   onMapPropertiesClick(_event) {
     this.dispatchEvent(new CustomEvent("map-properties"));
+  }
+
+  onReloadGraphicsClick(_event) {
+    this.dispatchEvent(new CustomEvent("reload-gfx"));
   }
 
   onSettingsClick(_event) {

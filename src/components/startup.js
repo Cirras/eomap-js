@@ -214,6 +214,8 @@ export class Startup extends LitElement {
       case Startup.Status.NEED_GFX_DIRECTORY_PERMISSION:
       case Startup.Status.NEED_ASSETS_DIRECTORY_PERMISSION:
         return "Grant Permission";
+      case Startup.Status.ERROR_GFX:
+        return "Retry";
       default:
         return null;
     }
@@ -227,6 +229,8 @@ export class Startup extends LitElement {
         return "request-gfx-directory-permission";
       case Startup.Status.NEED_ASSETS_DIRECTORY_PERMISSION:
         return "request-assets-directory-permission";
+      case Startup.Status.ERROR_GFX:
+        return "retry-gfx";
       default:
         return null;
     }
