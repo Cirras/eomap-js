@@ -46,6 +46,7 @@ export class Startup extends LitElement {
         flex-direction: column;
         justify-content: center;
         align-items: center;
+        width: 100%;
       }
       .icon {
         width: 150px;
