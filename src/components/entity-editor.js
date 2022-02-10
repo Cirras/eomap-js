@@ -459,7 +459,7 @@ export class EntityEditor extends LitElement {
         @sp-closed=${this.closed}
       >
         <eomap-modal
-          style="--spectrum-dialog-confirm-min-width: 535px"
+          style="--eomap-modal-width: 535px"
           slot="click-content"
           underlay
           headline="Entities"

@@ -131,7 +131,7 @@ export class Settings extends LitElement {
         @sp-closed=${this.closed}
       >
         <eomap-modal
-          style="--spectrum-dialog-confirm-min-width: 500px"
+          style="--eomap-modal-width: 532px"
           slot="click-content"
           underlay
           headline="Settings"

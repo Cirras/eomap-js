@@ -240,7 +240,7 @@ export class Properties extends LitElement {
       >
         <eomap-modal
           slot="click-content"
-          style="--spectrum-dialog-confirm-min-width: 544px"
+          style="--eomap-modal-width: 544px"
           underlay
           confirm-label="Save"
           cancel-label="Cancel"

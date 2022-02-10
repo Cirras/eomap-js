@@ -11,6 +11,7 @@ body {
 }
 
 eomap-modal {
+  --eomap-modal-dialog-width: var(--eomap-modal-width, 100%);
   --spectrum-dialog-confirm-overlay-background-color: rgba(0, 0, 0, 0.75);
   --spectrum-button-secondary-m-background-color: var(
     --spectrum-global-color-gray-300

@@ -23,48 +23,6 @@ export class Modal extends FocusVisiblePolyfillMixin(SpectrumElement) {
     return [
       styles,
       css`
-        :host {
-          --spectrum-dialog-confirm-overlay-background-color: rgba(
-            0,
-            0,
-            0,
-            0.75
-          );
-          --spectrum-button-secondary-m-background-color: var(
-            --spectrum-global-color-gray-400
-          );
-          --spectrum-button-secondary-m-border-color: var(
-            --spectrum-global-color-gray-400
-          );
-          --spectrum-button-secondary-m-background-color-hover: var(
-            --spectrum-global-color-gray-500
-          );
-          --spectrum-button-secondary-m-border-color-hover: var(
-            --spectrum-global-color-gray-500
-          );
-          --spectrum-button-secondary-m-background-color-down: var(
-            --spectrum-global-color-gray-300
-          );
-          --spectrum-button-secondary-m-border-color-down: var(
-            --spectrum-global-color-gray-300
-          );
-          --spectrum-button-secondary-m-background-color-key-focus: var(
-            --spectrum-global-color-gray-500
-          );
-          --spectrum-button-secondary-m-border-color-key-focus: var(
-            --spectrum-global-color-gray-500
-          );
-          --spectrum-button-secondary-m-text-color-down: var(
-            --spectrum-global-color-gray-800
-          );
-          --spectrum-button-secondary-m-text-color-hover: var(
-            --spectrum-global-color-gray-800
-          );
-          --spectrum-button-secondary-m-text-color-key-focus: var(
-            --spectrum-global-color-gray-800
-          );
-        }
-
         sp-theme {
           z-index: 2;
         }
@@ -163,6 +121,7 @@ export class Modal extends FocusVisiblePolyfillMixin(SpectrumElement) {
           <sp-dialog
             ?error=${this.error}
             size=${ifDefined(this.size ? this.size : undefined)}
+            style="width: var(--eomap-modal-dialog-width)"
           >
             ${this.renderHeadline()}
             <slot></slot>
