@@ -678,7 +678,9 @@ export class Application extends LitElement {
     }
 
     try {
-      this.fileHandle = await showSaveFilePicker(this.emfPickerOptions());
+      this.mapState.fileHandle = await showSaveFilePicker(
+        this.emfPickerOptions()
+      );
     } catch (e) {
       return;
     }
