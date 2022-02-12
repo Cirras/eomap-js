@@ -39,7 +39,7 @@ export class FillCommand extends MapCommand {
       let spanUp = false;
       let spanDown = false;
       while (x < width && isContiguousTile(x, y)) {
-        this.map.draw(x, y, this.newDrawID, this.layer, false);
+        this.map.draw(x, y, this.newDrawID, this.layer);
         this.fillTiles.push(new Tile(x, y));
         if (!spanUp && y > 0 && isContiguousTile(x, y - 1)) {
           stack.push(new Tile(x, y - 1));
@@ -63,16 +63,14 @@ export class FillCommand extends MapCommand {
       this.doFloodFill();
     } else {
       for (let tile of this.fillTiles) {
-        this.map.draw(tile.x, tile.y, this.newDrawID, this.layer, false);
+        this.map.draw(tile.x, tile.y, this.newDrawID, this.layer);
       }
     }
-    this.map.dirtyRenderList = true;
   }
 
   undo() {
     for (let tile of this.fillTiles) {
-      this.map.draw(tile.x, tile.y, this.oldDrawID, this.layer, false);
+      this.map.draw(tile.x, tile.y, this.oldDrawID, this.layer);
     }
-    this.map.dirtyRenderList = true;
   }
 }

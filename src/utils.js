@@ -1,3 +1,12 @@
+export class PendingPromise {
+  constructor() {
+    this.promise = new Promise((resolve, reject) => {
+      this.resolve = resolve;
+      this.reject = reject;
+    });
+  }
+}
+
 export function arrayEquals(a, b) {
   if (a.length !== b.length) {
     return false;
@@ -92,13 +101,19 @@ export function blobToDataURL(blob) {
   });
 }
 
-export async function dataURLToImageData(dataURL) {
+export async function dataURLToImage(dataURL) {
   let image = new Image();
   image.src = dataURL;
 
   await new Promise((resolve) =>
     image.addEventListener("load", () => resolve())
   );
+
+  return image;
+}
+
+export async function dataURLToImageData(dataURL) {
+  let image = await dataURLToImage(dataURL);
 
   let canvas = document.createElement("canvas");
   canvas.width = image.width;

@@ -1,13 +1,16 @@
 import ShelfPack from "@mapbox/shelf-pack";
 import { AssetFactory } from "./asset";
 import { DrawableMultiTexture } from "./drawable-multi-texture";
+import { PendingPromise } from "../utils";
 
 class TextureCacheEntry {
-  constructor(asset, page, bin) {
-    this.asset = asset;
-    this.page = page;
-    this.bin = bin;
+  constructor(key, defaultAsset) {
+    this.key = key;
+    this.asset = defaultAsset;
+    this.page = null;
+    this.bin = null;
     this.refCount = 0;
+    this.loadingCompletePromise = new PendingPromise();
   }
 
   incRef() {
@@ -20,6 +23,89 @@ class TextureCacheEntry {
     }
 
     --this.refCount;
+  }
+
+  get loadingComplete() {
+    return this.loadingCompletePromise && this.loadingCompletePromise.promise;
+  }
+}
+
+class ResourceTextureCacheEntry extends TextureCacheEntry {
+  constructor(key, defaultAsset, fileID, resourceID) {
+    super(key, defaultAsset);
+    this.fileID = fileID;
+    this.resourceID = resourceID;
+  }
+
+  createAsset(assetFactory, textureKey) {
+    return assetFactory.createResource(
+      textureKey,
+      this.key,
+      this.fileID,
+      this.resourceID
+    );
+  }
+
+  async loadGFX(gfxLoader) {
+    return gfxLoader.loadResource(this.fileID, this.resourceID);
+  }
+}
+
+class SpecTextureCacheEntry extends TextureCacheEntry {
+  constructor(key, defaultAsset, tileSpec) {
+    super(key, defaultAsset);
+    this.tileSpec = tileSpec;
+  }
+
+  createAsset(assetFactory, textureKey) {
+    return assetFactory.createRaw(textureKey, this.key);
+  }
+
+  async loadGFX(gfxLoader) {
+    return gfxLoader.loadRaw(`specs/${this.tileSpec}.png`);
+  }
+}
+
+class EntityTextureCacheEntry extends TextureCacheEntry {
+  constructor(key, defaultAsset, entityType) {
+    super(key, defaultAsset);
+    this.entityType = entityType;
+  }
+
+  createAsset(assetFactory, textureKey) {
+    return assetFactory.createRaw(textureKey, this.key);
+  }
+
+  async loadGFX(gfxLoader) {
+    return gfxLoader.loadRaw(`entities/${this.entityType}.png`);
+  }
+}
+
+class CursorTextureCacheEntry extends TextureCacheEntry {
+  constructor(key, defaultAsset) {
+    super(key, defaultAsset);
+  }
+
+  createAsset(assetFactory, textureKey) {
+    return assetFactory.createCursor(textureKey, this.key);
+  }
+
+  async loadGFX(gfxLoader) {
+    return gfxLoader.loadRaw("cursor.png");
+  }
+}
+
+class BlackTileTextureCacheEntry extends TextureCacheEntry {
+  constructor(key, defaultAsset) {
+    super(key, defaultAsset);
+  }
+
+  createAsset(assetFactory, textureKey) {
+    return assetFactory.createRaw(textureKey, this.key);
+  }
+
+  async loadGFX(gfxLoader) {
+    return gfxLoader.loadRaw("black.png");
   }
 }
 
@@ -67,132 +153,91 @@ export class TextureCache {
     return "entity." + entityType;
   }
 
-  getEntry(key, getDimensions, createAsset) {
+  getEntry(key, createEntry) {
     let entry = this.entries.get(key);
     if (!entry) {
-      let dimensions = getDimensions();
-      entry = this.add(key, dimensions.width, dimensions.height, createAsset);
+      entry = createEntry();
+      this.entries.set(key, entry);
+      this.pending.push(entry);
     }
     return entry;
   }
 
   getResource(fileID, resourceID) {
     let key = this.makeResourceKey(fileID, resourceID);
-
-    let getDimensions = () => {
-      let width = 1;
-      let height = 1;
-      let info = this.gfxLoader.resourceInfo(fileID, resourceID);
-      if (info) {
-        width = info.width;
-        height = info.height;
-      }
-      return {
-        width: width,
-        height: height,
-      };
-    };
-
-    let createAsset = () => {
-      return this.assetFactory.createResource(
-        this.multiTexture.key,
+    return this.getEntry(key, () => {
+      return new ResourceTextureCacheEntry(
         key,
+        this.assetFactory.getDefault(),
         fileID,
         resourceID
       );
-    };
-
-    return this.getEntry(key, getDimensions, createAsset);
+    });
   }
 
   getSpec(tileSpec) {
     let key = this.makeSpecKey(tileSpec);
-
-    let getDimensions = () => ({
-      width: 64,
-      height: 32,
+    return this.getEntry(key, () => {
+      return new SpecTextureCacheEntry(
+        key,
+        this.assetFactory.getDefault(),
+        tileSpec
+      );
     });
-
-    let createAsset = () => {
-      return this.assetFactory.createSpec(this.multiTexture.key, key, tileSpec);
-    };
-
-    return this.getEntry(key, getDimensions, createAsset);
   }
 
   getEntity(entityType) {
     let key = this.makeEntityKey(entityType);
-
-    let getDimensions = () => ({
-      width: 64,
-      height: 32,
-    });
-
-    let createAsset = () => {
-      return this.assetFactory.createEntity(
-        this.multiTexture.key,
+    return this.getEntry(key, () => {
+      return new EntityTextureCacheEntry(
         key,
+        this.assetFactory.getDefault(),
         entityType
       );
-    };
-
-    return this.getEntry(key, getDimensions, createAsset);
+    });
   }
 
   getBlackTile() {
     let key = "black";
-
-    let getDimensions = () => ({
-      width: 64,
-      height: 32,
+    return this.getEntry(key, () => {
+      return new BlackTileTextureCacheEntry(
+        key,
+        this.assetFactory.getDefault()
+      );
     });
-
-    let createAsset = () => {
-      return this.assetFactory.createBlackTile(this.multiTexture.key, key);
-    };
-
-    return this.getEntry(key, getDimensions, createAsset);
   }
 
   getCursor() {
     let key = "cursor";
-
-    let getDimensions = () => {
-      return {
-        width: 320,
-        height: 32,
-      };
-    };
-
-    let createAsset = () => {
-      return this.assetFactory.createCursor(this.multiTexture.key, key);
-    };
-
-    return this.getEntry(key, getDimensions, createAsset);
+    return this.getEntry(key, () => {
+      return new CursorTextureCacheEntry(key, this.assetFactory.getDefault());
+    });
   }
 
-  add(key, width, height, createAsset) {
-    let cacheEntry = null;
+  findSpace(entry, width, height) {
+    let bin = null;
 
     for (let i = 0; i < this.pages.length; ++i) {
-      cacheEntry = this.addToPage(i, key, width, height, createAsset);
+      bin = this.findSpaceInPage(i, entry, width, height);
 
-      if (cacheEntry) {
-        this.entries.set(key, cacheEntry);
+      if (bin) {
         break;
       }
 
       if (this.pages[i].empty) {
-        throw new Error(`Failed to cache \"${key}\"`);
+        console.error(
+          `Failed to find space in the texture cache for \"${entry.key}\"`
+        );
+        return false;
       }
     }
 
-    if (!cacheEntry) {
+    if (!bin) {
       this.handleOutOfSpace();
-      return this.add(key, width, height, createAsset);
+      return this.findSpace(entry, width, height);
     }
 
-    return cacheEntry;
+    return true;
   }
 
   handleOutOfSpace() {
@@ -206,31 +251,32 @@ export class TextureCache {
     this.pages.push(newPage);
   }
 
-  addToPage(pageIndex, key, width, height, createAsset) {
+  findSpaceInPage(pageIndex, entry, width, height) {
     let page = this.pages[pageIndex];
     let bin = page.shelfPacker.packOne(width, height);
 
-    if (!bin) {
-      return null;
+    if (bin) {
+      this.multiTexture.add(entry.key, pageIndex, bin.x, bin.y, width, height);
+      entry.page = page;
+      entry.bin = bin;
     }
 
-    this.multiTexture.add(key, pageIndex, bin.x, bin.y, width, height);
-
-    let asset = createAsset();
-
-    let entry = new TextureCacheEntry(asset, page, bin);
-    this.pending.push(entry);
-
-    return entry;
+    return !!bin;
   }
 
-  loadEntry(entry) {
-    entry.asset.load(this.gfxLoader).then((pixels) => {
+  async loadEntry(entry) {
+    let pixels = await entry.loadGFX(this.gfxLoader);
+
+    if (this.findSpace(entry, pixels.width, pixels.height)) {
       let page = entry.page.texturePage;
       let x = entry.bin.x;
       let y = entry.bin.y;
       page.draw(pixels, x, y);
-    });
+      entry.asset = entry.createAsset(this.assetFactory, this.multiTexture.key);
+    }
+
+    entry.loadingCompletePromise.resolve();
+    entry.loadingCompletePromise = null;
   }
 
   update() {
@@ -263,8 +309,8 @@ export class EvictingTextureCache extends TextureCache {
     this.canEvict = true;
   }
 
-  add(key, width, height, createAsset) {
-    let entry = super.add(key, width, height, createAsset);
+  getEntry(key, createEntry) {
+    let entry = super.getEntry(key, createEntry);
     this.canEvict = true;
     return entry;
   }

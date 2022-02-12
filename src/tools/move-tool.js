@@ -16,7 +16,7 @@ export class MoveTool extends Tool {
       this.dragging = true;
 
       let asset = mapEditor.textureCache.getCursor().asset;
-      mapEditor.cursorSprite.setFrame(asset.frames[1].name);
+      mapEditor.cursorSprite.setFrame(asset.getFrame(1).name);
     }
   }
 
@@ -24,7 +24,7 @@ export class MoveTool extends Tool {
     if (this.dragging) {
       this.dragging = false;
       let asset = mapEditor.textureCache.getCursor().asset;
-      mapEditor.cursorSprite.setFrame(asset.frames[0].name);
+      mapEditor.cursorSprite.setFrame(asset.getFrame(0).name);
     }
   }
 

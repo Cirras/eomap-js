@@ -120,17 +120,22 @@ export class EditorScene extends Phaser.Scene {
   }
 
   createCursor() {
-    let cacheEntry = this.textureCache.getCursor();
-    cacheEntry.incRef();
-
     let cursorSprite = this.add.sprite(0, 0);
     cursorSprite.visible = false;
     cursorSprite.setDepth(1.0);
     cursorSprite.setOrigin(0);
-    cursorSprite.setTexture(
-      cacheEntry.asset.textureKey,
-      cacheEntry.asset.frames[0].name
-    );
+
+    let cacheEntry = this.textureCache.getCursor();
+    cacheEntry.incRef();
+
+    if (cacheEntry.loadingComplete) {
+      cacheEntry.loadingComplete.then(() => {
+        cursorSprite.setTexture(
+          cacheEntry.asset.textureKey,
+          cacheEntry.asset.getFrame(0).name
+        );
+      });
+    }
 
     return cursorSprite;
   }

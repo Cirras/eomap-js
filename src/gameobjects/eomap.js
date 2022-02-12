@@ -39,6 +39,17 @@ class TileGraphic {
     this.alpha = alpha;
   }
 
+  copy() {
+    return new TileGraphic(
+      this.cacheEntry,
+      this.x,
+      this.y,
+      this.layer,
+      this.depth,
+      this.alpha
+    );
+  }
+
   get width() {
     return this.cacheEntry.asset.width;
   }
@@ -152,13 +163,13 @@ export class EOMap extends Phaser.GameObjects.GameObject {
         let tile = this.emf.getTile(x, y);
         for (let layer = 0; layer < 9; ++layer) {
           let gfx = tile.gfx[layer];
-          this.setGraphic(x, y, gfx, layer, false);
+          this.setGraphic(x, y, gfx, layer);
         }
-        this.setSpec(x, y, tile.spec, false);
-        this.setWarp(x, y, tile.warp, false);
-        this.setSign(x, y, tile.sign, false);
-        this.setItems(x, y, this.items.get(x, y), false);
-        this.setNPCs(x, y, this.npcs.get(x, y), false);
+        this.setSpec(x, y, tile.spec);
+        this.setWarp(x, y, tile.warp);
+        this.setSign(x, y, tile.sign);
+        this.setItems(x, y, this.items.get(x, y));
+        this.setNPCs(x, y, this.npcs.get(x, y));
       }
     }
   }
@@ -236,14 +247,14 @@ export class EOMap extends Phaser.GameObjects.GameObject {
     return result;
   }
 
-  draw(x, y, drawID, layer, modifyRenderList) {
+  draw(x, y, drawID, layer) {
     if (layer >= 0 && layer <= 8) {
-      this.setGraphic(x, y, drawID, layer, modifyRenderList);
+      this.setGraphic(x, y, drawID, layer);
       return;
     }
 
     if (layer === 9) {
-      this.setSpec(x, y, drawID, modifyRenderList);
+      this.setSpec(x, y, drawID);
       return;
     }
 
@@ -262,7 +273,7 @@ export class EOMap extends Phaser.GameObjects.GameObject {
     throw new Error(`Invalid draw layer: ${layer}`);
   }
 
-  setGraphic(x, y, gfx, layer, modifyRenderList) {
+  setGraphic(x, y, gfx, layer) {
     if (gfx === 0 && layer !== 0) {
       return;
     }
@@ -281,17 +292,17 @@ export class EOMap extends Phaser.GameObjects.GameObject {
       }
     }
 
-    this.setTileGraphic(x, y, layer, cacheEntry, modifyRenderList);
+    this.setTileGraphic(x, y, layer, cacheEntry);
   }
 
-  setSpec(x, y, tileSpec, modifyRenderList) {
+  setSpec(x, y, tileSpec) {
     let tile = this.emf.getTile(x, y);
     let oldTileSpec = tile.spec;
 
     tile.spec = tileSpec;
 
     if (oldTileSpec === TileSpec.Chest || tile.spec === TileSpec.Chest) {
-      this.updateItemGraphic(x, y, modifyRenderList);
+      this.updateItemGraphic(x, y);
     }
 
     let cacheEntry = null;
@@ -304,15 +315,15 @@ export class EOMap extends Phaser.GameObjects.GameObject {
       }
     }
 
-    this.setTileGraphic(x, y, 9, cacheEntry, modifyRenderList);
-    this.setTileGraphic(x, y, 10, cacheEntry, modifyRenderList);
+    this.setTileGraphic(x, y, 9, cacheEntry);
+    this.setTileGraphic(x, y, 10, cacheEntry);
   }
 
   getWarp(x, y) {
     return this.emf.getTile(x, y).warp;
   }
 
-  setWarp(x, y, warp, modifyRenderList) {
+  setWarp(x, y, warp) {
     let tile = this.emf.getTile(x, y);
     tile.warp = warp;
 
@@ -333,15 +344,14 @@ export class EOMap extends Phaser.GameObjects.GameObject {
       cacheEntry = this.textureCache.getEntity(entityType);
     }
 
-    this.setTileGraphic(x, y, 11, cacheEntry, modifyRenderList);
-    this.updateEntityOffsets(x, y);
+    this.setTileGraphic(x, y, 11, cacheEntry);
   }
 
   getSign(x, y) {
     return this.emf.getTile(x, y).sign;
   }
 
-  setSign(x, y, sign, modifyRenderList) {
+  setSign(x, y, sign) {
     let tile = this.emf.getTile(x, y);
     tile.sign = sign;
 
@@ -351,15 +361,14 @@ export class EOMap extends Phaser.GameObjects.GameObject {
       cacheEntry = this.textureCache.getEntity("sign");
     }
 
-    this.setTileGraphic(x, y, 12, cacheEntry, modifyRenderList);
-    this.updateEntityOffsets(x, y);
+    this.setTileGraphic(x, y, 12, cacheEntry);
   }
 
   getItems(x, y) {
     return [...this.items.get(x, y)];
   }
 
-  updateItemGraphic(x, y, modifyRenderList) {
+  updateItemGraphic(x, y) {
     let items = this.items.get(x, y);
     let cacheEntry = null;
 
@@ -371,23 +380,22 @@ export class EOMap extends Phaser.GameObjects.GameObject {
       cacheEntry = this.textureCache.getEntity(entityKey);
     }
 
-    this.setTileGraphic(x, y, 13, cacheEntry, modifyRenderList);
-    this.updateEntityOffsets(x, y);
+    this.setTileGraphic(x, y, 13, cacheEntry);
   }
 
-  setItems(x, y, items, modifyRenderList) {
+  setItems(x, y, items) {
     let oldItems = this.items.get(x, y);
     this.items.set(x, y, items);
     this.emf.items = this.emf.items.filter((item) => !oldItems.includes(item));
     this.emf.items = this.emf.items.concat(items);
-    this.updateItemGraphic(x, y, modifyRenderList);
+    this.updateItemGraphic(x, y);
   }
 
   getNPCs(x, y) {
     return [...this.npcs.get(x, y)];
   }
 
-  setNPCs(x, y, npcs, modifyRenderList) {
+  setNPCs(x, y, npcs) {
     let oldNPCs = this.npcs.get(x, y);
     this.npcs.set(x, y, npcs);
     this.emf.npcs = this.emf.npcs.filter((npc) => !oldNPCs.includes(npc));
@@ -399,64 +407,70 @@ export class EOMap extends Phaser.GameObjects.GameObject {
       cacheEntry = this.textureCache.getEntity("npc");
     }
 
-    this.setTileGraphic(x, y, 14, cacheEntry, modifyRenderList);
-    this.updateEntityOffsets(x, y);
+    this.setTileGraphic(x, y, 14, cacheEntry);
   }
 
   getTileGraphicIndex(x, y, layer) {
     return (y * this.emf.width + x) * layerInfo.length + layer;
   }
 
-  setTileGraphic(x, y, layer, cacheEntry, modifyRenderList) {
-    if (modifyRenderList === undefined) {
-      modifyRenderList = true;
-    }
-
+  setTileGraphic(x, y, layer, cacheEntry) {
     let graphicIndex = this.getTileGraphicIndex(x, y, layer);
     let oldGraphic = this.tileGraphics[graphicIndex];
 
-    if (oldGraphic) {
-      oldGraphic.cacheEntry.decRef();
-      for (let section of this.findSections(oldGraphic)) {
-        section.delete(graphicIndex);
-      }
-      delete this.tileGraphics[graphicIndex];
-    }
-
     if (!cacheEntry) {
-      if (layer === 1) {
-        this.updateEntityOffsets(x, y);
-      }
+      if (oldGraphic) {
+        for (let section of this.findSections(oldGraphic)) {
+          section.delete(graphicIndex);
+        }
 
-      if (modifyRenderList && oldGraphic) {
+        delete this.tileGraphics[graphicIndex];
         removeFirst(this.renderList, oldGraphic);
-      }
 
+        oldGraphic.cacheEntry.decRef();
+        this.checkEntityOffsets(x, y, layer);
+      }
       return;
     }
 
     cacheEntry.incRef();
 
-    let info = layerInfo[layer];
-    let tilex = info.xoff + x * 32 - y * 32;
-    let tiley = info.yoff + x * 16 + y * 16;
+    let tileGraphic = null;
 
-    if (info.centered) {
-      tilex -= Math.floor(cacheEntry.asset.width / 2) - 32;
+    if (oldGraphic) {
+      tileGraphic = oldGraphic.copy();
+    } else {
+      tileGraphic = new TileGraphic(
+        cacheEntry,
+        0,
+        0,
+        layer,
+        this.calcDepth(x, y, layer),
+        this.calcAlpha(layer)
+      );
     }
 
-    if (info.bottomOrigin) {
-      tiley -= cacheEntry.asset.height - 32;
-    }
+    this.tileGraphics[graphicIndex] = tileGraphic;
 
-    let tileGraphic = new TileGraphic(
-      cacheEntry,
-      tilex,
-      tiley,
-      layer,
-      this.calcDepth(x, y, layer),
-      this.calcAlpha(layer)
-    );
+    let loaded = cacheEntry.loadingComplete || Promise.resolve();
+    loaded.then(() => {
+      if (oldGraphic) {
+        oldGraphic.cacheEntry.decRef();
+      }
+      let currentGraphic = this.tileGraphics[graphicIndex];
+      if (tileGraphic === currentGraphic) {
+        for (let section of this.findSections(tileGraphic)) {
+          section.delete(graphicIndex);
+        }
+        tileGraphic.cacheEntry = cacheEntry;
+        this.updateTileGraphicPosition(x, y, layer, tileGraphic);
+        this.addTileGraphic(x, y, layer, tileGraphic);
+      }
+    });
+  }
+
+  addTileGraphic(x, y, layer, tileGraphic) {
+    let graphicIndex = this.getTileGraphicIndex(x, y, layer);
 
     for (let section of this.findSections(tileGraphic)) {
       section.add(graphicIndex);
@@ -464,12 +478,35 @@ export class EOMap extends Phaser.GameObjects.GameObject {
 
     this.tileGraphics[graphicIndex] = tileGraphic;
 
-    if (modifyRenderList) {
+    if (this.layerVisibility.isLayerVisible(layer)) {
       binaryInsert(this.renderList, tileGraphic, depthComparator);
     }
 
-    if (layer === 1) {
-      this.updateEntityOffsets(x, y);
+    this.checkEntityOffsets(x, y, layer);
+  }
+
+  updateTileGraphicPosition(x, y, layer, tileGraphic) {
+    let info = layerInfo[layer];
+    tileGraphic.x = info.xoff + x * 32 - y * 32;
+    tileGraphic.y = info.yoff + x * 16 + y * 16;
+
+    if (info.centered) {
+      tileGraphic.x -= Math.floor(tileGraphic.cacheEntry.asset.width / 2) - 32;
+    }
+
+    if (info.bottomOrigin) {
+      tileGraphic.y -= tileGraphic.cacheEntry.asset.height - 32;
+    }
+  }
+
+  checkEntityOffsets(x, y, layer) {
+    switch (layer) {
+      case 1:
+      case 11:
+      case 12:
+      case 13:
+      case 14:
+        this.updateEntityOffsets(x, y);
     }
   }
 

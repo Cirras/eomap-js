@@ -1,16 +1,10 @@
 import Worker from "./gfx-loader.worker";
 import { LoadType } from "./load-type";
 
-import { getEGFFilename } from "../../utils";
+import { PendingPromise, dataURLToImage, getEGFFilename } from "../../utils";
 
-class PendingPromise {
-  constructor() {
-    this.promise = new Promise((resolve, reject) => {
-      this.resolve = resolve;
-      this.reject = reject;
-    });
-  }
-}
+import error from "../../assets/error.png";
+
 export class GFXLoader {
   constructor(loadingStrategy) {
     this.loadingStrategy = loadingStrategy;
@@ -124,8 +118,22 @@ export class GFXLoader {
     return result;
   }
 
-  errorGfx() {
-    return new ImageData(1, 1);
+  async errorGfx(location, name) {
+    let canvas = document.createElement("canvas");
+    canvas.width = 64;
+    canvas.height = 32;
+
+    let context = canvas.getContext("2d");
+    context.imageSmoothingEnabled = false;
+    context.font = "bolder 9px monospace";
+    context.fillStyle = "white";
+    context.textAlign = "center";
+
+    context.drawImage(await dataURLToImage(error), 0, 0);
+    context.fillText(location, 32, 13);
+    context.fillText(name, 32, 22);
+
+    return context.getImageData(0, 0, canvas.width, canvas.height);
   }
 
   async loadResource(fileID, resourceID) {
@@ -158,7 +166,7 @@ export class GFXLoader {
       }
     }
 
-    return this.errorGfx();
+    return this.errorGfx(`egf ${fileID}`, resourceID.toString());
   }
 
   async loadRaw(path) {
@@ -167,7 +175,17 @@ export class GFXLoader {
     } catch (e) {
       console.error("Failed to load %s: %s", path, e);
     }
-    return this.errorGfx();
+
+    let lastSlash = path.lastIndexOf("/");
+    let lastDot = path.lastIndexOf(".");
+    if (lastDot === -1) {
+      lastDot = undefined;
+    }
+
+    let location = path.substring(0, lastSlash) || "/";
+    let name = path.substring(lastSlash + 1, lastDot);
+
+    return this.errorGfx(location, name);
   }
 
   destroy() {

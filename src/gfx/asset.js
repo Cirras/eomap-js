@@ -6,10 +6,6 @@ export class Asset {
     this.animation = animation;
   }
 
-  async load(_gfxLoader) {
-    throw new Error("Asset.load() must be implemented");
-  }
-
   getFrame(index) {
     if (this.animation) {
       return this.animation.frames[index].frame;
@@ -24,45 +20,24 @@ export class Asset {
   get frameKey() {
     return this.textureFrame.name;
   }
-
-  get frames() {
-    if (this.animation) {
-      return this.animation.frames.map((f) => f.frame);
-    }
-    return [];
-  }
-}
-
-class ResourceAsset extends Asset {
-  constructor(textureFrame, width, height, animation, fileID, resourceID) {
-    super(textureFrame, width, height, animation);
-    this.fileID = fileID;
-    this.resourceID = resourceID;
-  }
-
-  async load(gfxLoader) {
-    return gfxLoader.loadResource(this.fileID, this.resourceID);
-  }
-}
-
-class RawAsset extends Asset {
-  constructor(textureFrame, width, height, animation, path) {
-    super(textureFrame, width, height, animation);
-    this.path = path;
-  }
-
-  async load(gfxLoader) {
-    return gfxLoader.loadRaw(this.path);
-  }
 }
 
 export class AssetFactory {
   constructor(scene, identifier) {
     this.scene = scene;
     this.identifier = identifier;
+    this.defaultAsset = null;
   }
 
-  createResource(textureKey, frameKey, fileID, resourceID) {
+  getDefault() {
+    if (!this.defaultAsset) {
+      let frame = this.scene.textures.get().frames["__BASE"];
+      this.defaultAsset = new Asset(frame, frame.width, frame.height, null);
+    }
+    return this.defaultAsset;
+  }
+
+  createResource(textureKey, frameKey, fileID) {
     let texture = this.scene.textures.get(textureKey);
     let textureFrame = texture.get(frameKey);
     let width = textureFrame.realWidth;
@@ -98,13 +73,16 @@ export class AssetFactory {
       height = sizeFrame.height;
     }
 
-    return new ResourceAsset(
+    return new Asset(textureFrame, width, height, animation);
+  }
+
+  createRaw(textureKey, frameKey) {
+    let textureFrame = this.getTextureFrame(textureKey, frameKey);
+    return new Asset(
       textureFrame,
-      width,
-      height,
-      animation,
-      fileID,
-      resourceID
+      textureFrame.width,
+      textureFrame.height,
+      null
     );
   }
 
@@ -135,40 +113,7 @@ export class AssetFactory {
     let width = sizeFrame.width;
     let height = sizeFrame.height;
 
-    return new RawAsset(textureFrame, width, height, animation, "cursor.png");
-  }
-
-  createSpec(textureKey, frameKey, tileSpec) {
-    let textureFrame = this.getTextureFrame(textureKey, frameKey);
-    return new RawAsset(
-      textureFrame,
-      textureFrame.width,
-      textureFrame.height,
-      null,
-      `specs/${tileSpec}.png`
-    );
-  }
-
-  createEntity(textureKey, frameKey, entityType) {
-    let textureFrame = this.getTextureFrame(textureKey, frameKey);
-    return new RawAsset(
-      textureFrame,
-      textureFrame.width,
-      textureFrame.height,
-      null,
-      `entities/${entityType}.png`
-    );
-  }
-
-  createBlackTile(textureKey, frameKey) {
-    let textureFrame = this.getTextureFrame(textureKey, frameKey);
-    return new RawAsset(
-      textureFrame,
-      textureFrame.width,
-      textureFrame.height,
-      null,
-      "black.png"
-    );
+    return new Asset(textureFrame, width, height, animation);
   }
 
   createAnimationFrames(texture, frame, frameWidth, frameHeight) {
