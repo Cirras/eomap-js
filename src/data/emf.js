@@ -342,10 +342,10 @@ export class EMF {
         let tiles = reader.getChar();
         for (let ii = 0; ii < tiles; ++ii) {
           let x = reader.getChar();
-          let c = reader.getChar();
+          let tileSpec = reader.getChar();
 
           if (x < emf.width && y < emf.height) {
-            emf.getTile(x, y).spec = c;
+            emf.getTile(x, y).spec = tileSpec;
           }
         }
       }
@@ -374,10 +374,14 @@ export class EMF {
         let tiles = reader.getChar();
         for (let ii = 0; ii < tiles; ++ii) {
           let x = reader.getChar();
-          let s = reader.getShort();
+          let graphic = reader.getShort();
+
+          if (layer > 0 && graphic === 0) {
+            continue;
+          }
 
           if (x < emf.width && y < emf.height) {
-            emf.getTile(x, y).gfx[layer] = s;
+            emf.getTile(x, y).gfx[layer] = graphic;
           }
         }
       }
