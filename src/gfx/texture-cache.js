@@ -352,6 +352,17 @@ export class EvictingTextureCache extends TextureCache {
       asset.animation.destroy();
     }
 
+    if (entry.bin) {
+      let page = entry.page;
+      page.shelfPacker.unref(entry.bin);
+      if (page.empty) {
+        page.shelfPacker = new ShelfPack(
+          page.texturePage.width,
+          page.texturePage.height
+        );
+      }
+    }
+
     this.entries.delete(key);
   }
 }
