@@ -402,7 +402,7 @@ export class Application extends LitElement {
       return;
     }
 
-    if (!this.settingsChangeRequiresGFXReload(previous)) {
+    if (!(await this.settingsChangeRequiresGFXReload(previous))) {
       return;
     }
 
@@ -415,7 +415,7 @@ export class Application extends LitElement {
     }
   }
 
-  settingsChangeRequiresGFXReload(previous) {
+  async settingsChangeRequiresGFXReload(previous) {
     if (!previous) {
       return true;
     }
@@ -434,10 +434,10 @@ export class Application extends LitElement {
       return previous.connectedModeURL !== this.settingsState.connectedModeURL;
     } else {
       return (
-        this.isDifferentHandle(
+        (await this.isDifferentHandle(
           previous.gfxDirectory,
           this.settingsState.gfxDirectory
-        ) ||
+        )) ||
         this.isDifferentHandle(
           previous.customAssetsDirectory,
           this.settingsState.customAssetsDirectory
@@ -446,14 +446,14 @@ export class Application extends LitElement {
     }
   }
 
-  isDifferentHandle(a, b) {
+  async isDifferentHandle(a, b) {
     if (!a && !b) {
       return false;
     }
     if (!!a !== !!b) {
       return true;
     }
-    return !a.isSameEntry(b);
+    return !(await a.isSameEntry(b));
   }
 
   calculateMaxPaletteWidth() {
