@@ -1,11 +1,5 @@
-import {
-  css,
-  customElement,
-  html,
-  LitElement,
-  property,
-  state,
-} from "lit-element";
+import { css, html, LitElement } from "lit";
+import { customElement, property, state } from "lit/decorators.js";
 
 import "phaser";
 

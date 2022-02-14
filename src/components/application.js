@@ -1,12 +1,6 @@
-import {
-  css,
-  customElement,
-  html,
-  LitElement,
-  property,
-  query,
-  state,
-} from "lit-element";
+import { css, html, LitElement } from "lit";
+
+import { customElement, property, query, state } from "lit/decorators.js";
 
 import { get, set } from "idb-keyval";
 
@@ -515,6 +509,7 @@ export class Application extends LitElement {
           .canAccessSettings=${this.settingsState != null}
           .canUndo=${this.canUndo()}
           .canRedo=${this.canRedo()}
+          .keyboardEnabled=${this.keyboardEnabled()}
           @new=${this.onNew}
           @open=${this.onOpen}
           @save=${this.onSave}

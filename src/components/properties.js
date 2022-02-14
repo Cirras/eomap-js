@@ -1,11 +1,5 @@
-import {
-  customElement,
-  html,
-  LitElement,
-  property,
-  query,
-  queryAll,
-} from "lit-element";
+import { html, LitElement } from "lit";
+import { customElement, property, query } from "lit/decorators.js";
 
 import "@spectrum-web-components/overlay/overlay-trigger.js";
 import "@spectrum-web-components/field-group/sp-field-group.js";
@@ -13,7 +7,9 @@ import "@spectrum-web-components/field-label/sp-field-label.js";
 import "@spectrum-web-components/switch/sp-switch.js";
 import "@spectrum-web-components/menu/sp-menu-item.js";
 import "@spectrum-web-components/menu/sp-menu-divider.js";
+import "@spectrum-web-components/accordion/sp-accordion-item.js";
 
+import "./accordion";
 import "./modal";
 import "./number-field";
 import "./picker";
@@ -25,8 +21,8 @@ import { MapPropertiesState } from "../map-properties-state";
 
 @customElement("eomap-properties")
 export class Properties extends LitElement {
-  @queryAll("sp-accordion-item")
-  accordianItems;
+  @query("eomap-accordion")
+  accordion;
 
   @query("#width", true)
   width;
@@ -67,14 +63,6 @@ export class Properties extends LitElement {
   @property({ type: Boolean, reflect: true })
   open = false;
 
-  onAccordianItemToggle(event) {
-    if (event.target !== document.activeElement) {
-      // Enter or Space was pressed from within an accordian item
-      event.preventDefault();
-      document.activeElement.click();
-    }
-  }
-
   updated(changed) {
     if (changed.has("open")) {
       this.manageOpen();
@@ -83,13 +71,7 @@ export class Properties extends LitElement {
 
   manageOpen() {
     if (this.open) {
-      this.expandAccordianItems();
-    }
-  }
-
-  expandAccordianItems() {
-    for (let accordianItem of this.accordianItems) {
-      accordianItem.open = true;
+      this.accordion.expand();
     }
   }
 
@@ -113,7 +95,7 @@ export class Properties extends LitElement {
         </div>
       </sp-field-group>
       <sp-field-group>
-        <div>
+        <div class="picker-container">
           <sp-field-label for="type">Type</sp-field-label>
           <eomap-picker id="type">
             <sp-menu-item value="${MapType.Normal}"> Normal </sp-menu-item>
@@ -121,7 +103,7 @@ export class Properties extends LitElement {
             <sp-menu-item value="${MapType.PK}"> Hostile (PK) </sp-menu-item>
           </eomap-picker>
         </div>
-        <div>
+        <div class="picker-container">
           <sp-field-label for="effect">Effect</sp-field-label>
           <eomap-picker id="effect">
             <sp-menu-item value="${MapEffect.None}"> None </sp-menu-item>
@@ -175,7 +157,7 @@ export class Properties extends LitElement {
             max="${SHORT_MAX}"
           ></eomap-number-field>
         </div>
-        <div>
+        <div class="picker-container">
           <sp-field-label for="music-control">Music Control</sp-field-label>
           <eomap-picker id="music-control">
             <sp-menu-item value="${MusicControl.InterruptIfDifferentPlayOnce}">
@@ -252,22 +234,24 @@ export class Properties extends LitElement {
         >
           <style>
             eomap-textfield {
-              --spectrum-textfield-min-width: 208px;
+              --spectrum-textfield-texticon-min-width: 208px;
+              padding-bottom: var(--spectrum-global-dimension-size-200);
+            }
+            eomap-number-field {
+              padding-bottom: var(--spectrum-global-dimension-size-200);
             }
             eomap-picker {
               --spectrum-picker-min-width: 208px;
             }
             .switch-container {
               width: 208px;
+              padding-bottom: var(--spectrum-global-dimension-size-200);
             }
-            sp-field-group {
+            .picker-container {
               padding-bottom: var(--spectrum-global-dimension-size-200);
             }
           </style>
-          <sp-accordion
-            allow-multiple
-            @sp-accordion-item-toggle=${this.onAccordianItemToggle}
-          >
+          <eomap-accordion>
             <sp-accordion-item label="General">
               ${this.renderGeneral()}
             </sp-accordion-item>
@@ -277,7 +261,7 @@ export class Properties extends LitElement {
             <sp-accordion-item label="Respawn">
               ${this.renderRespawn()}
             </sp-accordion-item>
-          </sp-accordion>
+          </eomap-accordion>
         </eomap-modal>
         <div slot="trigger"></div>
       </overlay-trigger>

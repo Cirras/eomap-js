@@ -1,3 +1,6 @@
+import { css, html, LitElement } from "lit";
+import { customElement, property } from "lit/decorators.js";
+
 import "@spectrum-web-components/action-group/sp-action-group";
 import {
   DrawIcon,
@@ -9,7 +12,6 @@ import {
   UndoIcon,
   RedoIcon,
 } from "@spectrum-web-components/icons-workflow";
-import { css, customElement, html, LitElement, property } from "lit-element";
 
 import "./sidebar-button";
 

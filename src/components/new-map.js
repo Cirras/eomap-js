@@ -1,4 +1,5 @@
-import { customElement, html, LitElement, property, query } from "lit-element";
+import { html, LitElement } from "lit";
+import { customElement, property, query } from "lit/decorators.js";
 
 import "@spectrum-web-components/overlay/overlay-trigger.js";
 import "@spectrum-web-components/field-group/sp-field-group.js";
@@ -61,7 +62,7 @@ export class NewMap extends LitElement {
         >
           <style>
             eomap-textfield {
-              --spectrum-textfield-min-width: 208px;
+              --spectrum-textfield-texticon-min-width: 208px;
             }
           </style>
           <sp-field-group>

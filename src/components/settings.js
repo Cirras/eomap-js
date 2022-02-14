@@ -1,19 +1,12 @@
-import {
-  customElement,
-  html,
-  LitElement,
-  property,
-  state,
-  query,
-  queryAll,
-} from "lit-element";
+import { html, LitElement } from "lit";
+import { customElement, property, state, query } from "lit/decorators.js";
 
 import "@spectrum-web-components/field-label/sp-field-label.js";
 import "@spectrum-web-components/field-group/sp-field-group.js";
 import "@spectrum-web-components/overlay/overlay-trigger.js";
-import "@spectrum-web-components/accordion/sp-accordion.js";
 import "@spectrum-web-components/accordion/sp-accordion-item.js";
 
+import "./accordion";
 import "./modal";
 import "./folderfield";
 import "./textfield";
@@ -22,8 +15,8 @@ import { SettingsState } from "../settings-state";
 
 @customElement("eomap-settings")
 export class Settings extends LitElement {
-  @queryAll("sp-accordion-item")
-  accordianItems;
+  @query("eomap-accordion")
+  accordion;
 
   @query("#gfx", true)
   gfx;
@@ -46,14 +39,6 @@ export class Settings extends LitElement {
   @state({ type: String })
   connectedModeURLState = false;
 
-  onAccordianItemToggle(event) {
-    if (event.target !== document.activeElement) {
-      // Enter or Space was pressed from within an accordian item
-      event.preventDefault();
-      document.activeElement.click();
-    }
-  }
-
   updated(changed) {
     if (changed.has("open")) {
       this.manageOpen();
@@ -62,13 +47,7 @@ export class Settings extends LitElement {
 
   manageOpen() {
     if (this.open) {
-      this.expandAccordianItems();
-    }
-  }
-
-  expandAccordianItems() {
-    for (let accordianItem of this.accordianItems) {
-      accordianItem.open = true;
+      this.accordion.expand();
     }
   }
 
@@ -147,14 +126,11 @@ export class Settings extends LitElement {
               margin-bottom: 10px;
             }
             eomap-textfield {
-              --spectrum-textfield-min-width: 388px;
+              --spectrum-textfield-texticon-min-width: 388px;
               margin-bottom: 10px;
             }
           </style>
-          <sp-accordion
-            allow-multiple
-            @sp-accordion-item-toggle=${this.onAccordianItemToggle}
-          >
+          <eomap-accordion>
             <sp-accordion-item
               label="Graphics"
               style="${!!FORCE_CONNECTED_MODE_URL ? "display: none;" : ""}"
@@ -164,7 +140,7 @@ export class Settings extends LitElement {
             <sp-accordion-item label="Connected Mode">
               ${this.renderConnectedMode()}
             </sp-accordion-item>
-          </sp-accordion>
+          </eomap-accordion>
         </eomap-modal>
         <div slot="trigger"></div>
       </overlay-trigger>

@@ -1,4 +1,5 @@
-import { css, customElement, html, LitElement, property } from "lit-element";
+import { css, html, LitElement } from "lit";
+import { customElement, property } from "lit/decorators.js";
 
 import "@spectrum-web-components/progress-bar/sp-progress-bar.js";
 import "@spectrum-web-components/button/sp-button.js";
@@ -53,11 +54,16 @@ export class Startup extends LitElement {
         height: 150px;
         padding-bottom: 30px;
       }
+      sp-progress-bar {
+        --spectrum-progressbar-value-gap-y: var(
+          --spectrum-global-dimension-size-50
+        );
+      }
       .stalled-progress-bar {
         --spectrum-fieldlabel-m-text-color: var(
           --spectrum-global-color-gray-700
         );
-        --spectrum-progressbar-m-over-background-track-fill-color: var(
+        --spectrum-progressbar-m-overbackground-track-fill-color: var(
           --spectrum-global-color-gray-700
         );
         --spectrum-progressbar-indeterminate-duration: 0ms;
@@ -66,22 +72,19 @@ export class Startup extends LitElement {
         --spectrum-fieldlabel-m-text-color: var(
           --spectrum-global-color-gray-700
         );
-        --spectrum-progressbar-m-over-background-track-fill-color: var(
+        --spectrum-progressbar-m-overbackground-track-fill-color: var(
           --spectrum-global-color-gray-700
         );
       }
       .negative-progress-bar {
         --spectrum-fieldlabel-m-text-color: var(
-          --spectrum-semantic-negative-color-status
+          --spectrum-semantic-negative-status-color
         );
-        --spectrum-progressbar-m-over-background-track-color: var(
-          --spectrum-semantic-negative-color-status
+        --spectrum-progressbar-m-overbackground-track-color: var(
+          --spectrum-semantic-negative-status-color
         );
-        --spectrum-progressbar-m-over-background-track-fill-color: var(
-          --spectrum-semantic-negative-color-status
-        );
-        --spectrum-progressbar-m-over-background-track-fill-color: var(
-          --spectrum-semantic-negative-color-status
+        --spectrum-progressbar-m-overbackground-track-fill-color: var(
+          --spectrum-semantic-negative-status-color
         );
       }
       .action-button {
@@ -111,7 +114,7 @@ export class Startup extends LitElement {
       return html`
         <sp-button
           class="action-button"
-          style="--spectrum-button-primary-text-padding-top: 0px;"
+          style="--spectrum-button-primary-textonly-text-padding-bottom: 3px;"
           variant="cta"
           size="s"
           @click=${() => {

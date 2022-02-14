@@ -1,30 +1,29 @@
-import {
-  css,
-  customElement,
-  html,
-  SpectrumElement,
-  property,
-  query,
-  ifDefined,
-} from "@spectrum-web-components/base";
+import { css, html } from "lit";
+import { customElement, property, query } from "lit/decorators.js";
+
+import { SpectrumElement } from "@spectrum-web-components/base";
+import { ifDefined } from "@spectrum-web-components/base/src/directives.js";
 
 import "@spectrum-web-components/theme/theme-dark.js";
 import "@spectrum-web-components/theme/sp-theme.js";
 import "@spectrum-web-components/underlay/sp-underlay.js";
 import "@spectrum-web-components/button/sp-button.js";
-import "@spectrum-web-components/dialog/sp-dialog.js";
 
-import styles from "@spectrum-web-components/modal/src/modal.css.js";
+import "./dialog";
+
+import modalWrapperStyles from "@spectrum-web-components/modal/src/modal-wrapper.css.js";
+import modalStyles from "@spectrum-web-components/modal/src/modal.css.js";
 import { FocusVisiblePolyfillMixin } from "@spectrum-web-components/shared";
 
 @customElement("eomap-modal")
 export class Modal extends FocusVisiblePolyfillMixin(SpectrumElement) {
   static get styles() {
     return [
-      styles,
+      modalWrapperStyles,
+      modalStyles,
       css`
-        sp-theme {
-          z-index: 2;
+        sp-underlay {
+          z-index: unset;
         }
       `,
     ];
@@ -48,7 +47,7 @@ export class Modal extends FocusVisiblePolyfillMixin(SpectrumElement) {
   @property()
   headline = "";
 
-  @query("sp-dialog")
+  @query("eomap-dialog")
   dialog;
 
   focus() {
@@ -118,15 +117,15 @@ export class Modal extends FocusVisiblePolyfillMixin(SpectrumElement) {
       <sp-underlay ?open=${this.open}> </sp-underlay>
       <sp-theme color="dark" scale="medium">
         <div class="modal">
-          <sp-dialog
+          <eomap-dialog
             ?error=${this.error}
             size=${ifDefined(this.size ? this.size : undefined)}
-            style="width: var(--eomap-modal-dialog-width)"
+            style="width: var(--eomap-modal-width, 100%)"
           >
             ${this.renderHeadline()}
             <slot></slot>
             ${this.renderCancel()} ${this.renderConfirm()}
-          </sp-dialog>
+          </eomap-dialog>
         </div>
       </sp-theme>
     `;

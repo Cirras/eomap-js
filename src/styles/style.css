@@ -10,78 +10,20 @@ body {
   user-select: none;
 }
 
-eomap-modal {
-  --eomap-modal-dialog-width: var(--eomap-modal-width, 100%);
-  --spectrum-dialog-confirm-overlay-background-color: rgba(0, 0, 0, 0.75);
-  --spectrum-button-secondary-m-background-color: var(
-    --spectrum-global-color-gray-300
-  );
-  --spectrum-button-secondary-m-border-color: var(
-    --spectrum-global-color-gray-300
-  );
-  --spectrum-button-secondary-m-background-color-hover: var(
-    --spectrum-global-color-gray-400
-  );
-  --spectrum-button-secondary-m-border-color-hover: var(
-    --spectrum-global-color-gray-400
-  );
-  --spectrum-button-secondary-m-background-color-down: var(
-    --spectrum-global-color-gray-200
-  );
-  --spectrum-button-secondary-m-border-color-down: var(
-    --spectrum-global-color-gray-200
-  );
-  --spectrum-button-secondary-m-background-color-key-focus: var(
-    --spectrum-global-color-gray-300
-  );
-  --spectrum-button-secondary-m-border-color-key-focus: var(
-    --spectrum-global-color-gray-300
-  );
-  --spectrum-button-secondary-m-text-color-down: var(
-    --spectrum-global-color-gray-700
-  );
-  --spectrum-button-secondary-m-text-color-hover: var(
-    --spectrum-global-color-gray-700
-  );
-  --spectrum-button-secondary-m-text-color-key-focus: var(
-    --spectrum-global-color-gray-700
-  );
-}
-
-kbd {
-  font-size: 13px;
-  padding-left: 15px;
-  color: var(--spectrum-global-color-gray-600);
-  pointer-events: none;
-}
-
-sp-menu-divider {
-  --spectrum-listitem-m-divider-color: var(--spectrum-global-color-gray-300);
-  --spectrum-listitem-divider-size: var(--spectrum-global-dimension-size-10);
-}
-
 sp-switch {
   width: 26px;
   --spectrum-switch-cursor-hit-x: 0px;
   --spectrum-switch-m-handle-border-size: 1px;
 }
 
-.menu-item {
-  --spectrum-listitem-selectable-padding-right: var(
-    --spectrum-global-dimension-size-150
+sp-menu-divider {
+  --spectrum-listitem-m-texticon-divider-color: var(
+    --spectrum-global-color-gray-300
   );
-}
-
-.checkable-menu-item {
-  --spectrum-listitem-selectable-padding-right: calc(
-    var(--spectrum-global-dimension-size-100) +
-      var(--spectrum-icon-checkmark-medium-width) +
-      var(--spectrum-listitem-icon-gap) +
-      var(
-        --spectrum-popover-border-size,
-        var(--spectrum-alias-border-size-thin)
-      )
+  --spectrum-listitem-texticon-divider-size: var(
+    --spectrum-global-dimension-size-10
   );
+  --spectrum-listitem-texticon-divider-padding: 8px;
 }
 
 .spectrum-Table {
@@ -91,6 +33,10 @@ sp-switch {
   --spectrum-table-m-regular-row-background-color-selected: var(
     --spectrum-global-color-gray-200
   );
+}
+
+.spectrum-Table-cell {
+  word-break: break-all;
 }
 
 .spectrum-Table-row.focus-visible {

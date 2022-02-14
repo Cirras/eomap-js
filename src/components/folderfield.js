@@ -1,11 +1,10 @@
+import { css, html, LitElement } from "@spectrum-web-components/base";
+
 import {
-  css,
   customElement,
-  html,
-  LitElement,
   property,
   query,
-} from "@spectrum-web-components/base";
+} from "@spectrum-web-components/base/src/decorators";
 
 import "@spectrum-web-components/field-label/sp-field-label.js";
 import "@spectrum-web-components/action-button/sp-action-button.js";
@@ -24,13 +23,14 @@ export class FolderTextfield extends Textfield {
       ...super.styles,
       css`
         :host {
-          --spectrum-textfield-m-validation-icon-color-valid: var(
+          --spectrum-textfield-m-texticon-validation-icon-color-valid: var(
             --spectrum-alias-text-color
           );
-          --spectrum-textfield-success-icon-width: 15px;
-          --spectrum-textfield-success-icon-height: 15px;
-          --spectrum-textfield-error-icon-width: 15px;
-          --spectrum-textfield-error-icon-height: 15px;
+          --spectrum-textfield-texticon-success-icon-width: 15px;
+          --spectrum-textfield-texticon-success-icon-height: 15px;
+          --spectrum-textfield-texticon-invalid-icon-width: 15px;
+          --spectrum-textfield-texticon-invalid-icon-height: 15px;
+          width: unset;
         }
         .input {
           cursor: pointer;
@@ -42,26 +42,29 @@ export class FolderTextfield extends Textfield {
               ease-out;
         }
         :host(:hover) .input {
-          --spectrum-textfield-m-background-color: var(
+          --spectrum-textfield-m-texticon-background-color: var(
             --spectrum-global-color-gray-75
           );
         }
         :host([focused][hidefocusring]) .input {
-          --spectrum-textfield-m-border-color-key-focus: var(
+          --spectrum-textfield-m-texticon-border-color-key-focus: var(
             --spectrum-alias-border-color-hover
           );
-          --spectrum-textfield-m-border-color-error-key-focus: var(
+          --spectrum-textfield-m-texticon-border-color-invalid-key-focus: var(
             --spectrum-semantic-negative-color-state-hover
           );
-          --spectrum-textfield-m-background-color: var(
+          --spectrum-textfield-m-texticon-background-color: var(
             --spectrum-global-color-gray-75
           );
           box-shadow: none;
         }
         :host(:active) .input {
-          --spectrum-textfield-m-background-color: var(
+          --spectrum-textfield-m-texticon-background-color: var(
             --spectrum-global-color-gray-200
           ) !important;
+        }
+        :host([hidefocusring]) #textfield::after {
+          box-shadow: none;
         }
       `,
     ];
@@ -121,7 +124,7 @@ export class Folderfield extends LitElement {
         flex-wrap: wrap;
       }
       eomap-folder-textfield {
-        --spectrum-textfield-min-width: var(
+        --spectrum-textfield-texticon-min-width: var(
           --spectrum-folderfield-min-width,
           var(--spectrum-global-dimension-size-600)
         );

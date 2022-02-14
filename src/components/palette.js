@@ -1,15 +1,13 @@
+import { css, html, LitElement } from "lit";
 import {
-  css,
   customElement,
   eventOptions,
-  html,
-  LitElement,
   property,
   query,
+  queryAll,
   state,
-} from "lit-element";
-
-import { classMap } from "lit-html/directives/class-map";
+} from "lit/decorators.js";
+import { classMap } from "lit/directives/class-map.js";
 
 import "@spectrum-web-components/action-group/sp-action-group";
 import "@spectrum-web-components/action-button/sp-action-button";
@@ -105,19 +103,19 @@ export class Palette extends LitElement {
         top: 0;
       }
       .scroll-arrow {
-        --spectrum-actionbutton-m-quiet-background-color: var(
+        --spectrum-actionbutton-m-quiet-textonly-background-color: var(
           --spectrum-global-color-gray-400
         );
-        --spectrum-actionbutton-m-quiet-background-color-down: var(
+        --spectrum-actionbutton-m-quiet-textonly-background-color-down: var(
           --spectrum-global-color-gray-400
         );
-        --spectrum-actionbutton-m-icon-color-disabled: var(
+        --spectrum-actionbutton-m-texticon-icon-color-disabled: var(
           --spectrum-global-color-gray-300
         );
       }
       #layer-buttons {
         display: flex;
-        padding-right: 1px;
+        padding: 1px;
         flex-wrap: nowrap;
         overflow-x: scroll;
         overflow: -moz-scrollbars-none;
@@ -128,33 +126,73 @@ export class Palette extends LitElement {
         width: 0 !important;
         display: none;
       }
+      #layer-buttons sp-action-button::after {
+        border-radius: unset;
+      }
+      #layer-buttons sp-action-button:first-of-type::after {
+        border-top-left-radius: var(--spectrum-alias-component-border-radius);
+        border-bottom-left-radius: var(
+          --spectrum-alias-component-border-radius
+        );
+      }
+      #layer-buttons sp-action-button:last-of-type::after {
+        border-top-right-radius: var(--spectrum-alias-component-border-radius);
+        border-bottom-right-radius: var(
+          --spectrum-alias-component-border-radius
+        );
+      }
       sp-action-button {
-        --spectrum-actionbutton-m-background-color: var(
+        --spectrum-actionbutton-m-textonly-background-color: var(
           --spectrum-global-color-gray-400
         );
-        --spectrum-actionbutton-m-border-color: var(
+        --spectrum-actionbutton-m-textonly-border-color: var(
           --spectrum-global-color-gray-300
         );
-        --spectrum-actionbutton-m-background-color-hover: var(
+        --spectrum-actionbutton-m-textonly-background-color-hover: var(
           --spectrum-global-color-gray-400
         );
-        --spectrum-actionbutton-m-border-color-hover: var(
+        --spectrum-actionbutton-m-textonly-border-color-hover: var(
           --spectrum-global-color-gray-300
         );
-        --spectrum-actionbutton-m-background-color-key-focus: var(
+        --spectrum-actionbutton-m-textonly-background-color-key-focus: var(
           --spectrum-global-color-gray-400
         );
-        --spectrum-actionbutton-m-background-color-down: var(
+        --spectrum-actionbutton-m-textonly-background-color-down: var(
           --spectrum-global-color-gray-300
         );
-        --spectrum-actionbutton-m-border-color-down: var(
+        --spectrum-actionbutton-m-textonly-border-color-down: var(
           --spectrum-global-color-gray-300
         );
-        --spectrum-actionbutton-m-border-color-selected: var(
+        --spectrum-actionbutton-m-textonly-border-color-selected: var(
           --spectrum-global-color-gray-300
         );
-        --spectrum-actionbutton-m-border-color-selected-hover: var(
+        --spectrum-actionbutton-m-textonly-border-color-selected-hover: var(
           --spectrum-global-color-gray-300
+        );
+        --spectrum-actionbutton-m-textonly-border-color-selected-down: var(
+          --spectrum-global-color-gray-300
+        );
+      }
+      sp-action-button:focus-visible {
+        --spectrum-actionbutton-m-textonly-border-color-selected-hover: var(
+          --spectrum-alias-component-border-color-selected-key-focus
+        );
+        --spectrum-actionbutton-m-textonly-border-color-down: var(
+          --spectrum-alias-component-border-coloR-selected-key-focus
+        );
+        --spectrum-actionbutton-m-textonly-border-color-selected-down: var(
+          --spectrum-alias-component-border-color-selected-key-focus
+        );
+      }
+      sp-action-button[quiet]:focus-visible {
+        --spectrum-actionbutton-m-quiet-textonly-border-color-selected-hover: var(
+          --spectrum-alias-component-border-color-quiet-selected-key-focus
+        );
+        --spectrum-actionbutton-m-quiet-textonly-border-color-down: var(
+          --spectrum-alias-component-border-color-quiet-selected-key-focus
+        );
+        --spectrum-actionbutton-m-quiet-textonly-border-color-selected-down: var(
+          --spectrum-alias-component-border-color-quiet-selected-key-focus
         );
       }
       ::-webkit-scrollbar {
@@ -191,6 +229,9 @@ export class Palette extends LitElement {
   }
 
   @query("#layer-buttons", true)
+  layerButtonsGroup;
+
+  @queryAll("#layer-buttons sp-action-button", true)
   layerButtons;
 
   @query("#palette-scroll-container", true)
@@ -415,6 +456,7 @@ export class Palette extends LitElement {
       return html`
         <sp-action-button
           value="${i}"
+          tabindex="0"
           ?selected=${this.selectedLayer === i}
           @click=${this.onLayerClick}
         >
@@ -577,7 +619,7 @@ export class Palette extends LitElement {
 
   onArrowPointerDown(direction) {
     this.scrollingHeader = true;
-    let startValue = this.layerButtons.scrollLeft;
+    let startValue = this.layerButtonsGroup.scrollLeft;
     requestAnimationFrame((timestamp) => {
       this.scrollHeader(timestamp, startValue, direction);
     });
@@ -596,7 +638,7 @@ export class Palette extends LitElement {
 
       let delta = timestamp - this.headerScrollStartTimestamp;
       let scrollValue = startValue + (delta / 2) * direction;
-      this.layerButtons.scrollLeft = scrollValue;
+      this.layerButtonsGroup.scrollLeft = scrollValue;
 
       requestAnimationFrame((t) => this.scrollHeader(t, startValue, direction));
     }
@@ -607,13 +649,16 @@ export class Palette extends LitElement {
   }
 
   preventLayerButtonsFromSwallowingKeyDownInputs() {
-    this.layerButtons.addEventListener("focusin", () => {
-      this.layerButtons.dispatchEvent(new CustomEvent("focusout"));
+    this.layerButtonsGroup.addEventListener("focusin", () => {
+      this.layerButtonsGroup.dispatchEvent(new CustomEvent("focusout"));
+      for (let button of this.layerButtons) {
+        button.tabIndex = 0;
+      }
     });
   }
 
   checkLayerButtonsArrows() {
-    let element = this.layerButtons;
+    let element = this.layerButtonsGroup;
     this.leftArrowEnabled = element.scrollLeft > 0;
     this.rightArrowEnabled =
       element.scrollLeft + element.offsetWidth !== element.scrollWidth;

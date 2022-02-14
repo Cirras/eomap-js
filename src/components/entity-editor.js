@@ -1,12 +1,5 @@
-import {
-  customElement,
-  html,
-  LitElement,
-  property,
-  query,
-  queryAll,
-  state,
-} from "lit-element";
+import { html, LitElement } from "lit";
+import { customElement, property, query, state } from "lit/decorators.js";
 
 import {
   AddCircleIcon,
@@ -14,11 +7,11 @@ import {
 } from "@spectrum-web-components/icons-workflow";
 
 import "@spectrum-web-components/overlay/overlay-trigger.js";
-import "@spectrum-web-components/accordion/sp-accordion.js";
 import "@spectrum-web-components/accordion/sp-accordion-item.js";
 
 import "@spectrum-css/table/dist/index-vars.css";
 
+import "./accordion";
 import "./modal";
 import "./entity-warp";
 import "./entity-sign";
@@ -31,8 +24,8 @@ import { TilePos } from "../tilepos";
 
 @customElement("eomap-entity-editor")
 export class EntityEditor extends LitElement {
-  @queryAll("sp-accordion-item")
-  accordianItems;
+  @query("eomap-accordion")
+  accordion;
 
   @query("eomap-entity-warp")
   warp;
@@ -80,14 +73,6 @@ export class EntityEditor extends LitElement {
 
   @state({ type: Function })
   onItemSave;
-
-  onAccordianItemToggle(event) {
-    if (event.target !== document.activeElement) {
-      // Enter or Space was pressed from within an accordian item
-      event.preventDefault();
-      document.activeElement.click();
-    }
-  }
 
   renderNewButton(onClick) {
     return html`
@@ -178,7 +163,10 @@ export class EntityEditor extends LitElement {
       let sign = this.entityState.sign;
       if (sign) {
         return html`
-          <table class="spectrum-Table spectrum-Table--sizeS">
+          <table
+            class="spectrum-Table spectrum-Table--sizeS"
+            style="width: 395px"
+          >
             <thead class="spectrum-Table-head">
               <tr>
                 <th class="spectrum-Table-headCell">Title</th>
@@ -440,13 +428,7 @@ export class EntityEditor extends LitElement {
 
   manageOpen() {
     if (this.open) {
-      this.expandAccordianItems();
-    }
-  }
-
-  expandAccordianItems() {
-    for (let accordianItem of this.accordianItems) {
-      accordianItem.open = true;
+      this.accordion.expand();
     }
   }
 
@@ -470,10 +452,7 @@ export class EntityEditor extends LitElement {
           @cancel=${this.cancel}
         >
           ${this.renderDialogStyles()}
-          <sp-accordion
-            allow-multiple
-            @sp-accordion-item-toggle=${this.onAccordianItemToggle}
-          >
+          <eomap-accordion>
             <sp-accordion-item label="Warp">
               ${this.renderWarp()}
             </sp-accordion-item>
@@ -486,7 +465,7 @@ export class EntityEditor extends LitElement {
             <sp-accordion-item label="Item Spawns">
               ${this.renderItems()}
             </sp-accordion-item>
-          </sp-accordion>
+          </eomap-accordion>
         </eomap-modal>
         <div slot="trigger"></div>
       </overlay-trigger>

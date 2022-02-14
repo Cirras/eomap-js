@@ -1,17 +1,32 @@
+import { css, html, LitElement } from "lit";
+import { customElement, property } from "lit/decorators.js";
+
 import "@spectrum-web-components/action-button/sp-action-button";
 import "@spectrum-web-components/icon/sp-icon";
 import "@spectrum-web-components/overlay/overlay-trigger";
-import "@spectrum-web-components/overlay/src/popper";
 import "@spectrum-web-components/tooltip/sp-tooltip";
-import { css, customElement, html, LitElement, property } from "lit-element";
 
 @customElement("eomap-sidebar-button")
 export class SidebarButton extends LitElement {
   static get styles() {
     return css`
       sp-action-button {
-        --spectrum-actionbutton-m-icon-color-disabled: var(
+        --spectrum-actionbutton-m-texticon-icon-color-disabled: var(
           --spectrum-global-color-gray-300
+        );
+        --spectrum-actionbutton-m-texticon-icon-color-selected: var(
+          --spectrum-alias-component-icon-color-default
+        );
+      }
+      sp-action-button[quiet]:focus-visible {
+        --spectrum-actionbutton-m-quiet-textonly-border-color-selected-hover: var(
+          --spectrum-alias-component-border-color-quiet-selected-key-focus
+        );
+        --spectrum-actionbutton-m-quiet-textonly-border-color-down: var(
+          --spectrum-alias-component-border-color-quiet-selected-key-focus
+        );
+        --spectrum-actionbutton-m-quiet-textonly-border-color-selected-down: var(
+          --spectrum-alias-component-border-color-quiet-selected-key-focus
         );
       }
     `;
@@ -46,7 +61,7 @@ export class SidebarButton extends LitElement {
           <sp-icon slot="icon">${this.icon()}</sp-icon>
         </sp-action-button>
         <sp-tooltip
-          style="--spectrum-tooltip-background-color: var(--spectrum-global-color-gray-200);"
+          style="--spectrum-tooltip-background-color: var(--spectrum-global-color-gray-200); --spectrum-tooltip-neutral-background-color: var(--spectrum-global-color-gray-200);"
           slot="hover-content"
           open
         >
