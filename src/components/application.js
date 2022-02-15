@@ -338,13 +338,15 @@ export class Application extends LitElement {
     );
   }
 
-  async tryLoadingGFX() {
-    if (
-      this.settingsState.gfxDirectory &&
-      !(await this.needGFXDirectoryPermission()) &&
-      !(await this.needAssetsDirectoryPermission())
-    ) {
-      this.loadGFX();
+  async canLoadGFX() {
+    if (this.isConnectedMode()) {
+      return true;
+    } else {
+      return (
+        this.settingsState.gfxDirectory &&
+        !(await this.needGFXDirectoryPermission()) &&
+        !(await this.needAssetsDirectoryPermission())
+      );
     }
   }
 
@@ -408,10 +410,8 @@ export class Application extends LitElement {
 
     this.destroyGFXLoader();
 
-    if (this.isConnectedMode()) {
+    if (await this.canLoadGFX()) {
       this.loadGFX();
-    } else if (this.settingsState.gfxDirectory) {
-      this.tryLoadingGFX();
     }
   }
 
@@ -432,17 +432,23 @@ export class Application extends LitElement {
 
     if (this.isConnectedMode()) {
       return previous.connectedModeURL !== this.settingsState.connectedModeURL;
-    } else {
-      return (
-        (await this.isDifferentHandle(
-          previous.gfxDirectory,
-          this.settingsState.gfxDirectory
-        )) ||
-        this.isDifferentHandle(
-          previous.customAssetsDirectory,
-          this.settingsState.customAssetsDirectory
-        )
-      );
+    }
+
+    switch (this.startupStatus) {
+      case Startup.Status.NEED_GFX_DIRECTORY_PERMISSION:
+      case Startup.Status.NEED_ASSETS_DIRECTORY_PERMISSION:
+        return this.canLoadGFX();
+      default:
+        return (
+          (await this.isDifferentHandle(
+            previous.gfxDirectory,
+            this.settingsState.gfxDirectory
+          )) ||
+          this.isDifferentHandle(
+            previous.customAssetsDirectory,
+            this.settingsState.customAssetsDirectory
+          )
+        );
     }
   }
 
@@ -897,13 +903,17 @@ export class Application extends LitElement {
   async onRequestGFXDirectoryPermission() {
     await this.settingsState.gfxDirectory.requestPermission();
     this.requestUpdate();
-    this.tryLoadingGFX();
+    if (await this.canLoadGFX()) {
+      this.loadGFX();
+    }
   }
 
   async onRequestAssetsDirectoryPermission() {
     await this.settingsState.customAssetsDirectory.requestPermission();
     this.requestUpdate();
-    this.tryLoadingGFX();
+    if (await this.canLoadGFX()) {
+      this.loadGFX();
+    }
   }
 
   async needGFXDirectoryPermission() {
