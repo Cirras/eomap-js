@@ -89,6 +89,7 @@ export class Startup extends LitElement {
       }
       .content-container {
         height: 150px;
+        width: max-content;
         display: flex;
         flex-direction: column;
         align-items: center;
