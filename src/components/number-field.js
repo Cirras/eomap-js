@@ -15,15 +15,15 @@ export class NumberField extends SpectrumNumberField {
     ];
   }
 
-  min = 0;
-
-  stepModifier = 1;
-
-  hideStepper = true;
-
-  formatOptions = {
-    maximumFractionDigits: 0,
-  };
+  constructor() {
+    super();
+    this.min = 0;
+    this.stepModifier = 1;
+    this.hideStepper = true;
+    this.formatOptions = {
+      maximumFractionDigits: 0,
+    };
+  }
 
   onInput() {
     super.onInput();

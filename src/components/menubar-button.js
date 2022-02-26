@@ -72,7 +72,10 @@ export class MenuBarButton extends Dropdown {
   @property({ type: Boolean })
   autofocus = false;
 
-  quiet = true;
+  constructor() {
+    super();
+    this.quiet = true;
+  }
 
   onButtonPointerEnter = (_event) => {
     this.dispatchEvent(new CustomEvent("button-pointerenter"));

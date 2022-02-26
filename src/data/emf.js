@@ -1,4 +1,4 @@
-import * as windows1252 from "windows-1252/windows-1252";
+import * as windows1252 from "windows-1252";
 
 import { decodeString } from "./eo-decode";
 import { encodeString } from "./eo-encode";
