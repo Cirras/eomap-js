@@ -2,7 +2,9 @@ import { css, html, SpectrumElement } from "@spectrum-web-components/base";
 import { customElement, query } from "lit/decorators.js";
 
 import menuStyles from "@spectrum-web-components/menu/src/menu.css.js";
-import { MenuItem } from "@spectrum-web-components/bundle";
+import { MenuItem } from "@spectrum-web-components/menu/src/MenuItem.js";
+
+import { SubmenuItem } from "./submenu-item";
 
 @customElement("eomap-menu")
 export class Menu extends SpectrumElement {
@@ -15,9 +17,10 @@ export class Menu extends SpectrumElement {
           padding-top: 4px;
           padding-bottom: 4px;
           margin: 0px;
-          overflow: hidden;
+          overflow: visible;
         }
-        ::slotted(sp-menu-item) {
+        ::slotted(sp-menu-item),
+        ::slotted(eomap-submenu-item) {
           --spectrum-listitem-m-texticon-focus-indicator-color: transparent;
           --spectrum-listitem-m-texticon-text-color-key-focus: var(
             --spectrum-listitem-m-texticon-text-color,
@@ -28,7 +31,8 @@ export class Menu extends SpectrumElement {
             var(--spectrum-alias-component-text-color-default)
           );
         }
-        ::slotted(sp-menu-item:not([focused])) {
+        ::slotted(sp-menu-item:not([focused])),
+        ::slotted(eomap-submenu-item:not([focused])) {
           --spectrum-listitem-m-texticon-background-color-hover: var(
             --spectrum-listitem-m-texticon-background-color,
             var(--spectrum-alias-background-color-transparent)
@@ -48,39 +52,70 @@ export class Menu extends SpectrumElement {
   focusedItemIndex = 0;
   menuItems = [];
 
+  closeSubmenuTimeout = null;
+  openSubmenuTimeout = null;
+  pointerInSubmenu = false;
+
   handleMenuItemPointerMove = (event) => {
-    let menuItem = event.target;
+    let menuItem = event.currentTarget;
+
+    if (menuItem !== event.target) {
+      this.pointerInSubmenu = true;
+      this.cancelCloseSubmenu();
+    }
 
     if (menuItem.focused) {
       return;
     }
 
-    let index = this.menuItems.indexOf(event.target);
+    let index = this.menuItems.indexOf(menuItem);
     if (index === -1) {
       return;
     }
 
     if (menuItem.disabled) {
-      const focusedItem = this.menuItems[this.focusedItemIndex];
-      focusedItem.focused = false;
+      this.blurFocusedMenuItem();
       this.focusedItemIndex = index;
+      if (this.submenu) {
+        this.scheduleCloseSubmenu();
+      }
       return;
     }
 
-    this.focusMenuItemByIndex(index);
+    const oldFocusedItem = this.menuItems[this.focusedItemIndex];
+    const newFocusedItem = this.focusMenuItemByIndex(index);
+    if (
+      newFocusedItem instanceof SubmenuItem &&
+      oldFocusedItem !== newFocusedItem &&
+      this.submenu !== newFocusedItem
+    ) {
+      this.scheduleOpenSubmenu();
+    }
   };
 
   handleMenuItemPointerUp = (event) => {
-    if (event.target === this.menuItems[this.focusedItemIndex]) {
-      this.pressFocusedMenuItem();
+    const focusedMenuItem = this.menuItems[this.focusedItemIndex];
+    if (focusedMenuItem instanceof SubmenuItem) {
+      return;
     }
+    if (event.target === focusedMenuItem) {
+      this.pressFocusedMenuItem(true);
+    }
+  };
+
+  handleWindowPointerDown = (_event) => {
+    this.closeSubmenu(true);
+  };
+
+  handleWindowBlur = (_event) => {
+    this.closeSubmenu(true);
   };
 
   constructor() {
     super();
     this.tabIndex = -1;
     this.addEventListener("pointerenter", this.handlePointerEnter);
-    this.addEventListener("pointerout", this.handlePointerOut);
+    this.addEventListener("pointerleave", this.handlePointerLeave);
   }
 
   focus(options) {
@@ -99,29 +134,83 @@ export class Menu extends SpectrumElement {
     if (this.menuItems.includes(event.relatedTarget)) {
       return;
     }
+    if (this.submenu && this.submenu.menu === event.relatedTarget) {
+      return;
+    }
+    if (this === event.relatedTarget) {
+      return;
+    }
     this.stopListeningToKeyboard();
+    this.closeSubmenu(true);
     this.blurFocusedMenuItem();
     this.focusedItemIndex = 0;
     this.removeAttribute("aria-activedescendant");
   }
 
-  handlePointerEnter(_event) {
+  handlePointerEnter(event) {
+    if (this.pointerInSubmenu && event.target === this) {
+      this.pointerInSubmenu = false;
+    }
     if (!this.menuItems.some((item) => item.focused)) {
       this.focus();
       this.blurFocusedMenuItem();
     }
   }
 
-  handlePointerOut(_event) {
+  handlePointerLeave(_event) {
+    if (this.pointerInSubmenu) {
+      return;
+    }
+    this.scheduleCloseSubmenu(true);
     this.blurFocusedMenuItem();
     this.focusedItemIndex = 0;
   }
 
+  handleSubmenuKeyDown(event) {
+    const focusedItem = this.menuItems[this.focusedItemIndex];
+
+    if (focusedItem instanceof SubmenuItem) {
+      if (this.submenu === focusedItem) {
+        const menu = this.submenu.menu;
+        switch (event.key) {
+          case "ArrowDown":
+          case "Home":
+            menu.focusMenuItemByIndex(0);
+            menu.focus();
+            return true;
+          case "ArrowUp":
+          case "End":
+            menu.focusMenuItemByIndex(menu.menuItems.length - 1, -1);
+            menu.focus();
+            return true;
+          case "Escape":
+          case "ArrowLeft":
+            this.focus();
+            this.closeSubmenu(true);
+            return true;
+        }
+      }
+
+      if (event.key === "ArrowRight" && focusedItem !== this.submenu) {
+        this.pressFocusedMenuItem(false);
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   handleKeyDown(event) {
+    if (this.handleSubmenuKeyDown(event)) {
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+
     switch (event.code) {
       case "Enter":
       case "Space":
-        this.pressFocusedMenuItem();
+        this.pressFocusedMenuItem(false);
         event.preventDefault();
         event.stopPropagation();
         return;
@@ -182,6 +271,7 @@ export class Menu extends SpectrumElement {
   focusMenuItemByIndex(index, step) {
     step = step || 1;
     this.blurFocusedMenuItem();
+    const oldFocusedItem = this.menuItems[this.focusedItemIndex];
     this.focusedItemIndex = index;
     let itemToFocus = this.menuItems[this.focusedItemIndex];
     let availableItems = this.menuItems.length;
@@ -198,7 +288,75 @@ export class Menu extends SpectrumElement {
       itemToFocus.focused = true;
     }
 
+    if (oldFocusedItem && oldFocusedItem !== itemToFocus) {
+      if (oldFocusedItem === this.submenu) {
+        this.scheduleCloseSubmenu();
+      } else if (itemToFocus === this.submenu) {
+        this.cancelCloseSubmenu();
+      }
+      this.cancelOpenSubmenu();
+    }
+
     return itemToFocus;
+  }
+
+  scheduleOpenSubmenu() {
+    if (this.openSubmenuTimeout === null) {
+      this.openSubmenuTimeout = setTimeout(() => {
+        this.closeSubmenu(false);
+        this.openSubmenu(false);
+      }, 250);
+    }
+  }
+
+  scheduleCloseSubmenu() {
+    if (this.closeSubmenuTimeout === null) {
+      this.closeSubmenuTimeout = setTimeout(() => {
+        this.closeSubmenu(true);
+      }, 750);
+    }
+  }
+
+  cancelCloseSubmenu() {
+    clearTimeout(this.closeSubmenuTimeout);
+    this.closeSubmenuTimeout = null;
+  }
+
+  cancelOpenSubmenu() {
+    clearTimeout(this.openSubmenuTimeout);
+    this.openSubmenuTimeout = null;
+  }
+
+  closeSubmenu(force) {
+    this.cancelCloseSubmenu();
+    if (force === undefined) {
+      force = false;
+    }
+    if (!this.submenu) {
+      return;
+    }
+    if (force || !this.submenu.focused) {
+      this.submenu.open = false;
+      this.submenu = null;
+    }
+  }
+
+  openSubmenu(focus) {
+    const focusedItem = this.menuItems[this.focusedItemIndex];
+    if (focusedItem instanceof SubmenuItem && !focusedItem.open) {
+      this.submenu = focusedItem;
+      this.submenu.open = true;
+
+      let menu = this.submenu.menu;
+      menu.focusMenuItemByIndex(0);
+      menu.blurFocusedMenuItem();
+
+      if (focus) {
+        setTimeout(() => {
+          menu.focus();
+        }, 1);
+      }
+    }
   }
 
   focusMenuItem(menuItem) {
@@ -215,9 +373,14 @@ export class Menu extends SpectrumElement {
     }
   }
 
-  pressFocusedMenuItem() {
+  pressFocusedMenuItem(pointer) {
     const focusedItem = this.menuItems[this.focusedItemIndex];
     if (focusedItem && !focusedItem.disabled) {
+      if (focusedItem instanceof SubmenuItem) {
+        this.closeSubmenu(false);
+        this.openSubmenu(!pointer);
+        return;
+      }
       focusedItem.dispatchEvent(
         new CustomEvent("menu-item-press", {
           bubbles: true,
@@ -266,5 +429,17 @@ export class Menu extends SpectrumElement {
       menuItem.addEventListener("pointermove", this.handleMenuItemPointerMove);
       menuItem.addEventListener("pointerup", this.handleMenuItemPointerUp);
     }
+  }
+
+  connectedCallback() {
+    super.connectedCallback();
+    window.addEventListener("pointerdown", this.handleWindowPointerDown);
+    window.addEventListener("blur", this.handleWindowBlur);
+  }
+
+  disconnectedCallback() {
+    window.removeEventListener("pointerdown", this.handleWindowPointerDown);
+    window.removeEventListener("blur", this.handleWindowBlur);
+    super.disconnectedCallback();
   }
 }
