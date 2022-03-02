@@ -18,6 +18,7 @@ export class Menu extends SpectrumElement {
           padding-bottom: 4px;
           margin: 0px;
           overflow: visible;
+          box-shadow: 0px 3px 5px rgb(0 0 0 / 40%);
         }
         ::slotted(sp-menu-item),
         ::slotted(eomap-submenu-item) {
@@ -130,14 +131,16 @@ export class Menu extends SpectrumElement {
     this.startListeningToKeyboard();
   }
 
+  isDescendant(element) {
+    return (
+      this === element ||
+      this.menuItems.includes(element) ||
+      (this.submenu && this.submenu.menu.isDescendant(element))
+    );
+  }
+
   handleFocusOut(event) {
-    if (this.menuItems.includes(event.relatedTarget)) {
-      return;
-    }
-    if (this.submenu && this.submenu.menu === event.relatedTarget) {
-      return;
-    }
-    if (this === event.relatedTarget) {
+    if (this.isDescendant(event.relatedTarget)) {
       return;
     }
     this.stopListeningToKeyboard();
@@ -396,7 +399,7 @@ export class Menu extends SpectrumElement {
   }
 
   render() {
-    return html` <slot> </slot> `;
+    return html` <slot @slotchange=${this.collectMenuItems}> </slot> `;
   }
 
   collectMenuItems() {
