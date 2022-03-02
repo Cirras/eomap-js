@@ -10,6 +10,7 @@ import "@spectrum-web-components/theme/theme-dark.js";
 import "@spectrum-web-components/theme/scale-medium.js";
 
 import "./menubar-button";
+import "./submenu-item";
 
 import { LayerVisibilityState } from "../layer-visibility-state";
 
@@ -87,6 +88,9 @@ export class MenuBar extends LitElement {
 
   @property({ type: Boolean })
   keyboardEnabled = true;
+
+  @property({ type: Array })
+  recentFiles = [];
 
   openMenu = null;
 
@@ -171,6 +175,11 @@ export class MenuBar extends LitElement {
         Open
         <kbd slot="value">Ctrl+O</kbd>
       </sp-menu-item>
+      <eomap-submenu-item
+        ?disabled=${!this.canOpenMaps || this.recentFiles.length === 0}
+      >
+        Open Recent ${this.renderRecentFiles()}
+      </eomap-submenu-item>
       <sp-menu-divider></sp-menu-divider>
       <sp-menu-item
         ?disabled=${!this.canSaveMaps}
@@ -210,6 +219,24 @@ export class MenuBar extends LitElement {
         Reload Graphics
       </sp-menu-item>
     `;
+  }
+
+  renderRecentFiles() {
+    let menuItems = this.recentFiles.map((handle) => {
+      return html`
+        <sp-menu-item
+          @menu-item-press=${() => {
+            this.dispatchEvent(
+              new CustomEvent("open-recent", { detail: handle })
+            );
+          }}
+        >
+          ${handle.name}
+        </sp-menu-item>
+      `;
+    });
+
+    return html` <eomap-menu slot="menu"> ${menuItems} </eomap-menu> `;
   }
 
   renderEditMenuItems() {

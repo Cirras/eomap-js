@@ -93,6 +93,11 @@ export function findMostFrequent(array) {
   return result;
 }
 
+export async function asyncFilter(array, predicate) {
+  const results = await Promise.all(array.map(predicate));
+  return array.filter((_, i) => results[i]);
+}
+
 export function blobToDataURL(blob) {
   return new Promise((resolve, _) => {
     let reader = new FileReader();

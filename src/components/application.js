@@ -37,7 +37,7 @@ import { EMF } from "../data/emf";
 import { EOReader } from "../data/eo-reader";
 import { EOBuilder } from "../data/eo-builder";
 
-import { fileSystemAccessSupported } from "../utils";
+import { asyncFilter, fileSystemAccessSupported } from "../utils";
 
 @customElement("eomap-application")
 export class Application extends LitElement {
@@ -173,6 +173,9 @@ export class Application extends LitElement {
   @state({ type: SettingsState })
   settingsState = null;
 
+  @state({ type: Array })
+  recentFiles = [];
+
   @state({ type: Boolean })
   paletteResizing = false;
 
@@ -196,6 +199,7 @@ export class Application extends LitElement {
   constructor() {
     super();
     this.loadSettings();
+    this.loadRecentFiles();
     this.preventSpecialInputsFromBeingSwallowed();
   }
 
@@ -206,6 +210,39 @@ export class Application extends LitElement {
     } catch (e) {
       console.error("Failed to load settings", e);
     }
+  }
+
+  async loadRecentFiles() {
+    try {
+      this.recentFiles = (await get("recentFiles")) || [];
+    } catch (e) {
+      console.error("Failed to load recent files", e);
+    }
+  }
+
+  async saveRecentFiles() {
+    try {
+      await set("recentFiles", this.recentFiles);
+    } catch (e) {
+      console.error("Failed to save recent files", e);
+    }
+  }
+
+  async addRecentFile(handle) {
+    await this.removeRecentFile(handle);
+    this.recentFiles.unshift(handle);
+    while (this.recentFiles.length > 10) {
+      this.recentFiles.pop();
+    }
+    this.saveRecentFiles();
+  }
+
+  async removeRecentFile(handle) {
+    this.recentFiles = await asyncFilter(
+      this.recentFiles,
+      async (recent) => !(await recent.isSameEntry(handle))
+    );
+    this.saveRecentFiles();
   }
 
   preventSpecialInputsFromBeingSwallowed() {
@@ -510,8 +547,10 @@ export class Application extends LitElement {
           .canUndo=${this.canUndo()}
           .canRedo=${this.canRedo()}
           .keyboardEnabled=${this.keyboardEnabled()}
+          .recentFiles=${this.recentFiles}
           @new=${this.onNew}
           @open=${this.onOpen}
+          @open-recent=${this.onOpenRecent}
           @save=${this.onSave}
           @save-as=${this.onSaveAs}
           @map-properties=${this.onMapProperties}
@@ -639,6 +678,19 @@ export class Application extends LitElement {
     await this.openFile(fileHandle);
   }
 
+  async onOpenRecent(event) {
+    let handle = event.detail;
+    if ((await handle.queryPermission()) !== "granted") {
+      if ((await handle.requestPermission()) !== "granted") {
+        return;
+      }
+    }
+    await this.openFile(event.detail);
+    if (this.mapState.error) {
+      this.removeRecentFile(event.detail);
+    }
+  }
+
   async openFile(fileHandle) {
     this.mapState = MapState.fromFileHandle(fileHandle);
     this.startupStatus = Startup.Status.LOADING_EMF;
@@ -646,8 +698,13 @@ export class Application extends LitElement {
       let file = await fileHandle.getFile();
       let buffer = await file.arrayBuffer();
       this.readMap(buffer);
+      this.addRecentFile(fileHandle);
     } catch (e) {
-      this.mapState = this.mapState.withError(e);
+      let error = e;
+      if (e instanceof DOMException && e.name === "NotFoundError") {
+        error = new Error(`"${fileHandle.name}" could not be found.`);
+      }
+      this.mapState = this.mapState.withError(error);
       console.error("Failed to load EMF", e);
     }
   }
