@@ -3,16 +3,27 @@ import { CHAR_MAX, SHORT_MAX, THREE_MAX } from "./eo-numeric-limits";
 import { reverse } from "../utils";
 
 export function encodeNumber(number) {
-  let d = Math.trunc(number / THREE_MAX) + 1;
-  number %= THREE_MAX;
+  let value = number;
 
-  let c = Math.trunc(number / SHORT_MAX) + 1;
-  number %= SHORT_MAX;
+  let d = 254;
+  if (number > THREE_MAX) {
+    d = Math.trunc(value / THREE_MAX) + 1;
+    value %= THREE_MAX;
+  }
 
-  let b = Math.trunc(number / CHAR_MAX) + 1;
-  number %= CHAR_MAX;
+  let c = 254;
+  if (number > SHORT_MAX) {
+    c = Math.trunc(value / SHORT_MAX) + 1;
+    value %= SHORT_MAX;
+  }
 
-  let a = number + 1;
+  let b = 254;
+  if (number > CHAR_MAX) {
+    b = Math.trunc(value / CHAR_MAX) + 1;
+    value %= CHAR_MAX;
+  }
+
+  let a = value + 1;
 
   return Uint8Array.from([a, b, c, d]);
 }
