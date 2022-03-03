@@ -17,6 +17,7 @@ import "./entity-editor";
 import "./new-map";
 import "./properties";
 import "./settings";
+import "./about";
 
 import { Startup } from "./startup";
 import { Palette } from "./palette";
@@ -130,6 +131,9 @@ export class Application extends LitElement {
 
   @query("eomap-settings")
   settings;
+
+  @query("eomap-about")
+  about;
 
   @property({ type: Boolean, reflect: true, attribute: "dragged" })
   isDragged = false;
@@ -561,6 +565,7 @@ export class Application extends LitElement {
           @undo=${this.undo}
           @redo=${this.redo}
           @visibility-flag-toggle=${this.onVisibilityFlagToggle}
+          @about=${this.onAbout}
         ></eomap-menubar>
         <eomap-sidebar
           .selectedTool=${this.selectedTool}
@@ -606,6 +611,7 @@ export class Application extends LitElement {
           @close=${this.onModalClose}
           @save=${this.onSettingsSave}
         ></eomap-settings>
+        <eomap-about @close=${this.onModalClose}></eomap-about>
       </sp-theme>
     `;
   }
@@ -765,6 +771,11 @@ export class Application extends LitElement {
     this.layerVisibility = this.layerVisibility.withFlagToggled(flag);
   }
 
+  onAbout() {
+    this.about.open = true;
+    this.requestUpdate();
+  }
+
   onToolSelected(event) {
     this.selectedTool = event.detail;
   }
@@ -871,7 +882,8 @@ export class Application extends LitElement {
       this.modalNotOpen(this.entityEditor) &&
       this.modalNotOpen(this.newMap) &&
       this.modalNotOpen(this.properties) &&
-      this.modalNotOpen(this.settings)
+      this.modalNotOpen(this.settings) &&
+      this.modalNotOpen(this.about)
     );
   }
 

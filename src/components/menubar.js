@@ -293,6 +293,12 @@ export class MenuBar extends LitElement {
     );
   }
 
+  renderHelpMenuItems() {
+    return html`
+      <sp-menu-item @menu-item-press=${this.onAboutPress}> About </sp-menu-item>
+    `;
+  }
+
   render() {
     return html`
       <header>
@@ -326,6 +332,7 @@ export class MenuBar extends LitElement {
           @button-pointerdown=${this.onButtonPointerDown}
           @menu-item-press=${this.onMenuItemPress}
         >
+          ${this.renderHelpMenuItems()}
         </eomap-menubar-button>
       </header>
     `;
@@ -379,6 +386,10 @@ export class MenuBar extends LitElement {
         detail: parseInt(event.target.value),
       })
     );
+  }
+
+  onAboutPress(_event) {
+    this.dispatchEvent(new CustomEvent("about"));
   }
 
   onUndoPress(_event) {

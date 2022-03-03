@@ -51,6 +51,7 @@ module.exports = (env) => {
         FORCE_CONNECTED_MODE_URL: JSON.stringify(
           (env && env.FORCE_CONNECTED_MODE_URL) || ""
         ),
+        NPM_VERSION: JSON.stringify(require("../package.json").version),
       }),
       new HtmlWebpackPlugin({
         template: "./index.html",

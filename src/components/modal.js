@@ -44,6 +44,9 @@ export class Modal extends FocusVisiblePolyfillMixin(SpectrumElement) {
   @property({ type: Boolean, reflect: true })
   open = false;
 
+  @property({ type: Boolean, reflect: true, attribute: "no-divider" })
+  noDivider = false;
+
   @property({ type: String, reflect: true })
   size;
 
@@ -122,6 +125,7 @@ export class Modal extends FocusVisiblePolyfillMixin(SpectrumElement) {
         <div class="modal">
           <eomap-dialog
             ?error=${this.error}
+            .noDivider=${this.noDivider}
             size=${ifDefined(this.size ? this.size : undefined)}
             style="width: var(--eomap-modal-width, 100%); --spectrum-dialog-confirm-title-text-font-weight: light;"
           >
