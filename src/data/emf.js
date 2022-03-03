@@ -54,7 +54,6 @@ export const TileSpec = {
   Jukebox: 28,
   Jump: 29,
   Water: 30,
-  SpecUnknown7: 31,
   Arena: 32,
   AmbientSource: 33,
   Spikes1: 34,
