@@ -160,28 +160,25 @@ export class MapNPC {
   }
 }
 
-export class MapUnknown {
-  constructor(unk1, unk2, unk3, unk4) {
-    this.unk1 = unk1;
-    this.unk2 = unk2;
-    this.unk3 = unk3;
-    this.unk4 = unk4;
+export class MapLegacyDoorKey {
+  constructor(x, y, key) {
+    this.x = x;
+    this.y = y;
+    this.key = key;
   }
 
   static read(reader) {
-    let unk1 = reader.getChar();
-    let unk2 = reader.getChar();
-    let unk3 = reader.getChar();
-    let unk4 = reader.getChar();
+    let x = reader.getChar();
+    let y = reader.getChar();
+    let key = reader.getShort();
 
-    return new MapUnknown(unk1, unk2, unk3, unk4);
+    return new MapLegacyDoorKey(x, y, key);
   }
 
   write(builder) {
-    builder.addChar(this.unk1);
-    builder.addChar(this.unk2);
-    builder.addChar(this.unk3);
-    builder.addChar(this.unk4);
+    builder.addChar(x);
+    builder.addChar(y);
+    builder.addShort(key);
   }
 }
 
@@ -263,7 +260,7 @@ export class EMF {
     this.relogY = 0;
 
     this.npcs = [];
-    this.unknowns = [];
+    this.legacyDoorKeys = [];
     this.items = [];
 
     this.tiles = [];
@@ -317,9 +314,9 @@ export class EMF {
       emf.npcs.push(MapNPC.read(reader));
     }
 
-    let unknownCount = reader.getChar();
-    for (let i = 0; i < unknownCount; ++i) {
-      emf.unknowns.push(MapUnknown.read(reader));
+    let legacyDoorKeyCount = reader.getChar();
+    for (let i = 0; i < legacyDoorKeyCount; ++i) {
+      emf.legacyDoorKeys.push(MapLegacyDoorKey.read(reader));
     }
 
     let itemCount = reader.getChar();
@@ -427,9 +424,9 @@ export class EMF {
       npc.write(builder);
     }
 
-    builder.addChar(this.unknowns.length);
-    for (let unknown of this.unknowns) {
-      unknown.write(builder);
+    builder.addChar(this.legacyDoorKeys.length);
+    for (let legacyDoorKey of this.legacyDoorKeys) {
+      legacyDoorKey.write(builder);
     }
 
     builder.addChar(this.items.length);
