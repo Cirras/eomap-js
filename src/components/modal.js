@@ -120,7 +120,7 @@ export class Modal extends FocusVisiblePolyfillMixin(SpectrumElement) {
           <eomap-dialog
             ?error=${this.error}
             size=${ifDefined(this.size ? this.size : undefined)}
-            style="width: var(--eomap-modal-width, 100%)"
+            style="width: var(--eomap-modal-width, 100%); --spectrum-dialog-confirm-title-text-font-weight: light;"
           >
             ${this.renderHeadline()}
             <slot></slot>
