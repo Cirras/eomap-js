@@ -22,6 +22,9 @@ export class Modal extends FocusVisiblePolyfillMixin(SpectrumElement) {
       modalWrapperStyles,
       modalStyles,
       css`
+        .modal {
+          border: 1px solid var(--spectrum-global-color-gray-50);
+        }
         sp-underlay {
           z-index: unset;
         }
