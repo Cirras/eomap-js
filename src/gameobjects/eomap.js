@@ -446,7 +446,7 @@ export class EOMap extends Phaser.GameObjects.GameObject {
         0,
         layer,
         this.calcDepth(x, y, layer),
-        this.calcAlpha(layer)
+        0.0
       );
     }
 
@@ -463,6 +463,7 @@ export class EOMap extends Phaser.GameObjects.GameObject {
           section.delete(graphicIndex);
         }
         tileGraphic.cacheEntry = cacheEntry;
+        tileGraphic.alpha = this.calcAlpha(layer);
         this.updateTileGraphicPosition(x, y, layer, tileGraphic);
         this.addTileGraphic(x, y, layer, tileGraphic);
       }
