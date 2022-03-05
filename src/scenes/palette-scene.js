@@ -34,6 +34,8 @@ class LayerPreload {
 }
 
 export class PaletteScene extends Phaser.Scene {
+  static FILE_BY_LAYER = [3, 4, 5, 6, 6, 7, 3, 22, 5];
+
   constructor() {
     super("palette");
     this.textureCache = null;
@@ -104,7 +106,7 @@ export class PaletteScene extends Phaser.Scene {
   createLayers() {
     let result = [];
 
-    for (let fileID of [3, 4, 5, 6, 6, 7, 3, 22, 5]) {
+    for (let fileID of PaletteScene.FILE_BY_LAYER) {
       result.push(this.createResourceLayer(fileID));
     }
 
@@ -167,6 +169,7 @@ export class PaletteScene extends Phaser.Scene {
 
   selectLayer(layer) {
     if (this.selectedLayer) {
+      this.syncFileScroll();
       this.selectedLayer.visible = false;
     }
 
@@ -180,6 +183,39 @@ export class PaletteScene extends Phaser.Scene {
     this.updateSelectedDrawID();
     this.emitContentHeightChangedEvent();
     this.emitScrollChangedEvent();
+  }
+
+  syncFileScroll() {
+    let layerID = this.layers.indexOf(this.selectedLayer);
+    let fileID = PaletteScene.FILE_BY_LAYER[layerID];
+    for (let layer of this.getLayersByFile(fileID)) {
+      layer.scroll = this.selectedLayer.scroll;
+    }
+  }
+
+  getLayersByFile(fileID) {
+    let layerIDs = [];
+    switch (fileID) {
+      case 3:
+        layerIDs.push(0, 6);
+        break;
+      case 4:
+        layerIDs.push(1);
+        break;
+      case 5:
+        layerIDs.push(2, 8);
+        break;
+      case 6:
+        layerIDs.push(3, 4);
+        break;
+      case 7:
+        layerIDs.push(5);
+        break;
+      case 22:
+        layerIDs.push(7);
+        break;
+    }
+    return layerIDs.map((id) => this.layers[id]);
   }
 
   update(_time, _delta) {
