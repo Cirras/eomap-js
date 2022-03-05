@@ -31,7 +31,7 @@ export class Palette extends LitElement {
 
   static PHASER_CONTAINER_ID = "phaser-palette";
 
-  static PHASER_DATA_KEYS = ["selectedDrawID", "contentHeight"];
+  static PHASER_DATA_KEYS = ["selectedDrawID"];
 
   static COMPONENT_DATA_KEYS = ["gfxLoader", "selectedLayer", "eyedrop"];
 
@@ -326,6 +326,18 @@ export class Palette extends LitElement {
     }
   }
 
+  setupContentHeightListener(scene) {
+    scene.events.on("contentHeight-changed", (value) => {
+      if (value !== this.contentHeight) {
+        this.contentHeight = value;
+        // The paletteContent height needs an immediate update, or
+        // paletteScrollContainer.scrollTop will get clamped to the previous
+        // content height when switching layers.
+        this.paletteContent.style.height = `${value}px`;
+      }
+    });
+  }
+
   setupContentScrollMirroring(scene) {
     scene.data.set("contentScroll", 0);
     this.onPaletteContentScroll = () => {
@@ -337,16 +349,6 @@ export class Palette extends LitElement {
         this.paletteScrollContainer.scrollTop = value;
       }
       this.onPaletteContentScroll();
-    });
-  }
-
-  setupContentHeightListener() {
-    this.addEventListener("changedata-contentHeight", (event) => {
-      this.contentHeight = event.detail;
-      // The paletteContent height needs an immediate update, or
-      // paletteScrollContainer.scrollTop will get clamped to the previous
-      // content height when switching layers.
-      this.paletteContent.style.height = `${this.contentHeight}px`;
     });
   }
 
@@ -397,8 +399,8 @@ export class Palette extends LitElement {
       scene.sys.events.once("ready", () => {
         this.setupPhaserChangeDataEvents(scene);
         this.setupComponentDataForwardingToPhaser(scene);
-        this.setupContentScrollMirroring(scene);
         this.setupContentHeightListener(scene);
+        this.setupContentScrollMirroring(scene);
         this.game = game;
         this.updateInputEnabledState();
       });

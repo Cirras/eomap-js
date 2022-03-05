@@ -68,7 +68,7 @@ export class PaletteScene extends Phaser.Scene {
         let resource = this.selectedLayer.selectedEntry;
         if (resource) {
           this.selectedLayer.scroll = resource.y;
-          this.updateScroll();
+          this.emitScrollChangedEvent();
         }
         this.updateSelectedDrawID();
       }
@@ -96,9 +96,9 @@ export class PaletteScene extends Phaser.Scene {
     });
 
     this.scale.on("resize", this.resize, this);
+    this.resize();
 
     this.selectLayer(this.data.values.selectedLayer);
-    this.resize();
   }
 
   createLayers() {
@@ -173,10 +173,13 @@ export class PaletteScene extends Phaser.Scene {
     this.selectedLayer = this.layers[layer];
     this.selectedLayer.visible = true;
 
+    if (this.selectedLayer.dirty) {
+      this.selectedLayer.layout();
+    }
     this.prioritizePreloads();
-    this.updateScroll();
     this.updateSelectedDrawID();
-    this.updateContentHeight();
+    this.emitContentHeightChangedEvent();
+    this.emitScrollChangedEvent();
   }
 
   update(_time, _delta) {
@@ -184,7 +187,7 @@ export class PaletteScene extends Phaser.Scene {
 
     if (this.selectedLayer.dirty && this.canDoResizeLayout()) {
       this.selectedLayer.layout();
-      this.updateContentHeight();
+      this.emitContentHeightChangedEvent();
     }
 
     if (this.preloads.length > 0) {
@@ -232,7 +235,11 @@ export class PaletteScene extends Phaser.Scene {
     }
   }
 
-  updateScroll() {
+  emitContentHeightChangedEvent() {
+    this.events.emit("contentHeight-changed", this.selectedLayer.height);
+  }
+
+  emitScrollChangedEvent() {
     this.events.emit(
       "scroll-changed",
       this.selectedLayer.scroll,
@@ -246,9 +253,5 @@ export class PaletteScene extends Phaser.Scene {
       id = this.selectedLayer.selectedEntry.id;
     }
     this.data.set("selectedDrawID", id);
-  }
-
-  updateContentHeight() {
-    this.data.set("contentHeight", this.selectedLayer.height);
   }
 }
