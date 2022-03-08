@@ -10,6 +10,10 @@ export class NumberField extends SpectrumNumberField {
       css`
         :host {
           --spectrum-stepper-width: var(--spectrum-global-dimension-size-1200);
+          --spectrum-stepper-quiet-width: 100%;
+        }
+        input {
+          text-align: var(--number-field-text-align, start);
         }
       `,
     ];
@@ -18,7 +22,6 @@ export class NumberField extends SpectrumNumberField {
   constructor() {
     super();
     this.min = 0;
-    this.stepModifier = 1;
     this.hideStepper = true;
     this.formatOptions = {
       maximumFractionDigits: 0,
@@ -28,5 +31,13 @@ export class NumberField extends SpectrumNumberField {
   onInput() {
     super.onInput();
     this.invalid = false;
+  }
+
+  onScroll(event) {
+    event.preventDefault();
+    const direction = event.deltaY / Math.abs(event.deltaY);
+    if (direction !== 0 && !isNaN(direction)) {
+      this.stepBy(-direction * (event.shiftKey ? this.stepModifier : 1));
+    }
   }
 }

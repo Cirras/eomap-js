@@ -10,7 +10,7 @@ export class MoveTool extends Tool {
 
   startDragging(mapEditor) {
     if (!this.dragging) {
-      let camera = mapEditor.cameras.main;
+      let camera = mapEditor.map.camera;
       this.startX = camera.scrollX;
       this.startY = camera.scrollY;
       this.dragging = true;
@@ -30,9 +30,9 @@ export class MoveTool extends Tool {
 
   handlePointerMove(mapEditor, _pointer) {
     if (this.dragging) {
-      let camera = mapEditor.cameras.main;
-      camera.scrollX = this.startX + this.pointerDownDistance.x;
-      camera.scrollY = this.startY + this.pointerDownDistance.y;
+      let camera = mapEditor.map.camera;
+      camera.scrollX = this.startX + this.pointerDownDistance.x / camera.zoom;
+      camera.scrollY = this.startY + this.pointerDownDistance.y / camera.zoom;
     }
   }
 

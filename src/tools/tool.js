@@ -1,5 +1,3 @@
-import { Eyedrop } from "./eyedrop";
-
 const PointerDownState = {
   None: 0,
   Left: 1,

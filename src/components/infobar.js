@@ -1,7 +1,11 @@
 import { css, html, LitElement } from "lit";
-import { customElement, property } from "lit/decorators.js";
+import { customElement, property, query } from "lit/decorators.js";
 
 import "@spectrum-web-components/divider/sp-divider.js";
+
+import "./number-field";
+
+import { TilePos } from "../tilepos";
 
 @customElement("eomap-infobar")
 export class InfoBar extends LitElement {
@@ -23,9 +27,25 @@ export class InfoBar extends LitElement {
       .filler {
         flex-grow: 1;
       }
+      .zoom {
+        --spectrum-textfield-m-texticon-text-size: var(
+          --spectrum-global-dimension-font-size-75
+        );
+        --spectrum-alias-body-text-font-family: var(
+          --spectrum-global-font-family-code
+        );
+        --number-field-text-align: center;
+        background-color: var(--spectrum-global-color-gray-300);
+        width: 65px;
+        height: 18px;
+        contain: strict style;
+        overflow: hidden;
+        border-right: var(--spectrum-alias-border-size-thin) solid
+          var(--spectrum-global-color-gray-200);
+      }
       .loc {
         background-color: var(--spectrum-global-color-gray-300);
-        width: 110px;
+        min-width: 110px;
         height: 18px;
         display: flex;
         contain: strict style;
@@ -34,6 +54,7 @@ export class InfoBar extends LitElement {
       .loc-box {
         width: 55px;
         height: 18px;
+        display: inline-block;
         white-space: nowrap;
       }
       .loc-axis {
@@ -55,12 +76,50 @@ export class InfoBar extends LitElement {
     `;
   }
 
-  @property({ type: Object })
-  tilePos;
+  @query("#zoom-field")
+  zoomField;
+
+  @property({ type: TilePos })
+  tilePos = new TilePos();
+
+  @property({ type: Number })
+  zoom = null;
+
+  updated(changedProperties) {
+    if (changedProperties.has("zoom")) {
+      let zoom = this.zoom;
+      if (zoom === null) {
+        zoom = NaN;
+      }
+      this.zoomField.value = zoom;
+    }
+  }
 
   render() {
     return html`
       <footer>
+        <div class="zoom">
+          <eomap-number-field
+            id="zoom-field"
+            min="0.25"
+            max="16"
+            format-options='{"style": "percent", "maximumFractionDigits": 2, "useGrouping": false}'
+            quiet
+            style="--spectrum-textfield-texticon-height: 18px;
+                 --spectrum-textfield-quiet-texticon-padding-right: var(--spectrum-global-dimension-size-75);
+                 --spectrum-textfield-quiet-texticon-padding-left: var(--spectrum-global-dimension-size-75);
+                 --spectrum-textfield-texticon-padding-top: var(--spectrum-global-dimension-size-25);
+                 --spectrum-textfield-texticon-padding-bottom: var(--spectrum-global-dimension-size-25);
+                 --spectrum-textfield-quiet-texticon-border-bottom-size: 0px;
+                 --spectrum-stepper-width: 100%;
+                 --spectrum-textfield-m-texticon-text-color: var(--spectrum-global-color-gray-700);
+                 --spectrum-textfield-m-textonly-focus-ring-border-color-key-focus: transparent;"
+            .disabled=${this.zoom === null}
+            @keydown=${this.onZoomKeyDown}
+            @blur=${this.onZoomBlur}
+          >
+          </eomap-number-field>
+        </div>
         <div class="filler"></div>
         <div class="loc">
           <div class="loc-box">
@@ -78,5 +137,23 @@ export class InfoBar extends LitElement {
         </div>
       </footer>
     `;
+  }
+
+  onZoomKeyDown(event) {
+    if (event.key === "Shift") {
+      return;
+    }
+    if (event.key === "Enter") {
+      document.activeElement.blur();
+    }
+    event.stopPropagation();
+  }
+
+  onZoomBlur(_event) {
+    if (this.zoomField.value !== this.zoom) {
+      this.dispatchEvent(
+        new CustomEvent("zoom-changed", { detail: this.zoomField.value })
+      );
+    }
   }
 }

@@ -7,6 +7,7 @@ import { DrawTool } from "../tools/draw-tool";
 import { EraseTool } from "../tools/erase-tool";
 import { EyedropperTool } from "../tools/eyedropper-tool";
 import { MoveTool } from "../tools/move-tool";
+import { ZoomTool } from "../tools/zoom-tool";
 import { FillTool } from "../tools/fill-tool";
 import { EntityTool } from "../tools/entity-tool";
 
@@ -32,10 +33,14 @@ export class EditorScene extends Phaser.Scene {
     this.yKey = null;
     this.zKey = null;
     this.cameraControls = null;
+
+    this._tempMatrix1 = new Phaser.GameObjects.Components.TransformMatrix();
+    this._tempMatrix2 = new Phaser.GameObjects.Components.TransformMatrix();
   }
 
   create() {
     this.currentPos = new TilePos();
+    this.cursorPos = new TilePos();
 
     this.textureCache = new EvictingTextureCache(
       this,
@@ -57,22 +62,15 @@ export class EditorScene extends Phaser.Scene {
 
     this.cursorSprite = this.createCursor();
 
-    this.cursors = this.input.keyboard.createCursorKeys();
-
-    let controlConfig = {
-      camera: this.cameras.main,
-      left: this.cursors.left,
-      right: this.cursors.right,
-      up: this.cursors.up,
-      down: this.cursors.down,
-      zoomIn: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Q),
-      zoomOut: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E),
+    let cursorKeys = this.input.keyboard.createCursorKeys();
+    this.cameraControls = new Phaser.Cameras.Controls.FixedKeyControl({
+      camera: this.map.camera,
+      left: cursorKeys.left,
+      right: cursorKeys.right,
+      up: cursorKeys.up,
+      down: cursorKeys.down,
       speed: 1,
-    };
-
-    this.cameraControls = new Phaser.Cameras.Controls.FixedKeyControl(
-      controlConfig
-    );
+    });
 
     this.input.on("pointermove", (pointer) => this.handlePointerMove(pointer));
     this.input.on("pointerdown", (pointer) => this.handlePointerDown(pointer));
@@ -99,6 +97,10 @@ export class EditorScene extends Phaser.Scene {
       this.updateMapPropertiesState();
     });
 
+    this.data.events.on("changedata-updateZoom", () => {
+      this.map.zoom = this.data.values.updateZoom;
+    });
+
     this.scale.on("resize", this.resize, this);
 
     this.updateLayerVisibility();
@@ -114,6 +116,7 @@ export class EditorScene extends Phaser.Scene {
       ["erase", new EraseTool()],
       ["eyedropper", new EyedropperTool()],
       ["move", new MoveTool()],
+      ["zoom", new ZoomTool()],
       ["fill", new FillTool()],
       ["entity", new EntityTool()],
     ]);
@@ -143,13 +146,18 @@ export class EditorScene extends Phaser.Scene {
   update(time, delta) {
     this.cameraControls.update(delta);
     this.textureCache.update();
-    this.map.update(time, delta);
 
-    let camera = this.cameras.main;
-    if (camera.dirty) {
-      this.mapState.scrollX = camera.scrollX;
-      this.mapState.scrollY = camera.scrollY;
+    if (this.map.camera.dirty) {
+      this.mapState.scrollX = this.map.scrollX;
+      this.mapState.scrollY = this.map.scrollY;
+      if (this.mapState.zoom !== this.map.zoom) {
+        this.mapState.zoom = this.map.zoom;
+        this.events.emit("zoom-changed");
+      }
+      this.moveCursor(this.cursorPos);
     }
+
+    this.map.update(time, delta);
 
     if (this.currentPosDirty) {
       this.data.set("currentPos", this.currentPos);
@@ -157,36 +165,41 @@ export class EditorScene extends Phaser.Scene {
     }
   }
 
-  resize(gameSize, _baseSize, _displaySize, _resolution) {
-    let width;
-    let height;
-
-    if (gameSize === undefined) {
-      width = this.sys.scale.width;
-      height = this.sys.scale.height;
-    } else {
-      width = gameSize.width;
-      height = gameSize.height;
-    }
-
-    this.cameras.main.setSize(width, height);
-    let centerXDiff = this.cameras.main.scrollX + this.cameras.main.centerX;
-    let centerYDiff = this.cameras.main.scrollY + this.cameras.main.centerY;
-    this.cameras.main.scrollX = -this.cameras.main.centerX + centerXDiff;
-    this.cameras.main.scrollY = -this.cameras.main.centerY + centerYDiff;
+  resize() {
+    this.map.setSize(this.cameras.main.width + 1, this.cameras.main.height + 1);
   }
 
   moveCursor(tilePos) {
+    this.cursorPos = tilePos;
+
     if (!tilePos.valid) {
-      this.cursorSprite.visible = false;
+      this.cursorSprite.setVisible(false);
       return false;
     }
 
-    this.cursorSprite.visible = true;
-    this.cursorSprite.setPosition(
-      tilePos.x * 32 - tilePos.y * 32,
-      tilePos.x * 16 + tilePos.y * 16
-    );
+    let x = tilePos.x * 32 - tilePos.y * 32;
+    let y = tilePos.x * 16 + tilePos.y * 16;
+
+    let camera = this.map.camera;
+
+    let cameraDirty = camera.dirty;
+    camera.preRender();
+    camera.dirty = cameraDirty;
+
+    let camMatrix = this._tempMatrix1;
+    camMatrix.copyFrom(camera.matrix);
+
+    let spriteMatrix = this._tempMatrix2;
+    spriteMatrix.applyITRS(x, y, 0, 1, 1);
+    spriteMatrix.e -= camera.scrollX;
+    spriteMatrix.f -= camera.scrollY;
+
+    camMatrix.multiply(spriteMatrix);
+
+    this.cursorSprite
+      .setVisible(true)
+      .setScale(this.map.zoom)
+      .setPosition(camMatrix.e, camMatrix.f);
 
     return true;
   }
@@ -303,7 +316,7 @@ export class EditorScene extends Phaser.Scene {
   }
 
   updateCurrentPos(pointerPos) {
-    let worldPos = this.cameras.main.getWorldPoint(pointerPos.x, pointerPos.y);
+    let worldPos = this.map.camera.getWorldPoint(pointerPos.x, pointerPos.y);
     let newPos = this.getTilePosFromWorldPos(worldPos);
 
     if (this.currentPos.x !== newPos.x || this.currentPos.y !== newPos.y) {
@@ -367,7 +380,7 @@ export class EditorScene extends Phaser.Scene {
   }
 
   getTilePosFromPointerPos(pointerPos) {
-    let worldPos = this.cameras.main.getWorldPoint(pointerPos.x, pointerPos.y);
+    let worldPos = this.map.camera.getWorldPoint(pointerPos.x, pointerPos.y);
 
     return this.getTilePosFromWorldPos(worldPos);
   }
@@ -395,15 +408,9 @@ export class EditorScene extends Phaser.Scene {
   }
 
   initCameraPosition() {
-    let scrollX = this.mapState.scrollX;
-    let scrollY = this.mapState.scrollY;
-
-    if (scrollX === null || scrollY === null) {
-      scrollX = -this.cameras.main.centerX + 32;
-      scrollY = -64;
-    }
-
-    this.cameras.main.setScroll(scrollX, scrollY);
+    this.map.scrollX = this.mapState.scrollX || -this.map.camera.centerX + 32;
+    this.map.scrollY = this.mapState.scrollY || -64;
+    this.map.zoom = this.mapState.zoom || 1.0;
   }
 
   get tool() {

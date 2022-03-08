@@ -96,6 +96,18 @@ class EntityMap {
   }
 }
 
+class CachedFrame {
+  constructor(renderTexture) {
+    this.renderTexture = renderTexture;
+    this.dirty = true;
+  }
+
+  destroy() {
+    this.renderTexture.destroy();
+    this.renderTexture = null;
+  }
+}
+
 export class EOMap extends Phaser.GameObjects.GameObject {
   constructor(scene, textureCache, emf, layerVisibility) {
     super(scene, "EOMap");
@@ -103,6 +115,12 @@ export class EOMap extends Phaser.GameObjects.GameObject {
     this.textureCache = textureCache;
     this.emf = emf;
     this.layerVisibility = layerVisibility;
+
+    this.x = 0;
+    this.y = 0;
+    this.drawScale = 1.0;
+
+    this.camera = new Phaser.Cameras.Scene2D.Camera().setScene(scene);
     this.selectedLayer = 0;
     this.sections = null;
     this.sectionWidth = null;
@@ -112,8 +130,13 @@ export class EOMap extends Phaser.GameObjects.GameObject {
     this.npcs = null;
     this.tileGraphics = null;
     this.renderList = null;
-    this.dirtyRenderList = false;
+    this.cachedFrame = null;
     this.animationFrame = 0;
+
+    this.dirtyRenderList = false;
+
+    this._tempMatrix1 = new Phaser.GameObjects.Components.TransformMatrix();
+    this._tempMatrix2 = new Phaser.GameObjects.Components.TransformMatrix();
 
     this.init();
     this.initPipeline();
@@ -429,6 +452,7 @@ export class EOMap extends Phaser.GameObjects.GameObject {
 
         oldGraphic.cacheEntry.decRef();
         this.checkEntityOffsets(x, y, layer);
+        this.invalidateCachedFrame();
       }
       return;
     }
@@ -484,6 +508,7 @@ export class EOMap extends Phaser.GameObjects.GameObject {
     }
 
     this.checkEntityOffsets(x, y, layer);
+    this.invalidateCachedFrame();
   }
 
   updateTileGraphicPosition(x, y, layer, tileGraphic) {
@@ -541,26 +566,29 @@ export class EOMap extends Phaser.GameObjects.GameObject {
     let halfWidth = this.emf.width * 32;
     let fullHeight = this.emf.height * 32;
 
-    let camera = this.scene.cameras.main;
-    let cullTop = camera.scrollY;
-    let cullBottom = cullTop + camera.height;
-    let cullLeft = camera.scrollX;
-    let cullRight = cullLeft + camera.width;
+    let midX = this.scrollX + this.width / 2;
+    let midY = this.scrollY + this.height / 2;
+    let displayWidth = this.camera.displayWidth;
+    let displayHeight = this.camera.displayHeight;
+    let cullTop = midY - displayHeight / 2;
+    let cullBottom = cullTop + displayHeight;
+    let cullLeft = midX - displayWidth / 2;
+    let cullRight = cullLeft + displayWidth;
 
     if (cullBottom < 0) {
-      cullTop = -camera.height;
+      cullTop = -displayHeight;
       cullBottom = 0;
     } else if (cullTop > fullHeight) {
       cullTop = fullHeight;
-      cullBottom = cullTop + camera.height;
+      cullBottom = cullTop + displayHeight;
     }
 
     if (cullRight < -halfWidth) {
       cullRight = -halfWidth;
-      cullLeft = cullRight - camera.width;
+      cullLeft = cullRight - displayWidth;
     } else if (cullLeft > halfWidth) {
       cullLeft = halfWidth;
-      cullRight = cullLeft + camera.width;
+      cullRight = cullLeft + displayHeight;
     }
 
     cullTop = Math.max(0, cullTop);
@@ -595,6 +623,13 @@ export class EOMap extends Phaser.GameObjects.GameObject {
     }
   }
 
+  updateDrawScale() {
+    this.drawScale = 0.25;
+    while (this.drawScale < this.zoom) {
+      this.drawScale *= 2;
+    }
+  }
+
   setLayerVisibility(layerVisibility) {
     this.layerVisibility = layerVisibility;
     this.dirtyRenderList = true;
@@ -605,79 +640,130 @@ export class EOMap extends Phaser.GameObjects.GameObject {
     this.dirtyRenderList = true;
   }
 
-  renderWebGL(renderer, src, camera) {
-    let pipeline = renderer.pipelines.set(src.pipeline, src);
-    let getTint = Phaser.Renderer.WebGL.Utils.getTintAppendFloatAlpha;
+  getFrame() {
+    if (!this.cachedFrame) {
+      let renderTexture = new Phaser.GameObjects.RenderTexture(this.scene);
+      renderTexture.camera.roundPixels = true;
+      this.cachedFrame = new CachedFrame(renderTexture);
+    }
 
-    renderer.pipelines.preBatch(src);
+    if (this.cachedFrame.dirty) {
+      this.drawFrame();
+    }
+
+    this.cachedFrame.renderTexture
+      .setPosition(this.x, this.y)
+      .setDisplaySize(this.width, this.height);
+
+    return this.cachedFrame;
+  }
+
+  drawFrame() {
+    this.cachedFrame.dirty = false;
+
+    let drawSizeRatio = this.drawScale / this.zoom;
+    let drawWidth = this.width * drawSizeRatio;
+    let drawHeight = this.height * drawSizeRatio;
+
+    let renderTexture = this.cachedFrame.renderTexture
+      .setSize(drawWidth, drawHeight)
+      .clear();
+
+    let cameraDirty = this.camera.dirty;
+    this.camera.preRender();
+    this.camera.dirty = cameraDirty;
+
+    renderTexture.camera.zoom = this.drawScale;
+    renderTexture.camera.scrollX = this.scrollX;
+    renderTexture.camera.scrollY = this.scrollY;
+    renderTexture.beginDraw();
+
+    let worldPoint = this.camera.getWorldPoint(0, 0);
+    let drawWorldPoint = renderTexture.camera.getWorldPoint(0, 0);
+    let drawOffsetX = worldPoint.x - drawWorldPoint.x;
+    let drawOffsetY = worldPoint.y - drawWorldPoint.y;
 
     for (let tileGraphic of this.renderList) {
-      let frame = tileGraphic.cacheEntry.asset.getFrame(this.animationFrame);
-      let texture = frame.glTexture;
-      let textureUnit = pipeline.setTexture2D(texture, src);
+      let asset = tileGraphic.cacheEntry.asset;
+      let frame = asset.getFrame(this.animationFrame);
 
-      let tint = getTint(0xffffff, tileGraphic.alpha);
-
-      pipeline.batchTexture(
-        src,
-        texture,
-        texture.width,
-        texture.height,
-        tileGraphic.x,
-        tileGraphic.y,
-        tileGraphic.width,
-        tileGraphic.height,
-        1,
-        1,
-        0,
-        false,
-        true,
-        1,
-        1,
-        0,
-        0,
-        frame.cutX,
-        frame.cutY,
-        frame.width,
-        frame.height,
-        tint,
-        tint,
-        tint,
-        tint,
-        false,
-        0,
-        0,
-        camera,
-        null,
-        true,
-        textureUnit
+      this.batchDrawFrame(
+        renderTexture,
+        frame,
+        tileGraphic.x - drawOffsetX,
+        tileGraphic.y - drawOffsetY,
+        tileGraphic.alpha
       );
     }
 
-    renderer.pipelines.postBatch(src);
+    renderTexture.endDraw();
   }
 
-  renderCanvas(renderer, _src, camera) {
-    let ctx = renderer.currentContext;
-    ctx.save();
+  batchDrawFrame(renderTexture, textureFrame, x, y, alpha) {
+    let flipY;
 
-    ctx.transform(1, 0, 0, 1, -camera.scrollX, -camera.scrollY);
-
-    if (!renderer.antialias) {
-      ctx.imageSmoothingEnabled = false;
+    if (renderTexture.renderTarget) {
+      flipY = -1;
+      y += textureFrame.height;
+    } else {
+      flipY = 1;
+      x += renderTexture.frame.cutX;
+      y += renderTexture.frame.cutY;
     }
 
-    for (let tileGraphic of this.renderList) {
-      ctx.save();
-      ctx.globalAlpha = tileGraphic.alpha;
+    let matrix = this._tempMatrix1;
+    matrix.copyFrom(renderTexture.camera.matrix);
 
-      let frame = tileGraphic.cacheEntry.asset.getFrame(this.animationFrame);
-      let cd = frame.canvasData;
-      let frameX = cd.x;
-      let frameY = cd.y;
-      let frameWidth = frame.cutWidth;
-      let frameHeight = frame.cutHeight;
-      let res = frame.source.resolution;
+    let spriteMatrix = this._tempMatrix2;
+    spriteMatrix.applyITRS(x, y, 0, 1, flipY);
+    spriteMatrix.e -= renderTexture.camera.scrollX;
+    spriteMatrix.f -= renderTexture.camera.scrollY;
+
+    matrix.multiply(spriteMatrix);
+
+    if (renderTexture.camera.roundPixels) {
+      matrix.e = Math.round(matrix.e);
+      matrix.f = Math.round(matrix.f);
+    }
+
+    if (renderTexture.renderTarget) {
+      let tint =
+        (renderTexture.globalTint >> 16) +
+        (renderTexture.globalTint & 0xff00) +
+        ((renderTexture.globalTint & 0xff) << 16);
+      renderTexture.pipeline.batchTextureFrame(
+        textureFrame,
+        0,
+        0,
+        tint,
+        alpha,
+        matrix,
+        null
+      );
+    } else {
+      this.batchTextureFrameCanvas(renderTexture, textureFrame, matrix, alpha);
+    }
+  }
+
+  batchTextureFrameCanvas(renderTexture, frame, matrix, alpha) {
+    let renderer = renderTexture.renderer;
+    let ctx = renderer.currentContext;
+
+    let cd = frame.canvasData;
+    let frameX = cd.x;
+    let frameY = cd.y;
+    let frameWidth = frame.cutWidth;
+    let frameHeight = frame.cutHeight;
+
+    if (frameWidth > 0 && frameHeight > 0) {
+      ctx.save();
+
+      matrix.setToContext(ctx);
+      ctx.globalCompositeOperation = "source-over";
+      ctx.globalAlpha = alpha;
+      ctx.imageSmoothingEnabled = !(
+        !renderer.antialias || frame.source.scaleMode
+      );
 
       ctx.drawImage(
         frame.source.image,
@@ -685,28 +771,58 @@ export class EOMap extends Phaser.GameObjects.GameObject {
         frameY,
         frameWidth,
         frameHeight,
-        tileGraphic.x,
-        tileGraphic.y,
-        frameWidth / res,
-        frameHeight / res
+        0,
+        0,
+        frameWidth,
+        frameHeight
       );
 
       ctx.restore();
     }
+  }
 
-    ctx.restore();
+  renderWebGL(renderer, _src, camera) {
+    if (this.width > 0 && this.height > 0) {
+      let renderTexture = this.getFrame().renderTexture;
+      renderTexture.renderWebGL(renderer, renderTexture, camera);
+    }
+  }
+
+  renderCanvas(renderer, _src, camera) {
+    if (this.width > 0 && this.height > 0) {
+      let renderTexture = this.getFrame().renderTexture;
+      renderTexture.renderCanvas(renderer, renderTexture, camera);
+    }
   }
 
   update(_time, _delta) {
-    if (this.scene.cameras.main.dirty) {
+    if (this.camera.dirty) {
       this.cull();
+      this.updateDrawScale();
+      this.invalidateCachedFrame();
     }
 
     if (this.dirtyRenderList) {
       this.rebuildRenderList();
     }
 
+    this.camera.dirty = false;
+
+    this.updateAnimationFrame();
+  }
+
+  updateAnimationFrame() {
+    let oldAnimationFrame = this.animationFrame;
     this.animationFrame = Math.trunc(performance.now() / 600) % 4;
+    if (oldAnimationFrame !== this.animationFrame) {
+      this.invalidateCachedFrame();
+    }
+  }
+
+  invalidateCachedFrame() {
+    if (this.cachedFrame) {
+      this.cachedFrame.dirty = true;
+    }
   }
 
   destroy(fromScene) {
@@ -717,8 +833,61 @@ export class EOMap extends Phaser.GameObjects.GameObject {
 
     this.tileGraphics = null;
     this.sections = null;
+    this.camera.destroy();
+
+    if (this.cachedFrame) {
+      this.cachedFrame.destroy();
+    }
 
     super.destroy(fromScene);
+  }
+
+  setSize(width, height) {
+    let offsetRatio = 1.0 + Math.pow(this.zoom - 1, -1);
+    this.scrollX += (this.camera.width - width) / 2 / offsetRatio;
+    this.scrollY += (this.camera.height - height) / 2 / offsetRatio;
+    this.camera.width = width;
+    this.camera.height = height;
+  }
+
+  get width() {
+    return this.camera.width;
+  }
+
+  set width(value) {
+    this.setSize(value, this.height);
+  }
+
+  get height() {
+    return this.camera.height;
+  }
+
+  set height(value) {
+    this.setSize(this.width, value);
+  }
+
+  get scrollX() {
+    return this.camera.scrollX;
+  }
+
+  set scrollX(value) {
+    this.camera.scrollX = value;
+  }
+
+  get scrollY() {
+    return this.camera.scrollY;
+  }
+
+  set scrollY(value) {
+    this.camera.scrollY = value;
+  }
+
+  get zoom() {
+    return this.camera.zoom;
+  }
+
+  set zoom(value) {
+    this.camera.zoom = value;
   }
 }
 

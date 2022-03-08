@@ -7,6 +7,7 @@ import {
   EraseIcon,
   SamplerIcon,
   HandIcon,
+  MagnifyIcon,
   ColorFillIcon,
   StarIcon,
   UndoIcon,
@@ -85,6 +86,14 @@ export class Sidebar extends LitElement {
           label="Move"
           .icon=${HandIcon}
           ?selected=${"move" === this.selectedTool}
+          @click=${this.onToolClick}
+        >
+        </eomap-sidebar-button>
+        <eomap-sidebar-button
+          value="zoom"
+          label="Zoom"
+          .icon=${MagnifyIcon}
+          ?selected=${"zoom" === this.selectedTool}
           @click=${this.onToolClick}
         >
         </eomap-sidebar-button>

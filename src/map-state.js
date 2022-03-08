@@ -9,6 +9,7 @@ export class MapState {
     this.commandInvoker = new CommandInvoker();
     this.scrollX = null;
     this.scrollY = null;
+    this.zoom = null;
   }
 
   static fromFileHandle(fileHandle) {
@@ -27,6 +28,7 @@ export class MapState {
     copy.gameObject = this.gameObject;
     copy.scrollX = this.scrollX;
     copy.scrollY = this.scrollY;
+    copy.zoom = this.zoom;
     return copy;
   }
 

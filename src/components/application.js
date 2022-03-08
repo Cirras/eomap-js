@@ -120,6 +120,9 @@ export class Application extends LitElement {
   @query("eomap-sidebar", true)
   sidebar;
 
+  @query("eomap-editor")
+  editor;
+
   @query("eomap-entity-editor")
   entityEditor;
 
@@ -152,6 +155,9 @@ export class Application extends LitElement {
 
   @state({ type: TilePos })
   currentPos = new TilePos();
+
+  @state({ type: Number })
+  zoom = null;
 
   @state({ type: LayerVisibilityState })
   layerVisibility = new LayerVisibilityState();
@@ -519,6 +525,7 @@ export class Application extends LitElement {
           @changedata-currentPos=${this.onCurrentPosChanged}
           @changedata-eyedrop=${this.onEyedropChanged}
           @request-entity-editor=${this.onEntityEditorRequested}
+          @zoom-changed=${this.onEditorZoomChanged}
         ></eomap-editor>
       `;
     }
@@ -593,7 +600,11 @@ export class Application extends LitElement {
           @layer-selected=${this.onSelectedLayerChanged}
           @changedata-selectedDrawID=${this.onSelectedDrawIDChanged}
         ></eomap-palette>
-        <eomap-infobar .tilePos=${this.currentPos}></eomap-infobar>
+        <eomap-infobar
+          .tilePos=${this.currentPos}
+          .zoom=${this.zoom}
+          @zoom-changed=${this.onInfoBarZoomChanged}
+        ></eomap-infobar>
         <eomap-entity-editor
           .tilePos=${this.currentPos}
           @close=${this.onModalClose}
@@ -700,6 +711,7 @@ export class Application extends LitElement {
   async openFile(fileHandle) {
     this.mapState = MapState.fromFileHandle(fileHandle);
     this.startupStatus = Startup.Status.LOADING_EMF;
+    this.zoom = null;
     try {
       let file = await fileHandle.getFile();
       let buffer = await file.arrayBuffer();
@@ -831,6 +843,15 @@ export class Application extends LitElement {
 
   onSelectedDrawIDChanged(event) {
     this.selectedDrawID = event.detail;
+  }
+
+  onEditorZoomChanged(_event) {
+    this.zoom = this.mapState.zoom;
+  }
+
+  onInfoBarZoomChanged(event) {
+    this.zoom = event.detail;
+    this.editor.updateZoom(this.zoom);
   }
 
   onEntityEditorRequested(event) {

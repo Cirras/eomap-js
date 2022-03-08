@@ -77,6 +77,8 @@ export class Editor extends LitElement {
 
   componentDataForwarders = new Map();
 
+  updateZoom = () => {};
+
   setupPhaserChangeDataEvents(scene) {
     for (let key of Editor.PHASER_DATA_KEYS) {
       let eventName = "changedata-" + key;
@@ -91,6 +93,16 @@ export class Editor extends LitElement {
       this.dispatchEvent(
         new CustomEvent("request-entity-editor", { detail: entityState })
       );
+    });
+  }
+
+  setupZoomEvents(scene) {
+    scene.data.set("updateZoom", this.mapState.zoom);
+    this.updateZoom = (zoom) => {
+      scene.data.set("updateZoom", zoom);
+    };
+    scene.events.on("zoom-changed", () => {
+      this.dispatchEvent(new CustomEvent("zoom-changed"));
     });
   }
 
@@ -130,7 +142,7 @@ export class Editor extends LitElement {
         async: true,
       },
       render: {
-        pixelArt: true,
+        antialias: false,
         powerPreference: "high-performance",
       },
       input: {
@@ -154,6 +166,7 @@ export class Editor extends LitElement {
         this.setupPhaserChangeDataEvents(scene);
         this.setupComponentDataForwardingToPhaser(scene);
         this.setupEntityToolEvents(scene);
+        this.setupZoomEvents(scene);
         this.game = game;
         this.updateInputEnabledState();
       });
