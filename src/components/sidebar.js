@@ -20,12 +20,8 @@ import "./sidebar-button";
 export class Sidebar extends LitElement {
   static get styles() {
     return css`
-      * {
-        box-sizing: border-box;
-      }
       :host {
         display: block;
-        width: var(--spectrum-global-dimension-size-600);
         background-color: var(--spectrum-global-color-gray-400);
         padding-left: var(--spectrum-global-dimension-size-100);
         padding-right: var(--spectrum-global-dimension-size-100);

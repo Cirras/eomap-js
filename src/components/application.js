@@ -56,28 +56,28 @@ export class Application extends LitElement {
         display: grid;
         grid-template-rows: min-content 1fr;
         grid-template-columns: min-content minmax(0, 1fr) min-content;
-        grid-row-gap: var(--spectrum-divider-size);
-        grid-column-gap: var(--spectrum-divider-size);
         overflow: hidden;
       }
 
       eomap-menubar {
         grow-row: 1 / 2;
         grid-column: 1 / 3;
+        border-bottom: 1px solid var(--spectrum-global-color-gray-200);
       }
 
       eomap-sidebar {
-        grid-row: 2 / 5;
+        grid-row: 2 / 4;
         grid-column: 1;
+        border-right: 1px solid var(--spectrum-global-color-gray-200);
       }
 
       eomap-startup {
-        grid-row: 2 / 4;
+        grid-row: 2 / 3;
         grid-column: 2;
       }
 
       eomap-editor {
-        grid-row: 2 / 4;
+        grid-row: 2 / 3;
         grid-column: 2;
       }
 
@@ -85,7 +85,7 @@ export class Application extends LitElement {
         --spectrum-dropzone-border-width: 0px;
         --spectrum-dropzone-border-radius: 0px;
         --spectrum-dropzone-padding: 0px;
-        grid-row: 2 / 4;
+        grid-row: 2 / 3;
         grid-column: 2;
         z-index: 101;
         pointer-events: none;
@@ -100,13 +100,15 @@ export class Application extends LitElement {
       }
 
       eomap-palette {
-        grid-row: 2 / 5;
+        grid-row: 2 / 4;
         grid-column: 3;
+        border-left: 1px solid var(--spectrum-global-color-gray-200);
       }
 
       eomap-infobar {
-        grid-row: 4 / 5;
+        grid-row: 3 / 4;
         grid-column: 2;
+        border-top: 1px solid var(--spectrum-global-color-gray-200);
       }
     `;
   }
