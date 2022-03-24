@@ -35,10 +35,6 @@ sp-menu-divider {
   );
 }
 
-.spectrum-Table-cell {
-  word-break: break-all;
-}
-
 .spectrum-Table-row.focus-visible {
   background-color: var(
     --spectrum-table-m-regular-row-background-color-hover,

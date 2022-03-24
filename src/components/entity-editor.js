@@ -167,6 +167,12 @@ export class EntityEditor extends LitElement {
             class="spectrum-Table spectrum-Table--sizeS"
             style="width: 395px"
           >
+            <style>
+              td {
+                max-width: 200px;
+                word-break: break-word;
+              }
+            </style>
             <thead class="spectrum-Table-head">
               <tr>
                 <th class="spectrum-Table-headCell">Title</th>
@@ -185,10 +191,10 @@ export class EntityEditor extends LitElement {
                 }}
               >
                 <td class="spectrum-Table-cell spectrum-Table-cell--divider">
-                  &ZeroWidthSpace;${sign.title}
+                  ${sign.title || "\u200B"}
                 </td>
                 <td class="spectrum-Table-cell spectrum-Table-cell--divider">
-                  &ZeroWidthSpace;${sign.message}
+                  ${sign.message || "\u200B"}
                 </td>
               </tr>
               ${this.renderDeleteButton(() => {
