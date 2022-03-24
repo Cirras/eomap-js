@@ -12,8 +12,7 @@ export class EyedropperTool extends Tool {
       return;
     }
 
-    let asset = mapEditor.textureCache.getCursor().asset;
-    mapEditor.cursorSprite.play(asset.animation);
+    mapEditor.playCursorAnimation();
 
     mapEditor.data.set("eyedrop", new Eyedrop(drawID));
   }

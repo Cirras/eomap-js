@@ -889,6 +889,10 @@ export class EOMap extends Phaser.GameObjects.GameObject {
   set zoom(value) {
     this.camera.zoom = value;
   }
+
+  get shouldRender() {
+    return !this.cachedFrame || this.cachedFrame.dirty;
+  }
 }
 
 Phaser.Class.mixin(EOMap, [

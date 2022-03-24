@@ -20,6 +20,7 @@ import "./sidebar-button";
 
 import "phaser";
 import { PaletteScene } from "../scenes/palette-scene";
+import { RenderControlPlugin } from "../plugins/render-control-plugin";
 
 import { GFXLoader } from "../gfx/load/gfx-loader";
 import { Eyedrop } from "../tools/eyedrop";
@@ -390,6 +391,15 @@ export class Palette extends LitElement {
           capture: false,
         },
       },
+      plugins: {
+        global: [
+          {
+            key: "RenderControlPluginPalette",
+            plugin: RenderControlPlugin,
+            mapping: "render",
+          },
+        ],
+      },
     });
 
     game.events.once("ready", () => {
@@ -695,6 +705,7 @@ export class Palette extends LitElement {
         );
       }
       this.game.destroy(true);
+      Phaser.Plugins.PluginCache.removeCustom("RenderControlPluginPalette");
       this.game = null;
     }
   }

@@ -14,17 +14,14 @@ export class MoveTool extends Tool {
       this.startX = camera.scrollX;
       this.startY = camera.scrollY;
       this.dragging = true;
-
-      let asset = mapEditor.textureCache.getCursor().asset;
-      mapEditor.cursorSprite.setFrame(asset.getFrame(1).name);
+      mapEditor.setCursorFrame(1);
     }
   }
 
   stopDragging(mapEditor) {
     if (this.dragging) {
       this.dragging = false;
-      let asset = mapEditor.textureCache.getCursor().asset;
-      mapEditor.cursorSprite.setFrame(asset.getFrame(0).name);
+      mapEditor.setCursorFrame(0);
     }
   }
 

@@ -43,6 +43,7 @@ export class PaletteScene extends Phaser.Scene {
     this.layers = [];
     this.preloads = [];
     this.lastResize = performance.now();
+    this.dirtySelectedLayer = true;
   }
 
   create() {
@@ -175,8 +176,9 @@ export class PaletteScene extends Phaser.Scene {
 
     this.selectedLayer = this.layers[layer];
     this.selectedLayer.visible = true;
+    this.selectedLayerDirty = true;
 
-    if (this.selectedLayer.dirty) {
+    if (this.selectedLayer.dirtyLayout) {
       this.selectedLayer.layout();
     }
     this.prioritizePreloads();
@@ -221,7 +223,16 @@ export class PaletteScene extends Phaser.Scene {
   update(_time, _delta) {
     this.selectedLayer.update(_time, _delta);
 
-    if (this.selectedLayer.dirty && this.canDoResizeLayout()) {
+    let dirtyLayout =
+      this.selectedLayer.dirtyLayout && this.canDoResizeLayout();
+    this.render.shouldRender =
+      this.dirtySelectedLayer ||
+      this.cameras.main.dirty ||
+      this.selectedLayer.dirtyAnimationFrame;
+    this.dirtySelectedLayer = false;
+    this.dirtyScroll = false;
+
+    if (dirtyLayout) {
       this.selectedLayer.layout();
       this.emitContentHeightChangedEvent();
     }

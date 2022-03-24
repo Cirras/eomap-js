@@ -124,8 +124,9 @@ export class PaletteLayer extends Phaser.GameObjects.GameObject {
     this._width = 0;
     this._height = 0;
     this.scroll = 0;
-    this.dirty = true;
     this.animationFrame = 0;
+    this.dirtyLayout = true;
+    this.dirtyAnimationFrame = true;
 
     this.initPipeline();
   }
@@ -196,7 +197,7 @@ export class PaletteLayer extends Phaser.GameObjects.GameObject {
   }
 
   layout() {
-    if (this.dirty) {
+    if (this.dirtyLayout) {
       this.layoutEntries();
     }
     this.cull();
@@ -278,7 +279,7 @@ export class PaletteLayer extends Phaser.GameObjects.GameObject {
       }
     }
 
-    this.dirty = false;
+    this.dirtyLayout = false;
   }
 
   renderWebGL(renderer, src, camera) {
@@ -388,8 +389,13 @@ export class PaletteLayer extends Phaser.GameObjects.GameObject {
     if (this.scene.cameras.main.dirty) {
       this.cull();
     }
+    this.updateAnimationFrame();
+  }
 
+  updateAnimationFrame() {
+    let oldAnimationFrame = this.animationFrame;
     this.animationFrame = Math.trunc(performance.now() / 600) % 4;
+    this.dirtyAnimationFrame = this.animationFrame !== oldAnimationFrame;
   }
 
   destroy(fromScene) {
@@ -405,7 +411,7 @@ export class PaletteLayer extends Phaser.GameObjects.GameObject {
 
   set width(value) {
     this._width = value;
-    this.dirty = true;
+    this.dirtyLayout = true;
   }
 
   get height() {

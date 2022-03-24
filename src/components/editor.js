@@ -2,8 +2,8 @@ import { css, html, LitElement } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 
 import "phaser";
-
 import { EditorScene } from "../scenes/editor-scene";
+import { RenderControlPlugin } from "../plugins/render-control-plugin";
 
 import { GFXLoader } from "../gfx/load/gfx-loader";
 import { EntityState } from "../entity-state";
@@ -156,6 +156,15 @@ export class Editor extends LitElement {
           capture: false,
         },
       },
+      plugins: {
+        global: [
+          {
+            key: "RenderControlPluginEditor",
+            plugin: RenderControlPlugin,
+            mapping: "render",
+          },
+        ],
+      },
     });
 
     game.events.once("ready", () => {
@@ -189,6 +198,7 @@ export class Editor extends LitElement {
         );
       }
       this.game.destroy(true);
+      Phaser.Plugins.PluginCache.removeCustom("RenderControlPluginEditor");
       this.game = null;
     }
   }

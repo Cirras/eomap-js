@@ -22,6 +22,7 @@ export class EditorScene extends Phaser.Scene {
     super("editor");
     this.ctrlKeyDown = false;
     this.currentPosDirty = false;
+    this.cursorDirty = false;
 
     this.currentPos = null;
     this.textureCache = null;
@@ -131,19 +132,40 @@ export class EditorScene extends Phaser.Scene {
     let cacheEntry = this.textureCache.getCursor();
     cacheEntry.incRef();
 
-    if (cacheEntry.loadingComplete) {
-      cacheEntry.loadingComplete.then(() => {
-        cursorSprite.setTexture(
-          cacheEntry.asset.textureKey,
-          cacheEntry.asset.getFrame(0).name
-        );
+    let onCursorLoad = () => {
+      cursorSprite.setTexture(
+        cacheEntry.asset.textureKey,
+        cacheEntry.asset.getFrame(0).name
+      );
+      cursorSprite.on("animationupdate", () => {
+        this.cursorDirty = true;
       });
+      this.cursorDirty = true;
+    };
+
+    if (cacheEntry.loadingComplete) {
+      cacheEntry.loadingComplete.then(onCursorLoad);
+    } else {
+      onCursorLoad();
     }
 
     return cursorSprite;
   }
 
+  setCursorFrame(frameIndex) {
+    let asset = this.textureCache.getCursor().asset;
+    this.cursorSprite.setFrame(asset.getFrame(frameIndex).name);
+    this.cursorDirty = true;
+  }
+
+  playCursorAnimation() {
+    let asset = this.textureCache.getCursor().asset;
+    this.cursorSprite.play(asset.animation);
+  }
+
   update(time, delta) {
+    this.render.shouldRender = false;
+
     this.cameraControls.update(delta);
     this.textureCache.update();
 
@@ -161,8 +183,12 @@ export class EditorScene extends Phaser.Scene {
 
     if (this.currentPosDirty) {
       this.data.set("currentPos", this.currentPos);
-      this.currentPosDirty = false;
     }
+
+    this.render.shouldRender =
+      this.map.shouldRender || this.currentPosDirty || this.cursorDirty;
+    this.currentPosDirty = false;
+    this.cursorDirty = false;
   }
 
   resize() {
