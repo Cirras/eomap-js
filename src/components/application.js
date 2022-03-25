@@ -26,13 +26,13 @@ import { GFXLoader } from "../gfx/load/gfx-loader";
 import { LocalLoadingStrategy } from "../gfx/load/strategy/local-loading-strategy";
 import { RemoteLoadingStrategy } from "../gfx/load/strategy/remote-loading-strategy";
 
-import { TilePos } from "../tilepos";
+import { TilePosState } from "../state/tilepos-state";
 import { Eyedrop } from "../tools/eyedrop";
-import { LayerVisibilityState } from "../layer-visibility-state";
-import { EntityState } from "../entity-state";
-import { MapPropertiesState } from "../map-properties-state";
-import { SettingsState } from "../settings-state";
-import { MapState } from "../map-state";
+import { LayerVisibilityState } from "../state/layer-visibility-state";
+import { EntityState } from "../state/entity-state";
+import { MapPropertiesState } from "../state/map-properties-state";
+import { SettingsState } from "../state/settings-state";
+import { MapState } from "../state/map-state";
 
 import { EMF } from "../data/emf";
 import { EOReader } from "../data/eo-reader";
@@ -155,8 +155,8 @@ export class Application extends LitElement {
   @state({ type: Number })
   gfxErrors = 0;
 
-  @state({ type: TilePos })
-  currentPos = new TilePos();
+  @state({ type: TilePosState })
+  currentPos = new TilePosState();
 
   @state({ type: Number })
   zoom = null;

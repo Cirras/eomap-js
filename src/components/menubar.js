@@ -12,7 +12,7 @@ import "@spectrum-web-components/theme/scale-medium.js";
 import "./menubar-button";
 import "./submenu-item";
 
-import { LayerVisibilityState } from "../layer-visibility-state";
+import { LayerVisibilityState } from "../state/layer-visibility-state";
 
 @customElement("eomap-menubar")
 export class MenuBar extends LitElement {

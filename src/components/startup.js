@@ -7,7 +7,7 @@ import "@spectrum-web-components/button/sp-button.js";
 import icon from "../assets/icon.svg";
 
 import { Keybinding } from "./keybindings";
-import { MapState } from "../map-state";
+import { MapState } from "../state/map-state";
 
 @customElement("eomap-startup")
 export class Startup extends LitElement {

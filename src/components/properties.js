@@ -17,7 +17,7 @@ import "./textfield";
 
 import { CHAR_MAX, SHORT_MAX } from "../data/eo-numeric-limits";
 import { MapEffect, MapType, MusicControl } from "../data/emf";
-import { MapPropertiesState } from "../map-properties-state";
+import { MapPropertiesState } from "../state/map-properties-state";
 
 @customElement("eomap-properties")
 export class Properties extends LitElement {

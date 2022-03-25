@@ -1,4 +1,4 @@
-export class TilePos {
+export class TilePosState {
   constructor() {
     this.x = 0;
     this.y = 0;

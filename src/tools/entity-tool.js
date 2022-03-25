@@ -1,5 +1,5 @@
 import { Tool } from "./tool";
-import { EntityState } from "../entity-state";
+import { EntityState } from "../state/entity-state";
 
 export class EntityTool extends Tool {
   handleLeftPointerUp(mapEditor, _pointer) {

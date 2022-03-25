@@ -18,9 +18,9 @@ import "./entity-sign";
 import "./entity-npc";
 import "./entity-item";
 
-import { EntityState } from "../entity-state";
+import { EntityState } from "../state/entity-state";
 import { MapItem, MapNPC, MapSign, MapWarp } from "../data/emf";
-import { TilePos } from "../tilepos";
+import { TilePosState } from "../state/tilepos-state";
 
 @customElement("eomap-entity-editor")
 export class EntityEditor extends LitElement {
@@ -39,7 +39,7 @@ export class EntityEditor extends LitElement {
   @query("eomap-entity-item")
   item;
 
-  @property({ type: TilePos })
+  @property({ type: TilePosState })
   tilePos;
 
   @property({ type: Boolean, reflect: true })

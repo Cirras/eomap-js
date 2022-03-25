@@ -1,6 +1,6 @@
 import { DrawCommand } from "../command/draw-command";
 import { FillCommand } from "../command/fill-command";
-import { TilePos } from "../tilepos";
+import { TilePosState } from "../state/tilepos-state";
 import { EvictingTextureCache } from "../gfx/texture-cache";
 
 import { DrawTool } from "../tools/draw-tool";
@@ -12,9 +12,9 @@ import { FillTool } from "../tools/fill-tool";
 import { EntityTool } from "../tools/entity-tool";
 
 import "../gameobjects/eomap";
-import { EntityState } from "../entity-state";
+import { EntityState } from "../state/entity-state";
 import { EntityCommand } from "../command/entity-command";
-import { MapPropertiesState } from "../map-properties-state";
+import { MapPropertiesState } from "../state/map-properties-state";
 import { PropertiesCommand } from "../command/properties-command";
 
 export class EditorScene extends Phaser.Scene {
@@ -40,8 +40,8 @@ export class EditorScene extends Phaser.Scene {
   }
 
   create() {
-    this.currentPos = new TilePos();
-    this.cursorPos = new TilePos();
+    this.currentPos = new TilePosState();
+    this.cursorPos = new TilePosState();
 
     this.textureCache = new EvictingTextureCache(
       this,
@@ -415,7 +415,7 @@ export class EditorScene extends Phaser.Scene {
   }
 
   getTilePosFromWorldPos(worldPos) {
-    let tilePos = new TilePos();
+    let tilePos = new TilePosState();
     tilePos.x = this.getTileXFromWorldPos(worldPos);
     tilePos.y = this.getTileYFromWorldPos(worldPos);
 

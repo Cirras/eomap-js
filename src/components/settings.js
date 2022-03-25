@@ -11,7 +11,7 @@ import "./modal";
 import "./folderfield";
 import "./textfield";
 
-import { SettingsState } from "../settings-state";
+import { SettingsState } from "../state/settings-state";
 
 @customElement("eomap-settings")
 export class Settings extends LitElement {

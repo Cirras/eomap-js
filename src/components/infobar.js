@@ -5,7 +5,7 @@ import "@spectrum-web-components/divider/sp-divider.js";
 
 import "./number-field";
 
-import { TilePos } from "../tilepos";
+import { TilePosState } from "../state/tilepos-state";
 
 @customElement("eomap-infobar")
 export class InfoBar extends LitElement {
@@ -79,8 +79,8 @@ export class InfoBar extends LitElement {
   @query("#zoom-field")
   zoomField;
 
-  @property({ type: TilePos })
-  tilePos = new TilePos();
+  @property({ type: TilePosState })
+  tilePos = new TilePosState();
 
   @property({ type: Number })
   zoom = null;

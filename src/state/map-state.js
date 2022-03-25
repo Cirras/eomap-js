@@ -1,4 +1,4 @@
-import { CommandInvoker } from "./command/command";
+import { CommandInvoker } from "../command/command";
 
 export class MapState {
   constructor() {

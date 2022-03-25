@@ -6,9 +6,9 @@ import { EditorScene } from "../scenes/editor-scene";
 import { RenderControlPlugin } from "../plugins/render-control-plugin";
 
 import { GFXLoader } from "../gfx/load/gfx-loader";
-import { EntityState } from "../entity-state";
-import { MapPropertiesState } from "../map-properties-state";
-import { MapState } from "../map-state";
+import { EntityState } from "../state/entity-state";
+import { MapPropertiesState } from "../state/map-properties-state";
+import { MapState } from "../state/map-state";
 
 @customElement("eomap-editor")
 export class Editor extends LitElement {
