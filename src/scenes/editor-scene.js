@@ -99,7 +99,10 @@ export class EditorScene extends Phaser.Scene {
     });
 
     this.data.events.on("changedata-updateZoom", () => {
-      this.map.zoom = this.data.values.updateZoom;
+      this.map.zoom = Math.min(
+        ZoomTool.MAX_ZOOM,
+        Math.max(ZoomTool.MIN_ZOOM, this.data.values.updateZoom)
+      );
     });
 
     this.scale.on("resize", this.resize, this);
@@ -160,7 +163,7 @@ export class EditorScene extends Phaser.Scene {
 
   playCursorAnimation() {
     let asset = this.textureCache.getCursor().asset;
-    this.cursorSprite.play(asset.animation);
+    mapEditor.cursorSprite.play(asset.animation);
   }
 
   update(time, delta) {

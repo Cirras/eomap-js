@@ -212,7 +212,11 @@ export class Application extends LitElement {
     super();
     this.loadSettings();
     this.loadRecentFiles();
-    this.preventSpecialInputsFromBeingSwallowed();
+    this.addEventListener("keydown", this.onKeyDown);
+    this.addEventListener("wheel", this.onWheel);
+    this.addEventListener("dragover", this.onDragOver);
+    this.addEventListener("dragleave", this.onDragLeave);
+    this.addEventListener("drop", this.onDrop);
   }
 
   async loadSettings() {
@@ -255,23 +259,6 @@ export class Application extends LitElement {
       async (recent) => !(await recent.isSameEntry(handle))
     );
     this.saveRecentFiles();
-  }
-
-  preventSpecialInputsFromBeingSwallowed() {
-    this.addEventListener("keydown", (event) => {
-      switch (event.key) {
-        case "ArrowDown":
-        case "ArrowUp":
-        case "ArrowLeft":
-        case "ArrowRight":
-        case "End":
-        case "Home":
-        case "PageUp":
-        case "PageDown":
-          document.activeElement.blur();
-          break;
-      }
-    });
   }
 
   handleLayerVisibilityShortcuts(event) {
@@ -633,18 +620,36 @@ export class Application extends LitElement {
     super.connectedCallback();
     window.addEventListener("keydown", this.onWindowKeyDown);
     window.addEventListener("resize", this.onResize);
-    this.addEventListener("dragover", this.onDragOver);
-    this.addEventListener("dragleave", this.onDragLeave);
-    this.addEventListener("drop", this.onDrop);
   }
 
   disconnectedCallback() {
     window.removeEventListener("keydown", this.onWindowKeyDown);
     window.removeEventListener("resize", this.onResize);
-    this.removeEventListener("dragover", this.onDragOver);
-    this.removeEventListener("dragleave", this.onDragLeave);
-    this.removeEventListener("drop", this.onDrop);
     super.disconnectedCallback();
+  }
+
+  onKeyDown(event) {
+    // Prevent special inputs from being swallowed
+    switch (event.key) {
+      case "ArrowDown":
+      case "ArrowUp":
+      case "ArrowLeft":
+      case "ArrowRight":
+      case "End":
+      case "Home":
+      case "PageUp":
+      case "PageDown":
+        document.activeElement.blur();
+        break;
+    }
+  }
+
+  onWheel(event) {
+    if (event.altKey && this.mapState.zoom !== null) {
+      let zoomStep = this.mapState.zoom / (event.deltaY > 0 ? -11 : 10);
+      this.editor.updateZoom(this.mapState.zoom + zoomStep);
+      event.preventDefault();
+    }
   }
 
   onDragOver(event) {
