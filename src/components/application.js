@@ -194,6 +194,9 @@ export class Application extends LitElement {
   @state({ type: Number })
   maxPaletteWidth = Palette.DEFAULT_WIDTH;
 
+  @state({ type: Boolean })
+  contextMenuOpen = false;
+
   pendingGFXLoader = null;
 
   onWindowKeyDown = (event) => {
@@ -217,6 +220,8 @@ export class Application extends LitElement {
     this.addEventListener("dragover", this.onDragOver);
     this.addEventListener("dragleave", this.onDragLeave);
     this.addEventListener("drop", this.onDrop);
+    this.addEventListener("context-menu-open", this.onContextMenuOpen);
+    this.addEventListener("context-menu-close", this.onContextMenuClose);
   }
 
   async loadSettings() {
@@ -629,6 +634,10 @@ export class Application extends LitElement {
   }
 
   onKeyDown(event) {
+    if (!this.keyboardEnabled()) {
+      return;
+    }
+
     // Prevent special inputs from being swallowed
     switch (event.key) {
       case "ArrowDown":
@@ -667,6 +676,14 @@ export class Application extends LitElement {
   onDrop(event) {
     event.preventDefault();
     event.stopPropagation();
+  }
+
+  onContextMenuOpen(_event) {
+    this.contextMenuOpen = true;
+  }
+
+  onContextMenuClose(_event) {
+    this.contextMenuOpen = false;
   }
 
   emfPickerOptions() {
@@ -901,7 +918,7 @@ export class Application extends LitElement {
   }
 
   pointerEnabled() {
-    return !this.paletteResizing;
+    return !this.paletteResizing && !this.contextMenuOpen;
   }
 
   modalNotOpen(modal) {
@@ -914,7 +931,8 @@ export class Application extends LitElement {
       this.modalNotOpen(this.newMap) &&
       this.modalNotOpen(this.properties) &&
       this.modalNotOpen(this.settings) &&
-      this.modalNotOpen(this.about)
+      this.modalNotOpen(this.about) &&
+      !this.contextMenuOpen
     );
   }
 

@@ -1,9 +1,11 @@
 import { css, html, LitElement } from "lit";
-import { customElement, property, state } from "lit/decorators.js";
+import { customElement, property, query, state } from "lit/decorators.js";
 
 import "phaser";
 import { EditorScene } from "../scenes/editor-scene";
 import { RenderControlPlugin } from "../plugins/render-control-plugin";
+
+import "./context-menu";
 
 import { GFXLoader } from "../gfx/load/gfx-loader";
 import { EntityState } from "../state/entity-state";
@@ -41,6 +43,9 @@ export class Editor extends LitElement {
       }
     `;
   }
+
+  @query("eomap-context-menu")
+  contextMenu;
 
   @property({ type: GFXLoader })
   gfxLoader;
@@ -93,6 +98,14 @@ export class Editor extends LitElement {
       this.dispatchEvent(
         new CustomEvent("request-entity-editor", { detail: entityState })
       );
+    });
+  }
+
+  setupContextMenuEvents(scene) {
+    scene.events.on("request-context-menu", (contextMenuState) => {
+      this.contextMenu.state = contextMenuState;
+      this.contextMenu.open = true;
+      this.requestUpdate();
     });
   }
 
@@ -175,6 +188,7 @@ export class Editor extends LitElement {
         this.setupPhaserChangeDataEvents(scene);
         this.setupComponentDataForwardingToPhaser(scene);
         this.setupEntityToolEvents(scene);
+        this.setupContextMenuEvents(scene);
         this.setupZoomEvents(scene);
         this.game = game;
         this.updateInputEnabledState();
@@ -227,7 +241,10 @@ export class Editor extends LitElement {
   }
 
   render() {
-    return html` <div id="${Editor.EDITOR_ID}" class="editor"></div> `;
+    return html`
+      <div id="${Editor.EDITOR_ID}" class="editor"></div>
+      <eomap-context-menu></eomap-context-menu>
+    `;
   }
 
   disconnectedCallback() {

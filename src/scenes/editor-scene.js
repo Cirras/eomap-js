@@ -408,6 +408,10 @@ export class EditorScene extends Phaser.Scene {
     );
   }
 
+  requestContextMenu(contextMenuState) {
+    this.events.emit("request-context-menu", contextMenuState);
+  }
+
   getTilePosFromPointerPos(pointerPos) {
     let worldPos = this.map.camera.getWorldPoint(pointerPos.x, pointerPos.y);
 
