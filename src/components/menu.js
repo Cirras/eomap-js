@@ -164,6 +164,7 @@ export class Menu extends SpectrumElement {
     if (this.pointerInSubmenu) {
       return;
     }
+    this.stopListeningToKeyboard();
     this.scheduleCloseSubmenu(true);
     this.blurFocusedMenuItem();
     this.focusedItemIndex = 0;
@@ -207,6 +208,11 @@ export class Menu extends SpectrumElement {
     if (this.handleSubmenuKeyDown(event)) {
       event.preventDefault();
       event.stopPropagation();
+      return;
+    }
+
+    const focusedItem = this.menuItems[this.focusedItemIndex];
+    if (focusedItem && !focusedItem.focused) {
       return;
     }
 

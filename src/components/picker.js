@@ -106,7 +106,22 @@ export class Picker extends Dropdown {
     switch (event.key) {
       case "Enter":
       case "ArrowDown":
-        this.open = true;
+        if (this.open) {
+          this.menu.focus();
+          this.menu.focusMenuItemByOffset(0);
+        } else {
+          this.open = true;
+        }
+        break;
+      case "Tab":
+      case "Home":
+        this.menu.focus();
+        this.menu.focusMenuItemByOffset(0);
+        break;
+      case "ArrowUp":
+      case "End":
+        this.menu.focus();
+        this.menu.focusMenuItemByOffset(-1);
         break;
       case "Escape":
         if (this.open) {
