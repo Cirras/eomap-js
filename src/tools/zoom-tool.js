@@ -1,5 +1,11 @@
 import { Tool } from "./tool";
 
+import {
+  ContextMenuState,
+  ContextMenuActionItem,
+  ContextMenuDividerItem,
+} from "../state/context-menu-state";
+
 export class ZoomTool extends Tool {
   static ZOOM_LEVELS = [
     0.25, 0.5, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 8.0, 12.0, 16.0,
@@ -85,6 +91,45 @@ export class ZoomTool extends Tool {
     }
 
     this.originWorldPoint = null;
+  }
+
+  handleRightPointerUp(mapEditor, pointer) {
+    const zoomAction = (getZoomLevel) => {
+      return () => {
+        this.centerOrigin(mapEditor);
+        this.updateZoom(mapEditor, getZoomLevel(), true);
+      };
+    };
+
+    let items = [
+      new ContextMenuActionItem(
+        "100%",
+        zoomAction(() => 1.0)
+      ),
+      new ContextMenuActionItem(
+        "200%",
+        zoomAction(() => 2.0)
+      ),
+      new ContextMenuDividerItem(),
+      new ContextMenuActionItem(
+        "Zoom In",
+        zoomAction(() => this.nextZoomLevel(mapEditor.map.camera.zoom))
+      ),
+      new ContextMenuActionItem(
+        "Zoom Out",
+        zoomAction(() => this.previousZoomLevel(mapEditor.map.camera.zoom))
+      ),
+    ];
+
+    let contextMenuState = new ContextMenuState(pointer.x, pointer.y, items);
+    mapEditor.requestContextMenu(contextMenuState);
+  }
+
+  centerOrigin(mapEditor) {
+    let camera = mapEditor.map.camera;
+    this.originX = camera.width / 2;
+    this.originY = camera.height / 2;
+    this.originWorldPoint = camera.getWorldPoint(this.originX, this.originY);
   }
 
   previousZoomLevel(fromZoom) {
