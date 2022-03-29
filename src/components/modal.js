@@ -14,6 +14,7 @@ import "./dialog";
 import modalWrapperStyles from "@spectrum-web-components/modal/src/modal-wrapper.css.js";
 import modalStyles from "@spectrum-web-components/modal/src/modal.css.js";
 import { FocusVisiblePolyfillMixin } from "@spectrum-web-components/shared";
+import { Overlay } from "@spectrum-web-components/overlay/src/overlay.js";
 
 @customElement("eomap-modal")
 export class Modal extends FocusVisiblePolyfillMixin(SpectrumElement) {
@@ -140,9 +141,16 @@ export class Modal extends FocusVisiblePolyfillMixin(SpectrumElement) {
 
   updated(changes) {
     if (changes.has("open") && this.open) {
+      Overlay.overlayStack._doesNotCloseOnFirstClick = true;
       this.dialog.updateComplete.then(() => {
         this.dialog.shouldManageTabOrderForScrolling();
       });
     }
+  }
+
+  overlayOpenCallback(_args) {
+    // HACK: Prevents a problem where a well-timed click event can close the
+    //       overlay in the same tick that it opens, even though it's a modal.
+    Overlay.overlayStack._doesNotCloseOnFirstClick = true;
   }
 }

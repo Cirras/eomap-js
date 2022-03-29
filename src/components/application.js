@@ -18,6 +18,7 @@ import "./new-map";
 import "./properties";
 import "./settings";
 import "./about";
+import "./prompt";
 
 import { Startup } from "./startup";
 import { Palette } from "./palette";
@@ -33,6 +34,7 @@ import { EntityState } from "../state/entity-state";
 import { MapPropertiesState } from "../state/map-properties-state";
 import { SettingsState } from "../state/settings-state";
 import { MapState } from "../state/map-state";
+import { PromptState, PromptType } from "../state/prompt-state";
 
 import { EMF } from "../data/emf";
 import { EOReader } from "../data/eo-reader";
@@ -139,6 +141,9 @@ export class Application extends LitElement {
 
   @query("eomap-about")
   about;
+
+  @query("eomap-prompt")
+  prompt;
 
   @property({ type: Boolean, reflect: true, attribute: "dragged" })
   isDragged = false;
@@ -418,6 +423,11 @@ export class Application extends LitElement {
     this.pendingGFXLoader = null;
   }
 
+  showPrompt(promptState) {
+    this.prompt.state = promptState;
+    this.prompt.open = true;
+  }
+
   async firstUpdated(changes) {
     super.firstUpdated(changes);
 
@@ -617,6 +627,7 @@ export class Application extends LitElement {
           @save=${this.onSettingsSave}
         ></eomap-settings>
         <eomap-about @close=${this.onModalClose}></eomap-about>
+        <eomap-prompt></eomap-prompt>
       </sp-theme>
     `;
   }
@@ -933,6 +944,7 @@ export class Application extends LitElement {
       this.modalNotOpen(this.properties) &&
       this.modalNotOpen(this.settings) &&
       this.modalNotOpen(this.about) &&
+      this.modalNotOpen(this.prompt) &&
       !this.contextMenuOpen
     );
   }
