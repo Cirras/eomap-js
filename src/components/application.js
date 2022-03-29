@@ -782,7 +782,28 @@ export class Application extends LitElement {
         await writable.write(data);
         await writable.close();
       } catch (e) {
-        console.error("Failed to save EMF", e);
+        let onButtonPress = (buttonIndex) => {
+          switch (buttonIndex) {
+            case 0:
+              this.onSave();
+              break;
+            case 1:
+              this.onSaveAs();
+              break;
+          }
+        };
+
+        this.showPrompt(
+          new PromptState(
+            PromptType.Error,
+            `Failed to save '${this.mapState.fileHandle.name}'`,
+            e.message,
+            ["Retry", "Save As", "Cancel"],
+            onButtonPress
+          )
+        );
+
+        console.error(`Failed to save '${this.mapState.fileHandle.name}'`, e);
       }
     }
   }
