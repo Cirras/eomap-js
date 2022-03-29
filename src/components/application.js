@@ -724,8 +724,9 @@ export class Application extends LitElement {
 
   async onOpenRecent(event) {
     let handle = event.detail;
-    if ((await handle.queryPermission()) !== "granted") {
-      if ((await handle.requestPermission()) !== "granted") {
+    let opts = { mode: "readwrite" };
+    if ((await handle.queryPermission(opts)) !== "granted") {
+      if ((await handle.requestPermission(opts)) !== "granted") {
         return;
       }
     }
