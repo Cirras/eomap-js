@@ -163,7 +163,7 @@ export class EditorScene extends Phaser.Scene {
 
   playCursorAnimation() {
     let asset = this.textureCache.getCursor().asset;
-    mapEditor.cursorSprite.play(asset.animation);
+    this.cursorSprite.play(asset.animation);
   }
 
   update(time, delta) {
