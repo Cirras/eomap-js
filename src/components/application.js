@@ -513,7 +513,7 @@ export class Application extends LitElement {
   }
 
   renderEditor() {
-    if (this.validGfx() && this.mapState.loaded()) {
+    if (this.validGfx() && this.mapState.loaded) {
       return html`
         <eomap-editor
           .gfxLoader=${this.gfxLoader}
@@ -555,8 +555,8 @@ export class Application extends LitElement {
         <eomap-menubar
           .layerVisibility=${this.layerVisibility}
           .canOpenMaps=${this.validGfx()}
-          .canSaveMaps=${this.mapState.loaded()}
-          .canAccessMapProperties=${this.validGfx() && this.mapState.loaded()}
+          .canSaveMaps=${this.mapState.loaded}
+          .canAccessMapProperties=${this.validGfx() && this.mapState.loaded}
           .canReloadGraphics=${this.canReloadGraphics()}
           .canAccessSettings=${this.settingsState != null}
           .canUndo=${this.canUndo()}
@@ -710,12 +710,46 @@ export class Application extends LitElement {
     };
   }
 
+  dirtyCheck(callback) {
+    if (this.mapState.dirty) {
+      let onButtonPress = async (buttonIndex) => {
+        switch (buttonIndex) {
+          case 0:
+            await this.onSave();
+            if (this.mapState.dirty) {
+              // The map failed to save for some reason.
+              // Bail out to guard against data loss.
+              return;
+            }
+            break;
+          case 2:
+            return;
+        }
+        callback();
+      };
+
+      this.showPrompt(
+        new PromptState(
+          PromptType.Warning,
+          `Do you want to save the changes you made to ${this.mapState.filename}?`,
+          "Your changes will be lost if you don't save them.",
+          ["Save", "Don't Save", "Cancel"],
+          onButtonPress
+        )
+      );
+    } else {
+      callback();
+    }
+  }
+
   onNew(_event) {
     if (!this.validGfx()) {
       return;
     }
-    this.newMap.open = true;
-    this.requestUpdate();
+    this.dirtyCheck(() => {
+      this.newMap.open = true;
+      this.requestUpdate();
+    });
   }
 
   async onOpen() {
@@ -730,7 +764,9 @@ export class Application extends LitElement {
       return;
     }
 
-    await this.openFile(fileHandle);
+    this.dirtyCheck(() => {
+      this.openFile(fileHandle);
+    });
   }
 
   async onOpenRecent(event) {
@@ -741,10 +777,12 @@ export class Application extends LitElement {
         return;
       }
     }
-    await this.openFile(event.detail);
-    if (this.mapState.error) {
-      this.removeRecentFile(event.detail);
-    }
+    this.dirtyCheck(async () => {
+      await this.openFile(event.detail);
+      if (this.mapState.error) {
+        this.removeRecentFile(event.detail);
+      }
+    });
   }
 
   async openFile(fileHandle) {
@@ -767,7 +805,7 @@ export class Application extends LitElement {
   }
 
   async onSave() {
-    if (!this.mapState.loaded()) {
+    if (!this.mapState.loaded) {
       return;
     }
 
@@ -781,6 +819,7 @@ export class Application extends LitElement {
         const writable = await this.mapState.fileHandle.createWritable();
         await writable.write(data);
         await writable.close();
+        this.mapState.saved();
       } catch (e) {
         let onButtonPress = (buttonIndex) => {
           switch (buttonIndex) {
@@ -796,20 +835,20 @@ export class Application extends LitElement {
         this.showPrompt(
           new PromptState(
             PromptType.Error,
-            `Failed to save '${this.mapState.fileHandle.name}'`,
+            `Failed to save ${this.mapState.filename}`,
             e.message,
             ["Retry", "Save As", "Cancel"],
             onButtonPress
           )
         );
 
-        console.error(`Failed to save '${this.mapState.fileHandle.name}'`, e);
+        console.error(`Failed to save '${this.mapState.filename}'`, e);
       }
     }
   }
 
   async onSaveAs() {
-    if (!this.mapState.loaded()) {
+    if (!this.mapState.loaded) {
       return;
     }
 
@@ -1040,7 +1079,7 @@ export class Application extends LitElement {
       return Startup.Status.ERROR_EMF;
     }
 
-    if (this.mapState.loading()) {
+    if (this.mapState.loading) {
       return Startup.Status.LOADING_EMF;
     }
 

@@ -7,6 +7,7 @@ export class MapState {
     this.error = null;
     this.gameObject = null;
     this.commandInvoker = new CommandInvoker();
+    this.lastSavedCommand = null;
     this.scrollX = null;
     this.scrollY = null;
     this.zoom = null;
@@ -29,6 +30,7 @@ export class MapState {
     copy.scrollX = this.scrollX;
     copy.scrollY = this.scrollY;
     copy.zoom = this.zoom;
+    copy.lastSavedCommand = null;
     return copy;
   }
 
@@ -56,11 +58,28 @@ export class MapState {
     return copy;
   }
 
-  loading() {
-    return this.fileHandle !== null && !this.loaded();
+  get loading() {
+    return this.fileHandle !== null && !this.loaded;
   }
 
-  loaded() {
+  get loaded() {
     return this.emf !== null;
+  }
+
+  get dirty() {
+    return (
+      this.lastSavedCommand !== (this.commandInvoker.nextUndoCommand || null)
+    );
+  }
+
+  get filename() {
+    if (this.fileHandle) {
+      return this.fileHandle.name;
+    }
+    return "untitled";
+  }
+
+  saved() {
+    this.lastSavedCommand = this.commandInvoker.nextUndoCommand || null;
   }
 }

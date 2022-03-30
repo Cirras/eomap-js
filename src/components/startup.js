@@ -186,7 +186,7 @@ export class Startup extends LitElement {
       case Startup.Status.ERROR_EMF:
         return this.mapState.error.message;
       case Startup.Status.LOADING_EMF:
-        return `Loading ${this.mapState.fileHandle.name}...`;
+        return `Loading ${this.mapState.filename}...`;
       default:
         throw new Error("Unhandled Startup Status");
     }
