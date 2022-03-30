@@ -44,6 +44,7 @@ export class PaletteScene extends Phaser.Scene {
     this.preloads = [];
     this.lastResize = performance.now();
     this.dirtySelectedLayer = true;
+    this.dirtySelectedEntry = true;
   }
 
   create() {
@@ -67,7 +68,7 @@ export class PaletteScene extends Phaser.Scene {
     this.data.events.on(
       "changedata-eyedrop",
       (_parent, value, _previousValue) => {
-        this.selectedLayer.selectEntry(value.drawID);
+        this.selectEntry(value.drawID);
         let resource = this.selectedLayer.selectedEntry;
         if (resource) {
           this.selectedLayer.scroll = resource.y;
@@ -92,7 +93,7 @@ export class PaletteScene extends Phaser.Scene {
           pointer.y + this.cameras.main.scrollY
         );
         if (entry) {
-          this.selectedLayer.selectEntry(entry.id);
+          this.selectEntry(entry.id);
           this.updateSelectedDrawID();
         }
       }
@@ -176,7 +177,7 @@ export class PaletteScene extends Phaser.Scene {
 
     this.selectedLayer = this.layers[layer];
     this.selectedLayer.visible = true;
-    this.selectedLayerDirty = true;
+    this.dirtySelectedLayer = true;
 
     if (this.selectedLayer.dirtyLayout) {
       this.selectedLayer.layout();
@@ -185,6 +186,11 @@ export class PaletteScene extends Phaser.Scene {
     this.updateSelectedDrawID();
     this.emitContentHeightChangedEvent();
     this.emitScrollChangedEvent();
+  }
+
+  selectEntry(entryID) {
+    this.selectedLayer.selectEntry(entryID);
+    this.dirtySelectedEntry = true;
   }
 
   syncFileScroll() {
@@ -225,12 +231,16 @@ export class PaletteScene extends Phaser.Scene {
 
     let dirtyLayout =
       this.selectedLayer.dirtyLayout && this.canDoResizeLayout();
+
     this.render.shouldRender =
+      dirtyLayout ||
       this.dirtySelectedLayer ||
+      this.dirtySelectedEntry ||
       this.cameras.main.dirty ||
       this.selectedLayer.dirtyAnimationFrame;
+
     this.dirtySelectedLayer = false;
-    this.dirtyScroll = false;
+    this.dirtySelectedEntry = false;
 
     if (dirtyLayout) {
       this.selectedLayer.layout();
