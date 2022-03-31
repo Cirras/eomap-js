@@ -216,6 +216,13 @@ export class Application extends LitElement {
     this.calculateMaxPaletteWidth();
   };
 
+  onBeforeUnload = (event) => {
+    if (this.mapState.dirty) {
+      event.preventDefault();
+      event.returnValue = "";
+    }
+  };
+
   constructor() {
     super();
     this.loadSettings();
@@ -636,11 +643,13 @@ export class Application extends LitElement {
     super.connectedCallback();
     window.addEventListener("keydown", this.onWindowKeyDown);
     window.addEventListener("resize", this.onResize);
+    window.addEventListener("beforeunload", this.onBeforeUnload);
   }
 
   disconnectedCallback() {
     window.removeEventListener("keydown", this.onWindowKeyDown);
     window.removeEventListener("resize", this.onResize);
+    window.removeEventListener("beforeunload", this.onBeforeUnload);
     super.disconnectedCallback();
   }
 
