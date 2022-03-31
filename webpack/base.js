@@ -24,23 +24,11 @@ module.exports = (env) => {
         },
         {
           test: /\.(gif|png|jpe?g|svg|xml)$/i,
-          use: "url-loader",
+          type: "asset/inline",
         },
         {
           test: /\.html$/i,
           loader: "html-loader",
-          options: {
-            attributes: {
-              list: [
-                "...",
-                {
-                  tag: "link",
-                  attribute: "href",
-                  type: "src",
-                },
-              ],
-            },
-          },
         },
       ],
     },

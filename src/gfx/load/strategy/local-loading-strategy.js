@@ -10,7 +10,7 @@ export class LocalLoadingStrategy extends LoadingStrategy {
 
     let context = require.context("../../../assets/bundled", true, /\.png$/);
     context.keys().forEach((item) => {
-      this.bundledAssets.set(item.replace("./", ""), context(item).default);
+      this.bundledAssets.set(item.replace("./", ""), context(item));
     });
   }
 
