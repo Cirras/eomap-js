@@ -228,7 +228,7 @@ export class EditorScene extends Phaser.Scene {
     this.cursorSprite
       .setVisible(true)
       .setScale(this.map.zoom)
-      .setPosition(camMatrix.e, camMatrix.f);
+      .setPosition(Math.round(camMatrix.e), Math.round(camMatrix.f));
 
     return true;
   }
