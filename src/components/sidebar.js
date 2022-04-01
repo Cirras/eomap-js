@@ -1,7 +1,6 @@
 import { css, html, LitElement } from "lit";
 import { customElement, property } from "lit/decorators.js";
 
-import "@spectrum-web-components/action-group/sp-action-group";
 import {
   DrawIcon,
   EraseIcon,
@@ -14,6 +13,7 @@ import {
   RedoIcon,
 } from "@spectrum-web-components/icons-workflow";
 
+import "./action-group";
 import "./sidebar-button";
 
 @customElement("eomap-sidebar")
@@ -52,7 +52,7 @@ export class Sidebar extends LitElement {
 
   render() {
     return html`
-      <sp-action-group vertical>
+      <eomap-action-group vertical>
         <eomap-sidebar-button
           value="draw"
           label="Draw"
@@ -125,7 +125,7 @@ export class Sidebar extends LitElement {
           @click=${this.onRedoClick}
         >
         </eomap-sidebar-button>
-      </sp-action-group>
+      </eomap-action-group>
     `;
   }
 

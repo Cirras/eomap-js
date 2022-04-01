@@ -4,18 +4,17 @@ import {
   eventOptions,
   property,
   query,
-  queryAll,
   state,
 } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
 
-import "@spectrum-web-components/action-group/sp-action-group";
 import "@spectrum-web-components/action-button/sp-action-button";
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
 } from "@spectrum-web-components/icons-workflow";
 
+import "./action-group";
 import "./sidebar-button";
 
 import "phaser";
@@ -232,9 +231,6 @@ export class Palette extends LitElement {
   @query("#layer-buttons", true)
   layerButtonsGroup;
 
-  @queryAll("#layer-buttons sp-action-button", true)
-  layerButtons;
-
   @query("#palette-scroll-container", true)
   paletteScrollContainer;
 
@@ -303,7 +299,6 @@ export class Palette extends LitElement {
     const children = this.shadowRoot.querySelectorAll("*");
     await Promise.all(Array.from(children).map((c) => c.updateComplete));
 
-    this.preventLayerButtonsFromSwallowingKeyDownInputs();
     this.checkLayerButtonsArrows();
     this.updateViewportHeight();
   }
@@ -544,13 +539,13 @@ export class Palette extends LitElement {
         >
           <sp-icon slot="icon">${ChevronLeftIcon()}</sp-icon">
         </sp-action-button>
-        <sp-action-group
+        <eomap-action-group
           id="layer-buttons"
           compact
           @scroll=${this.onLayerButtonsScroll}
         >
           ${this.renderLayerButtons()}
-        </sp-action-group>
+        </eomap-action-group>
         <sp-action-button
           class="scroll-arrow"
           quiet
@@ -658,15 +653,6 @@ export class Palette extends LitElement {
 
   onLayerButtonsScroll(_event) {
     this.checkLayerButtonsArrows();
-  }
-
-  preventLayerButtonsFromSwallowingKeyDownInputs() {
-    this.layerButtonsGroup.addEventListener("focusin", () => {
-      this.layerButtonsGroup.dispatchEvent(new CustomEvent("focusout"));
-      for (let button of this.layerButtons) {
-        button.tabIndex = 0;
-      }
-    });
   }
 
   checkLayerButtonsArrows() {
