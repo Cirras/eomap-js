@@ -114,7 +114,7 @@ export class Startup extends LitElement {
       return html`
         <sp-button
           class="action-button"
-          style="--spectrum-button-primary-textonly-text-padding-bottom: 3px;"
+          style="--spectrum-button-primary-fill-textonly-text-padding-bottom: 3px;"
           variant="cta"
           size="s"
           @click=${() => {
