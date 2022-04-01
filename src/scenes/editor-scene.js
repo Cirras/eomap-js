@@ -179,7 +179,9 @@ export class EditorScene extends Phaser.Scene {
         this.mapState.zoom = this.map.zoom;
         this.events.emit("zoom-changed");
       }
-      this.moveCursor(this.cursorPos);
+      if (this.cursorPos.valid) {
+        this.positionCursor();
+      }
     }
 
     this.map.update(time, delta);
@@ -199,15 +201,23 @@ export class EditorScene extends Phaser.Scene {
   }
 
   moveCursor(tilePos) {
-    this.cursorPos = tilePos;
-
-    if (!tilePos.valid) {
-      this.cursorSprite.setVisible(false);
-      return false;
+    if (this.cursorPos.x === tilePos.x && this.cursorPos.y === tilePos.y) {
+      return;
     }
 
-    let x = tilePos.x * 32 - tilePos.y * 32;
-    let y = tilePos.x * 16 + tilePos.y * 16;
+    this.cursorPos = tilePos;
+    this.cursorSprite.visible = this.cursorPos.valid;
+
+    if (this.cursorPos.valid) {
+      this.positionCursor();
+    }
+
+    return this.cursorPos.valid;
+  }
+
+  positionCursor() {
+    let x = this.cursorPos.x * 32 - this.cursorPos.y * 32;
+    let y = this.cursorPos.x * 16 + this.cursorPos.y * 16;
 
     let camera = this.map.camera;
 
@@ -226,11 +236,8 @@ export class EditorScene extends Phaser.Scene {
     camMatrix.multiply(spriteMatrix);
 
     this.cursorSprite
-      .setVisible(true)
       .setScale(this.map.zoom)
       .setPosition(Math.round(camMatrix.e), Math.round(camMatrix.f));
-
-    return true;
   }
 
   handlePointerMove(pointer) {
