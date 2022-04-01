@@ -658,7 +658,9 @@ export class Application extends LitElement {
       return;
     }
 
-    // Prevent special inputs from being swallowed
+    // Blur any focused elements when:
+    //   1. We're moving around in the map renderer via keyboard
+    //   2. We're scrolling the palette via keyboard
     switch (event.key) {
       case "ArrowDown":
       case "ArrowUp":
