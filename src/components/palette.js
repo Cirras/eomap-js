@@ -386,6 +386,9 @@ export class Palette extends LitElement {
           capture: false,
         },
       },
+      audio: {
+        noAudio: true,
+      },
       plugins: {
         global: [
           {

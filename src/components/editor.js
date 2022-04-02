@@ -169,6 +169,9 @@ export class Editor extends LitElement {
           capture: false,
         },
       },
+      audio: {
+        noAudio: true,
+      },
       plugins: {
         global: [
           {
