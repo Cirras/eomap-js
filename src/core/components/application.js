@@ -48,6 +48,8 @@ export class Application extends LitElement {
     return css`
       sp-theme {
         --spectrum-divider-size: 1px;
+        --spectrum-global-font-family-code: "Source Code Pro", Monaco, Consolas,
+          monospace;
         background-color: var(--spectrum-global-color-gray-200);
         color: var(--spectrum-global-color-gray-800);
         position: absolute;

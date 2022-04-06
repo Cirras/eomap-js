@@ -411,6 +411,7 @@ export class Palette extends LitElement {
         this.setupContentScrollMirroring(scene);
         this.game = game;
         this.updateInputEnabledState();
+        this.updateViewportHeight();
       });
 
       game.scene.start("palette");

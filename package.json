@@ -2,10 +2,15 @@
   "name": "eomap-js",
   "version": "1.0.0",
   "description": "Endless Online Mapper",
-  "main": "src/index.js",
+  "main": "dist/electron/main.js",
   "scripts": {
-    "build": "webpack --config webpack/prod.js ",
-    "start": "webpack-dev-server --config webpack/base.js --open",
+    "start": "npm run start:electron",
+    "start:electron": "cross-env NODE_ENV=development node scripts/start.js",
+    "start:web": "webpack-dev-server --config webpack/web/web.js --open",
+    "dist": "npm run dist:web && npm run dist:electron",
+    "dist:electron": "npm run build && electron-builder",
+    "dist:web": "cross-env NODE_ENV=production webpack --config webpack/web/web.js",
+    "build": "cross-env NODE_ENV=production node scripts/build.js",
     "format": "pretty-quick",
     "prepare": "husky install",
     "pre-commit": "pretty-quick --staged"
@@ -21,13 +26,39 @@
     "url": "https://github.com/Cirras/eomap-js/issues"
   },
   "homepage": "https://github.com/Cirras/eomap-js#readme",
+  "build": {
+    "productName": "eomap-js",
+    "appId": "dev.eomap.app",
+    "directories": {
+      "output": "dist/electron"
+    },
+    "files": [
+      "dist/electron/**/*"
+    ],
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "cirras",
+        "repo": "eomap-js"
+      }
+    ],
+    "mac": {
+      "category": "public.app-category.developer-tools",
+      "hardenedRuntime": true
+    }
+  },
   "devDependencies": {
     "@babel/core": "^7.17.8",
     "@babel/plugin-proposal-class-properties": "^7.16.7",
     "@babel/plugin-proposal-decorators": "^7.17.8",
     "@babel/preset-env": "^7.16.11",
     "babel-loader": "^8.2.4",
+    "cross-env": "^7.0.3",
+    "cross-spawn": "^7.0.3",
     "css-loader": "^6.7.1",
+    "electron": "^18.0.2",
+    "electron-builder": "^22.14.13",
+    "electron-builder-notarize": "^1.4.0",
     "html-loader": "^3.1.0",
     "html-webpack-plugin": "^5.5.0",
     "husky": "^7.0.4",

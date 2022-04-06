@@ -2,22 +2,19 @@ const webpack = require("webpack");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 
+const mode = process.env.NODE_ENV || "development";
+const dev = mode === "development";
+
 module.exports = (env) => {
   return {
-    mode: "development",
-    devtool: "eval-source-map",
+    mode,
+    devtool: dev ? "cheap-module-source-map" : "source-map",
+    performance: {
+      maxEntrypointSize: 3145728,
+      maxAssetSize: 3145728,
+    },
     module: {
       rules: [
-        {
-          test: /\.js$/,
-          exclude: /node_modules/,
-          use: "babel-loader",
-        },
-        {
-          test: /\.worker\.js$/i,
-          exclude: /node_modules/,
-          use: [{ loader: "worker-loader" }, { loader: "babel-loader" }],
-        },
         {
           test: /\.css$/i,
           use: [MiniCssExtractPlugin.loader, "css-loader"],
