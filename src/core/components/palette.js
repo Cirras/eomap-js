@@ -561,7 +561,11 @@ export class Palette extends LitElement {
           <sp-icon slot="icon">${ChevronRightIcon()}</sp-icon">
         </sp-action-button>
       </div>
-      <div id="palette-scroll-container" @scroll=${this.onPaletteContentScroll}>
+      <div
+        id="palette-scroll-container"
+        tabindex="-1"
+        @scroll=${this.onPaletteContentScroll}
+      >
         <div id="palette-content" style="width: 100%; height: ${
           this.contentHeight
         }px">
