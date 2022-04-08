@@ -543,13 +543,15 @@ export class Palette extends LitElement {
         >
           <sp-icon slot="icon">${ChevronLeftIcon()}</sp-icon">
         </sp-action-button>
-        <eomap-action-group
+        <div 
+          tabindex="-1"
           id="layer-buttons"
-          compact
           @scroll=${this.onLayerButtonsScroll}
         >
-          ${this.renderLayerButtons()}
-        </eomap-action-group>
+          <eomap-action-group compact>
+            ${this.renderLayerButtons()}
+          </eomap-action-group>
+        </div>
         <sp-action-button
           class="scroll-arrow"
           quiet
