@@ -50,6 +50,11 @@ export class EditorScene extends Phaser.Scene {
       1024
     );
 
+    this.cursorSprite = this.createCursor();
+
+    // Preload the cursor in the texture cache
+    this.textureCache.update();
+
     this.map = this.add.eomap(
       this,
       this.textureCache,
@@ -60,8 +65,6 @@ export class EditorScene extends Phaser.Scene {
     this.mapState.gameObject = this.map;
 
     this.tools = this.createTools();
-
-    this.cursorSprite = this.createCursor();
 
     let cursorKeys = this.input.keyboard.createCursorKeys();
     this.cameraControls = new Phaser.Cameras.Controls.FixedKeyControl({

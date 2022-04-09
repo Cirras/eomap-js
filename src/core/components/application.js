@@ -428,6 +428,9 @@ export class Application extends LitElement {
       })
     );
 
+    // Preload the cursor
+    await this.pendingGFXLoader.loadRaw("cursor.png");
+
     this.gfxLoader = this.pendingGFXLoader;
     this.pendingGFXLoader = null;
   }
