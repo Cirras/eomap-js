@@ -304,6 +304,7 @@ export class MenuBar extends LitElement {
       <header>
         <eomap-menubar-button
           label="File"
+          tabindex="-1"
           @button-pointerenter=${this.onButtonPointerEnter}
           @button-pointerdown=${this.onButtonPointerDown}
           @menu-item-press=${this.onMenuItemPress}
@@ -312,6 +313,7 @@ export class MenuBar extends LitElement {
         </eomap-menubar-button>
         <eomap-menubar-button
           label="Edit"
+          tabindex="-1"
           @button-pointerenter=${this.onButtonPointerEnter}
           @button-pointerdown=${this.onButtonPointerDown}
           @menu-item-press=${this.onMenuItemPress}
@@ -320,6 +322,7 @@ export class MenuBar extends LitElement {
         </eomap-menubar-button>
         <eomap-menubar-button
           label="View"
+          tabindex="-1"
           @button-pointerenter=${this.onButtonPointerEnter}
           @button-pointerdown=${this.onButtonPointerDown}
           @menu-item-press=${this.onMenuItemPress}
@@ -328,6 +331,7 @@ export class MenuBar extends LitElement {
         </eomap-menubar-button>
         <eomap-menubar-button
           label="Help"
+          tabindex="-1"
           @button-pointerenter=${this.onButtonPointerEnter}
           @button-pointerdown=${this.onButtonPointerDown}
           @menu-item-press=${this.onMenuItemPress}
