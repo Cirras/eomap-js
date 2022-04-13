@@ -438,6 +438,7 @@ export class Application extends LitElement {
   showPrompt(promptState) {
     this.prompt.state = promptState;
     this.prompt.open = true;
+    this.requestUpdate();
   }
 
   async firstUpdated(changes) {
