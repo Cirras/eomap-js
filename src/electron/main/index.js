@@ -1,5 +1,6 @@
 import { app, BrowserWindow, session } from "electron";
 import path from "path";
+import { createWindow } from "./window/create";
 
 const setupCSP = () => {
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
@@ -13,7 +14,7 @@ const setupCSP = () => {
 };
 
 const setupWindow = () => {
-  const mainWindow = new BrowserWindow({
+  const mainWindow = createWindow("main", {
     width: 1024,
     height: 768,
     backgroundColor: "#1a1a1a",
