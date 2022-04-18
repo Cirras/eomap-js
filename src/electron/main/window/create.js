@@ -80,7 +80,7 @@ export function createWindow(name, options) {
     }
   });
 
-  window.on("close", () => {
+  window.on("pre-destroy", () => {
     saveWindowState(name, window);
   });
 

@@ -1,4 +1,4 @@
-import { app, BrowserWindow, session } from "electron";
+import { app, BrowserWindow, ipcMain, session } from "electron";
 import path from "path";
 import { createWindow } from "./window/create";
 
@@ -41,6 +41,11 @@ const setupWindow = () => {
 
   mainWindow.on("close", (event) => {
     event.preventDefault();
+    mainWindow.webContents.send("close-requested");
+  });
+
+  ipcMain.once("window:close", (_event) => {
+    mainWindow.emit("pre-destroy");
     mainWindow.destroy();
   });
 };
