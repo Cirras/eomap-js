@@ -804,6 +804,7 @@ export class EOMap extends Phaser.GameObjects.GameObject {
 
     if (this.dirtyRenderList) {
       this.rebuildRenderList();
+      this.invalidateCachedFrame();
     }
 
     this.camera.dirty = false;
