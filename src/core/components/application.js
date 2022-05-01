@@ -4,12 +4,8 @@ import { customElement, property, query, state } from "lit/decorators.js";
 
 import { get, set } from "idb-keyval";
 
-import "@spectrum-web-components/theme/theme-darkest.js";
-import "@spectrum-web-components/theme/scale-medium.js";
-import "@spectrum-web-components/theme/sp-theme.js";
 import "@spectrum-web-components/dropzone/sp-dropzone.js";
 
-import "./menubar";
 import "./sidebar";
 import "./editor";
 import "./infobar";
@@ -40,21 +36,18 @@ import { EMF } from "../data/emf";
 import { EOReader } from "../data/eo-reader";
 import { EOBuilder } from "../data/eo-builder";
 
-import { asyncFilter, fileSystemAccessSupported } from "../utils";
+import { asyncFilter } from "../util/array-utils";
 
 @customElement("eomap-application")
 export class Application extends LitElement {
   static get styles() {
     return css`
-      sp-theme {
+      :host {
         --spectrum-divider-size: 1px;
         --spectrum-global-font-family-code: "Source Code Pro", Monaco, Consolas,
           monospace;
         background-color: var(--spectrum-global-color-gray-200);
         color: var(--spectrum-global-color-gray-800);
-        position: absolute;
-        left: 0;
-        top: 0;
         width: 100%;
         height: 100%;
         display: grid;
@@ -63,7 +56,7 @@ export class Application extends LitElement {
         overflow: hidden;
       }
 
-      eomap-menubar {
+      eomap-titlebar {
         grow-row: 1 / 2;
         grid-column: 1 / 3;
         border-bottom: 1px solid var(--spectrum-global-color-gray-200);
@@ -117,9 +110,6 @@ export class Application extends LitElement {
     `;
   }
 
-  @query("sp-theme", true)
-  theme;
-
   @query("sp-dropzone", true)
   dropzone;
 
@@ -158,6 +148,15 @@ export class Application extends LitElement {
 
   @state({ type: MapState })
   mapState = new MapState();
+
+  @state({ type: Boolean })
+  dirty = false;
+
+  @state({ type: Boolean })
+  hasUndoCommands = false;
+
+  @state({ type: Boolean })
+  hasRedoCommands = false;
 
   @state({ type: Number })
   gfxErrors = 0;
@@ -223,6 +222,15 @@ export class Application extends LitElement {
       event.preventDefault();
       event.returnValue = "";
     }
+  };
+
+  onMapStateChange = () => {
+    this.dirty = this.mapState.dirty;
+    this.hasUndoCommands = this.mapState.commandInvoker.hasUndoCommands;
+    this.hasRedoCommands = this.mapState.commandInvoker.hasRedoCommands;
+    this.dispatchEvent(
+      new CustomEvent("map-state-changed", { detail: this.mapState })
+    );
   };
 
   constructor() {
@@ -342,24 +350,24 @@ export class Application extends LitElement {
     switch (event.code) {
       case "KeyN":
         if (event.altKey) {
-          this.onNew();
+          this.showNewMap();
           event.preventDefault();
         }
         break;
       case "KeyO":
-        this.onOpen();
+        this.open();
         event.preventDefault();
         break;
       case "KeyS":
         if (event.shiftKey) {
-          this.onSaveAs();
+          this.saveAs();
         } else {
-          this.onSave();
+          this.save();
         }
         event.preventDefault();
         break;
       case "Comma":
-        this.onSettings();
+        this.showSettings();
         event.preventDefault();
         break;
     }
@@ -367,12 +375,10 @@ export class Application extends LitElement {
 
   undo() {
     this.commandInvoker.undo();
-    this.requestUpdate();
   }
 
   redo() {
     this.commandInvoker.redo();
-    this.requestUpdate();
   }
 
   readMap(buffer) {
@@ -454,11 +460,14 @@ export class Application extends LitElement {
     if (changes.has("settingsState") && this.settingsState) {
       this.manageSettings(changes.get("settingsState"));
     }
+    if (changes.has("mapState")) {
+      this.manageMapState(changes.get("mapState"));
+    }
     this.updateStartupStatus();
   }
 
   async manageSettings(previous) {
-    if (!fileSystemAccessSupported()) {
+    if (!this.fileSystemAccessSupported()) {
       return;
     }
 
@@ -471,6 +480,14 @@ export class Application extends LitElement {
     if (await this.canLoadGFX()) {
       this.loadGFX();
     }
+  }
+
+  manageMapState(previous) {
+    if (previous) {
+      previous.commandInvoker.off("change", this.onMapStateChange);
+    }
+    this.mapState.commandInvoker.on("change", this.onMapStateChange);
+    this.onMapStateChange();
   }
 
   async settingsChangeRequiresGFXReload(previous) {
@@ -520,8 +537,12 @@ export class Application extends LitElement {
     return !(await a.isSameEntry(b));
   }
 
+  fileSystemAccessSupported() {
+    return self && "showOpenFilePicker" in self;
+  }
+
   calculateMaxPaletteWidth() {
-    let width = this.theme.clientWidth - this.sidebar.offsetWidth - 2;
+    let width = this.clientWidth - this.sidebar.offsetWidth - 2;
     this.maxPaletteWidth = Math.max(Palette.MIN_WIDTH, width);
   }
 
@@ -552,7 +573,7 @@ export class Application extends LitElement {
         .status=${this.startupStatus}
         .mapState=${this.mapState}
         .gfxErrors=${this.gfxErrors}
-        @settings=${this.onSettings}
+        @settings=${this.showSettings}
         @request-gfx-directory-permission=${this
           .onRequestGFXDirectoryPermission}
         @request-assets-directory-permission=${this
@@ -564,84 +585,56 @@ export class Application extends LitElement {
 
   render() {
     return html`
-      <sp-theme color="darkest" scale="medium">
-        <eomap-menubar
-          .layerVisibility=${this.layerVisibility}
-          .canOpenMaps=${this.validGfx()}
-          .canSaveMaps=${this.mapState.loaded}
-          .canAccessMapProperties=${this.validGfx() && this.mapState.loaded}
-          .canReloadGraphics=${this.canReloadGraphics()}
-          .canAccessSettings=${this.settingsState != null}
-          .canUndo=${this.canUndo()}
-          .canRedo=${this.canRedo()}
-          .keyboardEnabled=${this.keyboardEnabled()}
-          .recentFiles=${this.recentFiles}
-          @new=${this.onNew}
-          @open=${this.onOpen}
-          @open-recent=${this.onOpenRecent}
-          @save=${this.onSave}
-          @save-as=${this.onSaveAs}
-          @map-properties=${this.onMapProperties}
-          @settings=${this.onSettings}
-          @reload-gfx=${() => {
-            setTimeout(() => this.loadGFX(), 0);
-          }}
-          @undo=${this.undo}
-          @redo=${this.redo}
-          @visibility-flag-toggle=${this.onVisibilityFlagToggle}
-          @about=${this.onAbout}
-        ></eomap-menubar>
-        <eomap-sidebar
-          .selectedTool=${this.selectedTool}
-          .canUndo=${this.canUndo()}
-          .canRedo=${this.canRedo()}
-          @tool-selected=${this.onToolSelected}
-          @undo=${this.undo}
-          @redo=${this.redo}
-        ></eomap-sidebar>
-        ${this.renderEditor()}
-        <sp-dropzone
-          @sp-dropzone-should-accept=${this.onDropzoneShouldAccept}
-          @sp-dropzone-drop=${this.onDropzoneDrop}
-        ></sp-dropzone>
-        <eomap-palette
-          .gfxLoader=${this.gfxLoader}
-          .gfxErrors=${this.gfxErrors}
-          .eyedrop=${this.eyedrop}
-          .selectedLayer=${this.selectedLayer}
-          .pointerEnabled=${this.pointerEnabled()}
-          .keyboardEnabled=${this.keyboardEnabled()}
-          .maxWidth=${this.maxPaletteWidth}
-          @resize-start=${this.onPaletteResizeStart}
-          @resize-end=${this.onPaletteResizeEnd}
-          @layer-selected=${this.onSelectedLayerChanged}
-          @changedata-selectedDrawID=${this.onSelectedDrawIDChanged}
-        ></eomap-palette>
-        <eomap-infobar
-          .tilePos=${this.currentPos}
-          .zoom=${this.zoom}
-          @zoom-changed=${this.onInfoBarZoomChanged}
-        ></eomap-infobar>
-        <eomap-entity-editor
-          .tilePos=${this.currentPos}
-          @close=${this.onModalClose}
-          @save=${this.onEntityEditorSave}
-        ></eomap-entity-editor>
-        <eomap-new-map
-          @close=${this.onModalClose}
-          @confirm=${this.onNewMapConfirm}
-        ></eomap-new-map>
-        <eomap-properties
-          @close=${this.onModalClose}
-          @save=${this.onPropertiesSave}
-        ></eomap-properties>
-        <eomap-settings
-          @close=${this.onModalClose}
-          @save=${this.onSettingsSave}
-        ></eomap-settings>
-        <eomap-about @close=${this.onModalClose}></eomap-about>
-        <eomap-prompt></eomap-prompt>
-      </sp-theme>
+      <eomap-sidebar
+        .selectedTool=${this.selectedTool}
+        .canUndo=${this.canUndo()}
+        .canRedo=${this.canRedo()}
+        @tool-selected=${this.onToolSelected}
+        @undo=${this.undo}
+        @redo=${this.redo}
+      ></eomap-sidebar>
+      ${this.renderEditor()}
+      <sp-dropzone
+        @sp-dropzone-should-accept=${this.onDropzoneShouldAccept}
+        @sp-dropzone-drop=${this.onDropzoneDrop}
+      ></sp-dropzone>
+      <eomap-palette
+        .gfxLoader=${this.gfxLoader}
+        .gfxErrors=${this.gfxErrors}
+        .eyedrop=${this.eyedrop}
+        .selectedLayer=${this.selectedLayer}
+        .pointerEnabled=${this.pointerEnabled()}
+        .keyboardEnabled=${this.keyboardEnabled()}
+        .maxWidth=${this.maxPaletteWidth}
+        @resize-start=${this.onPaletteResizeStart}
+        @resize-end=${this.onPaletteResizeEnd}
+        @layer-selected=${this.onSelectedLayerChanged}
+        @changedata-selectedDrawID=${this.onSelectedDrawIDChanged}
+      ></eomap-palette>
+      <eomap-infobar
+        .tilePos=${this.currentPos}
+        .zoom=${this.zoom}
+        @zoom-changed=${this.onInfoBarZoomChanged}
+      ></eomap-infobar>
+      <eomap-entity-editor
+        .tilePos=${this.currentPos}
+        @close=${this.onModalClose}
+        @save=${this.onEntityEditorSave}
+      ></eomap-entity-editor>
+      <eomap-new-map
+        @close=${this.onModalClose}
+        @confirm=${this.onNewMapConfirm}
+      ></eomap-new-map>
+      <eomap-properties
+        @close=${this.onModalClose}
+        @save=${this.onPropertiesSave}
+      ></eomap-properties>
+      <eomap-settings
+        @close=${this.onModalClose}
+        @save=${this.onSettingsSave}
+      ></eomap-settings>
+      <eomap-about @close=${this.onModalClose}></eomap-about>
+      <eomap-prompt></eomap-prompt>
     `;
   }
 
@@ -732,7 +725,7 @@ export class Application extends LitElement {
       let onButtonPress = async (buttonIndex) => {
         switch (buttonIndex) {
           case 0:
-            await this.onSave();
+            await this.save();
             if (this.mapState.dirty) {
               // The map failed to save for some reason.
               // Bail out to guard against data loss.
@@ -759,17 +752,7 @@ export class Application extends LitElement {
     }
   }
 
-  onNew(_event) {
-    if (!this.validGfx()) {
-      return;
-    }
-    this.dirtyCheck(() => {
-      this.newMap.open = true;
-      this.requestUpdate();
-    });
-  }
-
-  async onOpen() {
+  async open() {
     if (!this.validGfx()) {
       return;
     }
@@ -786,17 +769,20 @@ export class Application extends LitElement {
     });
   }
 
-  async onOpenRecent(event) {
-    let handle = event.detail;
-    if ((await handle.queryPermission()) !== "granted") {
-      if ((await handle.requestPermission()) !== "granted") {
+  async openRecent(index) {
+    let fileHandle = this.recentFiles[index];
+    if (!fileHandle) {
+      throw new Error(`Invalid recent file index: ${index}`);
+    }
+    if ((await fileHandle.queryPermission()) !== "granted") {
+      if ((await fileHandle.requestPermission()) !== "granted") {
         return;
       }
     }
     this.dirtyCheck(async () => {
-      await this.openFile(event.detail);
+      await this.openFile(fileHandle);
       if (this.mapState.error) {
-        this.removeRecentFile(event.detail);
+        this.removeRecentFile(fileHandle);
       }
     });
   }
@@ -820,13 +806,13 @@ export class Application extends LitElement {
     }
   }
 
-  async onSave() {
+  async save() {
     if (!this.mapState.loaded) {
       return;
     }
 
     if (this.mapState.fileHandle === null) {
-      await this.onSaveAs();
+      await this.saveAs();
     } else {
       let builder = new EOBuilder();
       this.mapState.emf.write(builder);
@@ -836,14 +822,15 @@ export class Application extends LitElement {
         await writable.write(data);
         await writable.close();
         this.mapState.saved();
+        this.onMapStateChange();
       } catch (e) {
         let onButtonPress = (buttonIndex) => {
           switch (buttonIndex) {
             case 0:
-              this.onSave();
+              this.save();
               break;
             case 1:
-              this.onSaveAs();
+              this.saveAs();
               break;
           }
         };
@@ -863,7 +850,7 @@ export class Application extends LitElement {
     }
   }
 
-  async onSaveAs() {
+  async saveAs() {
     if (!this.mapState.loaded) {
       return;
     }
@@ -872,19 +859,30 @@ export class Application extends LitElement {
       this.mapState.fileHandle = await showSaveFilePicker(
         this.emfPickerOptions()
       );
+      this.onMapStateChange();
     } catch (e) {
       return;
     }
-    this.onSave();
+    this.save();
   }
 
-  onMapProperties() {
+  showNewMap() {
+    if (!this.validGfx()) {
+      return;
+    }
+    this.dirtyCheck(() => {
+      this.newMap.open = true;
+      this.requestUpdate();
+    });
+  }
+
+  showMapProperties() {
     this.properties.populate(this.mapState.emf);
     this.properties.open = true;
     this.requestUpdate();
   }
 
-  onSettings() {
+  showSettings() {
     if (!this.settingsState) {
       return;
     }
@@ -893,14 +891,13 @@ export class Application extends LitElement {
     this.requestUpdate();
   }
 
-  onVisibilityFlagToggle(event) {
-    let flag = event.detail;
-    this.layerVisibility = this.layerVisibility.withFlagToggled(flag);
-  }
-
-  onAbout() {
+  showAbout() {
     this.about.open = true;
     this.requestUpdate();
+  }
+
+  toggleVisibilityFlag(flag) {
+    this.layerVisibility = this.layerVisibility.withFlagToggled(flag);
   }
 
   onToolSelected(event) {
@@ -1038,19 +1035,11 @@ export class Application extends LitElement {
   }
 
   canUndo() {
-    return (
-      this.validGfx() &&
-      this.commandInvoker &&
-      this.commandInvoker.hasUndoCommands
-    );
+    return this.validGfx() && this.hasUndoCommands;
   }
 
   canRedo() {
-    return (
-      this.validGfx() &&
-      this.commandInvoker &&
-      this.commandInvoker.hasRedoCommands
-    );
+    return this.validGfx() && this.hasRedoCommands;
   }
 
   async updateStartupStatus() {
@@ -1058,7 +1047,7 @@ export class Application extends LitElement {
   }
 
   async getStartupStatus() {
-    if (!fileSystemAccessSupported()) {
+    if (!this.fileSystemAccessSupported()) {
       return Startup.Status.UNSUPPORTED;
     }
 
@@ -1136,7 +1125,7 @@ export class Application extends LitElement {
   }
 
   validGfx() {
-    return this.gfxLoader && this.gfxErrors === 0;
+    return !!this.gfxLoader && this.gfxErrors === 0;
   }
 
   destroyGFXLoader() {

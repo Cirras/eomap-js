@@ -5,8 +5,6 @@ import "@spectrum-web-components/overlay/overlay-trigger.js";
 import "@spectrum-web-components/field-group/sp-field-group.js";
 import "@spectrum-web-components/field-label/sp-field-label.js";
 import "@spectrum-web-components/switch/sp-switch.js";
-import "@spectrum-web-components/menu/sp-menu-item.js";
-import "@spectrum-web-components/menu/sp-menu-divider.js";
 import "@spectrum-web-components/accordion/sp-accordion-item.js";
 
 import "./accordion";
@@ -14,6 +12,8 @@ import "./modal";
 import "./number-field";
 import "./picker";
 import "./textfield";
+import "./menu-item";
+import "./menu-divider";
 
 import { CHAR_MAX, SHORT_MAX } from "../data/eo-numeric-limits";
 import { MapEffect, MapType, MusicControl } from "../data/emf";
@@ -98,31 +98,39 @@ export class Properties extends LitElement {
         <div class="picker-container">
           <sp-field-label for="type">Type</sp-field-label>
           <eomap-picker id="type">
-            <sp-menu-item value="${MapType.Normal}"> Normal </sp-menu-item>
-            <sp-menu-divider></sp-menu-divider>
-            <sp-menu-item value="${MapType.PK}"> Hostile (PK) </sp-menu-item>
+            <eomap-menu-item value="${MapType.Normal}">
+              Normal
+            </eomap-menu-item>
+            <eomap-menu-divider></eomap-menu-divider>
+            <eomap-menu-item value="${MapType.PK}">
+              Hostile (PK)
+            </eomap-menu-item>
           </eomap-picker>
         </div>
         <div class="picker-container">
           <sp-field-label for="effect">Effect</sp-field-label>
           <eomap-picker id="effect">
-            <sp-menu-item value="${MapEffect.None}"> None </sp-menu-item>
-            <sp-menu-divider></sp-menu-divider>
-            <sp-menu-item value="${MapEffect.HPDrain}">
+            <eomap-menu-item value="${MapEffect.None}"> None </eomap-menu-item>
+            <eomap-menu-divider></eomap-menu-divider>
+            <eomap-menu-item value="${MapEffect.HPDrain}">
               Poison (HP Drain)
-            </sp-menu-item>
-            <sp-menu-item value="${MapEffect.TPDrain}">
+            </eomap-menu-item>
+            <eomap-menu-item value="${MapEffect.TPDrain}">
               Vortex (TP Drain)
-            </sp-menu-item>
-            <sp-menu-divider></sp-menu-divider>
-            <sp-menu-item value="${MapEffect.Quake1}">
+            </eomap-menu-item>
+            <eomap-menu-divider></eomap-menu-divider>
+            <eomap-menu-item value="${MapEffect.Quake1}">
               Quake 1 (Weakest)
-            </sp-menu-item>
-            <sp-menu-item value="${MapEffect.Quake2}"> Quake 2 </sp-menu-item>
-            <sp-menu-item value="${MapEffect.Quake3}"> Quake 3 </sp-menu-item>
-            <sp-menu-item value="${MapEffect.Quake4}">
+            </eomap-menu-item>
+            <eomap-menu-item value="${MapEffect.Quake2}">
+              Quake 2
+            </eomap-menu-item>
+            <eomap-menu-item value="${MapEffect.Quake3}">
+              Quake 3
+            </eomap-menu-item>
+            <eomap-menu-item value="${MapEffect.Quake4}">
               Quake 4 (Strongest)
-            </sp-menu-item>
+            </eomap-menu-item>
           </eomap-picker>
         </div>
       </sp-field-group>
@@ -160,31 +168,33 @@ export class Properties extends LitElement {
         <div class="picker-container">
           <sp-field-label for="music-control">Music Control</sp-field-label>
           <eomap-picker id="music-control">
-            <sp-menu-item value="${MusicControl.InterruptIfDifferentPlayOnce}">
+            <eomap-menu-item
+              value="${MusicControl.InterruptIfDifferentPlayOnce}"
+            >
               Stop different - Play once
-            </sp-menu-item>
-            <sp-menu-item value="${MusicControl.InterruptPlayOnce}">
+            </eomap-menu-item>
+            <eomap-menu-item value="${MusicControl.InterruptPlayOnce}">
               Stop any - Play once
-            </sp-menu-item>
-            <sp-menu-item value="${MusicControl.FinishPlayOnce}">
+            </eomap-menu-item>
+            <eomap-menu-item value="${MusicControl.FinishPlayOnce}">
               Wait - Play once
-            </sp-menu-item>
-            <sp-menu-divider></sp-menu-divider>
-            <sp-menu-item
+            </eomap-menu-item>
+            <eomap-menu-divider></eomap-menu-divider>
+            <eomap-menu-item
               value="${MusicControl.InterruptIfDifferentPlayRepeat}"
             >
               Stop different - Play repeat
-            </sp-menu-item>
-            <sp-menu-item value="${MusicControl.InterruptPlayRepeat}">
+            </eomap-menu-item>
+            <eomap-menu-item value="${MusicControl.InterruptPlayRepeat}">
               Stop any - Play repeat
-            </sp-menu-item>
-            <sp-menu-item value="${MusicControl.FinishPlayRepeat}">
+            </eomap-menu-item>
+            <eomap-menu-item value="${MusicControl.FinishPlayRepeat}">
               Wait - Play repeat
-            </sp-menu-item>
-            <sp-menu-divider></sp-menu-divider>
-            <sp-menu-item value="${MusicControl.InterruptPlayNothing}">
+            </eomap-menu-item>
+            <eomap-menu-divider></eomap-menu-divider>
+            <eomap-menu-item value="${MusicControl.InterruptPlayNothing}">
               Stop any - Play nothing
-            </sp-menu-item>
+            </eomap-menu-item>
           </eomap-picker>
         </div>
       </sp-field-group>

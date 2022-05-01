@@ -1,11 +1,12 @@
 import { html, LitElement } from "lit";
 import { customElement, property } from "lit/decorators.js";
+import { unsafeHTML } from "lit/directives/unsafe-html.js";
 
 import "@spectrum-web-components/overlay/overlay-trigger.js";
 import "@spectrum-web-components/action-button/sp-action-button.js";
 
 import "./modal";
-import icon from "../assets/icon.svg";
+import AppIcon from "../assets/icon.svg";
 
 @customElement("eomap-about")
 export class About extends LitElement {
@@ -40,10 +41,12 @@ export class About extends LitElement {
               display: flex;
               justify-content: center;
             }
-            .icon {
+            .icon-container svg {
               width: 100px;
               height: 100px;
-              filter: drop-shadow(2px 2px 3px var(--spectrum-alias-dropshadow-color));
+              filter: drop-shadow(
+                2px 2px 3px var(--spectrum-alias-dropshadow-color)
+              );
             }
             .name {
               text-align: center;
@@ -61,9 +64,7 @@ export class About extends LitElement {
               font-size: 11px;
             }
           </style>
-          <div class="icon-container">
-            <img src=${icon} class="icon"></img>
-          </div>
+          <div class="icon-container">${unsafeHTML(AppIcon)}</div>
           <h3 class="name">eomap-js</h3>
           <p class="version">version ${NPM_VERSION}</p>
           <div class="button-container">

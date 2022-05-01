@@ -1,2 +1,5 @@
-import "../core/components/application";
-import "../core/styles/style.css";
+import { installApplication } from "../core/index";
+
+window.addEventListener("DOMContentLoaded", (_event) => {
+  installApplication();
+});

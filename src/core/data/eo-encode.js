@@ -1,6 +1,6 @@
 import { CHAR_MAX, SHORT_MAX, THREE_MAX } from "./eo-numeric-limits";
 
-import { reverse } from "../utils";
+import { reverse } from "../util/array-utils";
 
 export function encodeNumber(number) {
   let value = number;

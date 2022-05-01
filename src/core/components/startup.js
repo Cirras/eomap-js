@@ -1,10 +1,11 @@
 import { css, html, LitElement } from "lit";
 import { customElement, property } from "lit/decorators.js";
+import { unsafeHTML } from "lit/directives/unsafe-html.js";
 
 import "@spectrum-web-components/progress-bar/sp-progress-bar.js";
 import "@spectrum-web-components/button/sp-button.js";
 
-import icon from "../assets/icon.svg";
+import AppIcon from "../assets/icon.svg";
 
 import { Keybinding } from "./keybindings";
 import { MapState } from "../state/map-state";
@@ -49,7 +50,7 @@ export class Startup extends LitElement {
         align-items: center;
         width: 100%;
       }
-      .icon {
+      .icon-container svg {
         width: 150px;
         height: 150px;
         padding-bottom: 30px;
@@ -156,10 +157,8 @@ export class Startup extends LitElement {
     return html`
       <div class="loading">
         <div class="icon-container">
-          <img src=${icon} class="icon"></img>
-          <div class="content-container">
-            ${this.renderContent()}
-          </div>
+          ${unsafeHTML(AppIcon)}
+          <div class="content-container">${this.renderContent()}</div>
         </div>
       </div>
     `;

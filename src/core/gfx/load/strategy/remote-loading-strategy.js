@@ -1,4 +1,7 @@
-import { blobToDataURL, dataURLToImageData } from "../../../utils";
+import {
+  blobToDataURL,
+  dataURLToImageData,
+} from "../../../util/data-url-utils";
 import { LoadingStrategy } from "./loading-strategy";
 
 export class RemoteLoadingStrategy extends LoadingStrategy {

@@ -1,16 +1,30 @@
 import { customElement, property } from "lit/decorators.js";
 import { css } from "@spectrum-web-components/base";
 
-import "./menu";
-import { Dropdown } from "./dropdown";
+import "../../../core/components/menu";
+import { Dropdown } from "../../../core/components/dropdown";
 
 @customElement("eomap-menubar-button")
-export class MenuBarButton extends Dropdown {
+export class MenubarButton extends Dropdown {
   static get styles() {
     return [
       ...super.styles,
       css`
+        #menu {
+          margin-top: var(--eomap-menubar-button-height, 30px) !important;
+        }
         #button {
+          --spectrum-actionbutton-quiet-textonly-text-size: 13px;
+          --spectrum-actionbutton-textonly-height: var(
+            --eomap-menubar-button-height,
+            30px
+          );
+          --spectrum-actionbutton-textonly-padding-left-adjusted: var(
+            --spectrum-global-dimension-size-100
+          );
+          --spectrum-actionbutton-textonly-padding-right-adjusted: var(
+            --spectrum-global-dimension-size-100
+          );
           --spectrum-actionbutton-m-quiet-textonly-background-color-hover: var(
             --spectrum-alias-component-background-color-quiet-down
           );
@@ -72,6 +86,9 @@ export class MenuBarButton extends Dropdown {
   @property({ type: Boolean })
   autofocus = false;
 
+  @property({ type: Number })
+  menuWidth = null;
+
   constructor() {
     super();
     this.quiet = true;
@@ -97,6 +114,13 @@ export class MenuBarButton extends Dropdown {
     super.updated(changedProperties);
     if (changedProperties.has("open") && this.open && this.autofocus) {
       this.focus();
+    }
+    if (changedProperties.has("menuWidth")) {
+      if (this.menuWidth !== null) {
+        this.menu.style.width = `${this.menuWidth}px`;
+      } else {
+        this.menu.style.width = "";
+      }
     }
   }
 }

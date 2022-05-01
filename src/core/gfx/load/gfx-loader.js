@@ -1,7 +1,8 @@
 import Worker from "./gfx-loader.worker";
 import { LoadType } from "./load-type";
 
-import { PendingPromise, dataURLToImage, getEGFFilename } from "../../utils";
+import { PendingPromise } from "../../util/pending-promise";
+import { dataURLToImage } from "../../util/data-url-utils";
 
 import error from "../../assets/error.png";
 
@@ -80,7 +81,7 @@ export class GFXLoader {
       let pending = new PendingPromise();
       this.pendingEGFs.set(fileID, pending);
 
-      let filename = getEGFFilename(fileID);
+      let filename = "gfx" + fileID.toString().padStart(3, "0") + ".egf";
       let buffer = await this.loadingStrategy.loadEGF(filename);
 
       this.worker.postMessage(

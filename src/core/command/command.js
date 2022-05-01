@@ -1,3 +1,5 @@
+import { EventEmitter } from "eventemitter3";
+
 export class Command {
   execute() {
     throw new Error("Method not implemented.");
@@ -31,8 +33,9 @@ export class CommandAggregate extends Command {
   }
 }
 
-export class CommandInvoker {
+export class CommandInvoker extends EventEmitter {
   constructor() {
+    super();
     this.undoStack = [];
     this.redoStack = [];
     this.buildingAggregate = false;
@@ -51,6 +54,8 @@ export class CommandInvoker {
     } else {
       this.undoStack.push(command);
     }
+
+    this.emit("change");
   }
 
   beginAggregate() {
@@ -68,6 +73,7 @@ export class CommandInvoker {
     if (this.hasUndoCommands) {
       this.nextUndoCommand.undo();
       this.redoStack.push(this.undoStack.pop());
+      this.emit("change");
     }
   }
 
@@ -75,6 +81,7 @@ export class CommandInvoker {
     if (this.hasRedoCommands) {
       this.nextRedoCommand.execute();
       this.undoStack.push(this.redoStack.pop());
+      this.emit("change");
     }
   }
 

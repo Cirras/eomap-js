@@ -10,20 +10,17 @@ body {
   user-select: none;
 }
 
+body > sp-theme {
+  display: flex;
+  flex-direction: column;
+  width: 100vw;
+  height: 100vh;
+}
+
 sp-switch {
   width: 26px;
   --spectrum-switch-cursor-hit-x: 0px;
   --spectrum-switch-m-handle-border-size: 1px;
-}
-
-sp-menu-divider {
-  --spectrum-listitem-m-texticon-divider-color: var(
-    --spectrum-global-color-gray-300
-  );
-  --spectrum-listitem-texticon-divider-size: var(
-    --spectrum-global-dimension-size-10
-  );
-  --spectrum-listitem-texticon-divider-padding: 8px;
 }
 
 .spectrum-Table {

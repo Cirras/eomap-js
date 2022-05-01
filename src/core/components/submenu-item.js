@@ -2,9 +2,8 @@ import { css, html } from "@spectrum-web-components/base";
 import { customElement, property, queryAssignedNodes } from "lit/decorators.js";
 
 import "@spectrum-web-components/icon/sp-icon.js";
-import { MenuItem } from "@spectrum-web-components/menu/src/MenuItem.js";
 
-import "./menu";
+import { MenuItem } from "./menu-item";
 
 @customElement("eomap-submenu-item")
 export class SubmenuItem extends MenuItem {
@@ -65,6 +64,14 @@ export class SubmenuItem extends MenuItem {
   firstUpdated(changedProperties) {
     super.firstUpdated(changedProperties);
     this.resizeObserver.observe(this.menu);
+    this.setAttribute("aria-controls", "menu");
+  }
+
+  updated(changedProperties) {
+    super.updated(changedProperties);
+    if (changedProperties.has("open")) {
+      this.setAttribute("aria-expanded", this.open);
+    }
   }
 
   render() {
@@ -72,7 +79,9 @@ export class SubmenuItem extends MenuItem {
       ${super.render()}
       <sp-icon-chevron100 class="arrow"></sp-icon-chevron100>
       <slot
+        id="menu"
         name="menu"
+        role="menu"
         ?hidden=${!this.open}
         @pointerdown=${(event) => event.stopPropagation()}
       >

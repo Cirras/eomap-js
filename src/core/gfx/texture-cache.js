@@ -1,7 +1,7 @@
 import ShelfPack from "@mapbox/shelf-pack";
 import { AssetFactory } from "./asset";
 import { DrawableMultiTexture } from "./drawable-multi-texture";
-import { PendingPromise } from "../utils";
+import { PendingPromise } from "../util/pending-promise";
 
 class TextureCacheEntry {
   constructor(key, defaultAsset) {

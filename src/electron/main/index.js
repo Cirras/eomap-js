@@ -19,6 +19,7 @@ const setupWindow = () => {
     height: 768,
     backgroundColor: "#1a1a1a",
     show: false,
+    frame: false,
     webPreferences: {
       v8CacheOptions: "bypassHeatCheck",
       preload: path.join(__dirname, "preload.js"),
@@ -39,9 +40,41 @@ const setupWindow = () => {
     mainWindow.show();
   });
 
+  mainWindow.on("maximize", (_event) => {
+    mainWindow.webContents.send("window:maximized");
+  });
+
+  mainWindow.on("unmaximize", (_event) => {
+    mainWindow.webContents.send("window:unmaximized");
+  });
+
   mainWindow.on("close", (event) => {
     event.preventDefault();
-    mainWindow.webContents.send("close-requested");
+    mainWindow.webContents.send("window:close-request");
+  });
+
+  ipcMain.on("window:set-title", (_event, title) => {
+    mainWindow.setTitle(title);
+  });
+
+  ipcMain.on("window:close-request", (_event) => {
+    mainWindow.webContents.send("window:close-request");
+  });
+
+  ipcMain.on("window:minimize", (_event) => {
+    mainWindow.minimize();
+  });
+
+  ipcMain.on("window:maximize", (_event) => {
+    mainWindow.maximize();
+  });
+
+  ipcMain.on("window:unmaximize", (_event) => {
+    mainWindow.unmaximize();
+  });
+
+  ipcMain.on("window:maximized-query", (event) => {
+    event.returnValue = mainWindow.isMaximized();
   });
 
   ipcMain.once("window:close", (_event) => {

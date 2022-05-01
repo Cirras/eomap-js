@@ -1,12 +1,3 @@
-export class PendingPromise {
-  constructor() {
-    this.promise = new Promise((resolve, reject) => {
-      this.resolve = resolve;
-      this.reject = reject;
-    });
-  }
-}
-
 export function arrayEquals(a, b) {
   if (a.length !== b.length) {
     return false;
@@ -96,49 +87,4 @@ export function findMostFrequent(array) {
 export async function asyncFilter(array, predicate) {
   const results = await Promise.all(array.map(predicate));
   return array.filter((_, i) => results[i]);
-}
-
-export function blobToDataURL(blob) {
-  return new Promise((resolve, _) => {
-    let reader = new FileReader();
-    reader.onloadend = () => resolve(reader.result);
-    reader.readAsDataURL(blob);
-  });
-}
-
-export async function dataURLToImage(dataURL) {
-  let image = new Image();
-  image.src = dataURL;
-
-  await new Promise((resolve) =>
-    image.addEventListener("load", () => resolve())
-  );
-
-  return image;
-}
-
-export async function dataURLToImageData(dataURL) {
-  let image = await dataURLToImage(dataURL);
-
-  let canvas = document.createElement("canvas");
-  canvas.width = image.width;
-  canvas.height = image.height;
-
-  let context = canvas.getContext("2d");
-  context.imageSmoothingEnabled = false;
-  context.drawImage(image, 0, 0);
-
-  return context.getImageData(0, 0, image.width, image.height);
-}
-
-export function getEGFFilename(fileID) {
-  return "gfx" + fileID.toString().padStart(3, "0") + ".egf";
-}
-
-export function getEMFFilename(fileID) {
-  return fileID.toString().padStart(5, "0") + ".emf";
-}
-
-export function fileSystemAccessSupported() {
-  return self && "showOpenFilePicker" in self;
 }

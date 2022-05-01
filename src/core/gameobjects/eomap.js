@@ -1,4 +1,4 @@
-import { arrayEquals, binaryInsert, removeFirst } from "../utils";
+import { arrayEquals, binaryInsert, removeFirst } from "../util/array-utils";
 import { TileSpec } from "../data/emf";
 
 const SECTION_SIZE = 256;

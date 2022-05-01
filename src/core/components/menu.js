@@ -20,29 +20,6 @@ export class Menu extends SpectrumElement {
           overflow: visible;
           box-shadow: 0px 3px 5px rgb(0 0 0 / 40%);
         }
-        ::slotted(sp-menu-item),
-        ::slotted(eomap-submenu-item) {
-          --spectrum-listitem-m-texticon-focus-indicator-color: transparent;
-          --spectrum-listitem-m-texticon-text-color-key-focus: var(
-            --spectrum-listitem-m-texticon-text-color,
-            var(--spectrum-alias-component-text-color-default)
-          );
-          --spectrum-listitem-m-texticon-text-color-hover: var(
-            --spectrum-listitem-m-texticon-text-color,
-            var(--spectrum-alias-component-text-color-default)
-          );
-        }
-        ::slotted(sp-menu-item:not([focused])),
-        ::slotted(eomap-submenu-item:not([focused])) {
-          --spectrum-listitem-m-texticon-background-color-hover: var(
-            --spectrum-listitem-m-texticon-background-color,
-            var(--spectrum-alias-background-color-transparent)
-          );
-          --spectrum-listitem-m-texticon-background-color-down: var(
-            --spectrum-listitem-m-texticon-background-color,
-            var(--spectrum-alias-background-color-transparent)
-          );
-        }
       `,
     ];
   }

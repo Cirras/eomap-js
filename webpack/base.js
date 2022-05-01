@@ -20,7 +20,15 @@ module.exports = (env) => {
           use: [MiniCssExtractPlugin.loader, "css-loader"],
         },
         {
-          test: /\.(gif|png|jpe?g|svg|xml)$/i,
+          test: /\.(gif|png|jpe?g)$/i,
+          type: "asset/inline",
+        },
+        {
+          test: /\.(svg|xml)$/i,
+          type: "asset/source",
+        },
+        {
+          resourceQuery: /inline/,
           type: "asset/inline",
         },
         {

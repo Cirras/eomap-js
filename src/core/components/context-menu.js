@@ -2,10 +2,9 @@ import { css, html, SpectrumElement } from "@spectrum-web-components/base";
 import { customElement, property, query, state } from "lit/decorators.js";
 import { styleMap } from "lit/directives/style-map.js";
 
-import "@spectrum-web-components/menu/sp-menu-item.js";
-import "@spectrum-web-components/menu/sp-menu-divider.js";
-
 import "./menu";
+import "./menu-item";
+import "./menu-divider";
 
 import {
   ContextMenuActionItem,
@@ -41,14 +40,6 @@ export class ContextMenu extends SpectrumElement {
         100% {
           opacity: 1;
         }
-      }
-      sp-menu-divider {
-        --spectrum-listitem-m-texticon-divider-color: var(
-          --spectrum-global-color-gray-300
-        );
-        --spectrum-listitem-texticon-divider-size: var(
-          --spectrum-global-dimension-size-10
-        );
       }
     `;
   }
@@ -107,12 +98,12 @@ export class ContextMenu extends SpectrumElement {
     return this.state.items.map((item) => {
       if (item instanceof ContextMenuActionItem) {
         return html`
-          <sp-menu-item @menu-item-press=${item.action}>
+          <eomap-menu-item @menu-item-press=${item.action}>
             ${item.label}
-          </sp-menu-item>
+          </eomap-menu-item>
         `;
       } else if (item instanceof ContextMenuDividerItem) {
-        return html`<sp-menu-divider> </sp-menu-divider>`;
+        return html`<eomap-menu-divider> </eomap-menu-divider>`;
       }
     });
   }

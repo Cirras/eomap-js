@@ -2,7 +2,7 @@ import * as windows1252 from "windows-1252";
 
 import { decodeString } from "./eo-decode";
 import { encodeString } from "./eo-encode";
-import { findMostFrequent } from "../utils";
+import { findMostFrequent } from "../util/array-utils";
 
 export const MapType = {
   Normal: 0,

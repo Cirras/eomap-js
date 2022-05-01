@@ -95,6 +95,7 @@ export class Dropdown extends SizedMixin(Focusable) {
       </sp-action-button>
       <eomap-menu
         id="menu"
+        role="menu"
         ?hidden=${!this.open}
         @pointerdown=${(event) => event.stopPropagation()}
       >

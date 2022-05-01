@@ -35,9 +35,6 @@ export class Sidebar extends LitElement {
       sp-action-group:not(:first-child) {
         border-top: solid 1px var(--spectrum-global-color-gray-300);
       }
-      sp-menu-item {
-        white-space: nowrap;
-      }
     `;
   }
 
