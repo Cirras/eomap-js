@@ -84,6 +84,14 @@ export class ContextMenu extends SpectrumElement {
     event.stopPropagation();
   };
 
+  onWindowPointerDown = (_event) => {
+    this.open = false;
+  };
+
+  onWindowBlur = (_event) => {
+    this.open = false;
+  };
+
   onResize = (_event) => {
     this.open = false;
   };
@@ -197,12 +205,16 @@ export class ContextMenu extends SpectrumElement {
   connectedCallback() {
     super.connectedCallback();
     window.addEventListener("keydown", this.onKeyDown);
+    window.addEventListener("pointerdown", this.onWindowPointerDown);
+    window.addEventListener("blur", this.onWindowBlur);
     window.addEventListener("resize", this.onResize);
   }
 
   disconnectedCallback() {
     this.open = false;
     window.removeEventListener("keydown", this.onKeyDown);
+    window.removeEventListener("pointerdown", this.onWindowPointerDown);
+    window.removeEventListener("blur", this.onWindowBlur);
     window.removeEventListener("resize", this.onResize);
     super.disconnectedCallback();
   }
