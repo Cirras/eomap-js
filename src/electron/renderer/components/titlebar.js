@@ -10,7 +10,9 @@ import RestoreIcon from "@vscode/codicons/src/icons/chrome-restore.svg";
 import CloseIcon from "@vscode/codicons/src/icons/chrome-close.svg";
 
 import "./menubar";
+
 import { MenubarState } from "../../../core/state/menubar-state";
+import { isMac } from "../../../core/util/platform-utils";
 
 @customElement("eomap-titlebar")
 export class Titlebar extends LitElement {
@@ -23,10 +25,10 @@ export class Titlebar extends LitElement {
         height: ${this.TITLEBAR_HEIGHT}px;
         box-sizing: border-box;
         justify-content: left;
-        flex-shrink: 0;
+        flex-shrink: 1;
+        flex-grow: 1;
         align-items: center;
         -webkit-user-select: none;
-        zoom: 1;
         display: flex;
         background-color: var(--spectrum-global-color-gray-200);
         color: var(--spectrum-global-color-gray-800);
@@ -58,9 +60,10 @@ export class Titlebar extends LitElement {
         height: 16px;
       }
       .menubar {
-        z-index: 2500;
         --eomap-menubar-height: ${this.TITLEBAR_HEIGHT}px;
+        z-index: 2500;
         -webkit-app-region: no-drag;
+        min-width: 36px;
       }
       .window-title {
         flex: 0 2 auto;
@@ -70,7 +73,6 @@ export class Titlebar extends LitElement {
         text-overflow: ellipsis;
         margin-left: auto;
         margin-right: auto;
-        zoom: 1;
       }
       .window-controls-container {
         display: flex;
@@ -80,7 +82,7 @@ export class Titlebar extends LitElement {
         z-index: 3000;
         -webkit-app-region: no-drag;
         height: 100%;
-        min-width: 138px;
+        min-width: ${isMac() ? 70 : 138}px;
         margin-left: auto;
       }
       .window-icon {
@@ -148,19 +150,27 @@ export class Titlebar extends LitElement {
     this.resizeObserver.observe(this.windowTitle);
   }
 
-  render() {
-    return html`
-      <div class="drag-region"></div>
-      <div class="app-icon">${unsafeHTML(AppIcon)}</div>
-      <eomap-menubar
-        class="menubar"
-        .state=${this.menubarState}
-        .inactive=${this.inactive}
-      ></eomap-menubar>
-      <div class="window-title" style=${styleMap(this.titleStyle)}>
-        ${this.title}
-      </div>
-      <div class="window-controls-container">
+  renderAppIcon() {
+    if (!isMac()) {
+      return html` <div class="app-icon">${unsafeHTML(AppIcon)}</div> `;
+    }
+  }
+
+  renderMenubar() {
+    if (!isMac()) {
+      return html`
+        <eomap-menubar
+          class="menubar"
+          .state=${this.menubarState}
+          .inactive=${this.inactive}
+        ></eomap-menubar>
+      `;
+    }
+  }
+
+  renderWindowControls() {
+    if (!isMac()) {
+      return html`
         <div
           class="window-icon window-minimize"
           @click=${() => window.bridge.minimize()}
@@ -182,17 +192,40 @@ export class Titlebar extends LitElement {
         >
           ${unsafeHTML(CloseIcon)}
         </div>
+      `;
+    }
+  }
+
+  render() {
+    return html`
+      <div class="drag-region"></div>
+      ${this.renderAppIcon()} ${this.renderMenubar()}
+      <div class="window-title" style=${styleMap(this.titleStyle)}>
+        ${this.title}
+      </div>
+      <div class="window-controls-container">
+        ${this.renderWindowControls()}
       </div>
     `;
   }
 
   adjustTitlePosition() {
-    const leftMarker = this.appIcon.clientWidth + this.menubar.clientWidth + 10;
-    const rightMarker = this.clientWidth - this.windowControls.clientWidth - 10;
+    const iconWidth = this.appIcon ? this.appIcon.clientWidth : 0;
+    const menubarWidth = this.menubar ? this.menubar.clientWidth : 0;
+    const titleWidth = this.windowTitle.clientWidth;
+    const controlsWidth = this.windowControls.clientWidth;
+
+    let leftMarker = iconWidth + menubarWidth + 10;
+    let rightMarker = this.clientWidth - controlsWidth - 10;
+
+    if (isMac()) {
+      leftMarker += controlsWidth;
+      rightMarker += controlsWidth;
+    }
 
     if (
-      leftMarker > (this.clientWidth - this.windowTitle.clientWidth) / 2 ||
-      rightMarker < (this.clientWidth + this.windowTitle.clientWidth) / 2
+      leftMarker > (this.clientWidth - titleWidth) / 2 ||
+      rightMarker < (this.clientWidth + titleWidth) / 2
     ) {
       this.titleStyle = {};
       return;

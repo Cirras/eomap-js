@@ -7,6 +7,7 @@ import {
   SubmenuMenuItemState,
   DividerMenuItemState,
 } from "../state/menubar-state";
+import { isElectron, isMac } from "../util/platform-utils";
 
 export const MenuEvent = {
   New: "new",
@@ -70,55 +71,119 @@ export class MenubarController extends EventEmitter {
   }
 
   generateMenubarState() {
-    return new MenubarState()
-      .withMenu("File", this.generateFileMenu())
-      .withMenu("Edit", this.generateEditMenu())
-      .withMenu("View", this.generateViewMenu())
-      .withMenu("Help", this.generateHelpMenu());
+    let items = [];
+
+    if (isElectron() && isMac()) {
+      items.push(
+        new SubmenuMenuItemState()
+          .withLabel("App")
+          .withMenu(this.generateAppMenu())
+      );
+    }
+
+    items.push(
+      new SubmenuMenuItemState()
+        .withLabel("File")
+        .withMenu(this.generateFileMenu()),
+      new SubmenuMenuItemState()
+        .withLabel("Edit")
+        .withMenu(this.generateEditMenu()),
+      new SubmenuMenuItemState()
+        .withLabel("View")
+        .withMenu(this.generateViewMenu())
+    );
+
+    if (isElectron() && isMac()) {
+      items.push(new SubmenuMenuItemState().withRole("windowMenu"));
+    }
+
+    items.push(
+      new SubmenuMenuItemState()
+        .withLabel("Help")
+        .withMenu(this.generateHelpMenu())
+    );
+
+    return new MenubarState(items);
   }
 
-  generateFileMenu() {
-    let items = [
-      new MenuItemState("New")
-        .withEventType(MenuEvent.New)
-        .withAccelerator("Ctrl+Alt+N")
-        .withEnabled(this.canOpenMaps),
-      new MenuItemState("Open")
-        .withEventType(MenuEvent.Open)
-        .withAccelerator("Ctrl+O")
-        .withEnabled(this.canOpenMaps),
-      new SubmenuMenuItemState(
-        "Open Recent",
-        this.generateRecentFilesMenu()
-      ).withEnabled(this.canOpenMaps),
+  generateAppMenu() {
+    return new MenuState([
+      new MenuItemState()
+        .withLabel("About Endless Map Editor")
+        .withEventType(MenuEvent.About),
       new DividerMenuItemState(),
-      new MenuItemState("Save")
-        .withEventType(MenuEvent.Save)
-        .withAccelerator("Ctrl+S")
-        .withEnabled(this.canSaveMaps),
-      new MenuItemState("Save As")
-        .withEventType(MenuEvent.SaveAs)
-        .withAccelerator("Ctrl+Shift+S")
-        .withEnabled(this.canSaveMaps),
-      new DividerMenuItemState(),
-      new MenuItemState("Map Properties")
-        .withEventType(MenuEvent.MapProperties)
-        .withEnabled(this.canAccessMapProperties),
-      new DividerMenuItemState(),
-      new MenuItemState("Settings")
+      new MenuItemState()
+        .withLabel("Preferences...")
         .withEventType(MenuEvent.Settings)
         .withAccelerator("Ctrl+,")
         .withEnabled(this.canAccessSettings),
       new DividerMenuItemState(),
-      new MenuItemState("Reload Graphics")
+      new SubmenuMenuItemState()
+        .withRole("services")
+        .withMenu(new MenuState([])),
+      new DividerMenuItemState(),
+      new MenuItemState().withRole("hide"),
+      new MenuItemState().withRole("hideOthers"),
+      new MenuItemState().withRole("unhide"),
+      new DividerMenuItemState(),
+      new MenuItemState()
+        .withLabel("Reload Graphics")
         .withEventType(MenuEvent.ReloadGraphics)
         .withEnabled(this.canReloadGraphics),
+      new DividerMenuItemState(),
+      new MenuItemState().withRole("quit"),
+    ]);
+  }
+
+  generateFileMenu() {
+    let items = [
+      new MenuItemState()
+        .withLabel("New")
+        .withEventType(MenuEvent.New)
+        .withAccelerator("Ctrl+Alt+N")
+        .withEnabled(this.canOpenMaps),
+      new MenuItemState()
+        .withLabel("Open")
+        .withEventType(MenuEvent.Open)
+        .withAccelerator("Ctrl+O")
+        .withEnabled(this.canOpenMaps),
+      new SubmenuMenuItemState()
+        .withLabel("Open Recent")
+        .withMenu(this.generateRecentFilesMenu())
+        .withEnabled(this.canOpenMaps),
+      new DividerMenuItemState(),
+      new MenuItemState()
+        .withLabel("Save")
+        .withEventType(MenuEvent.Save)
+        .withAccelerator("Ctrl+S")
+        .withEnabled(this.canSaveMaps),
+      new MenuItemState()
+        .withLabel("Save As")
+        .withEventType(MenuEvent.SaveAs)
+        .withAccelerator("Ctrl+Shift+S")
+        .withEnabled(this.canSaveMaps),
+      new DividerMenuItemState(),
+      new MenuItemState()
+        .withLabel("Map Properties")
+        .withEventType(MenuEvent.MapProperties)
+        .withEnabled(this.canAccessMapProperties),
     ];
 
-    if (window.isElectron) {
+    if (isElectron() && !isMac()) {
       items.push(
         new DividerMenuItemState(),
-        new MenuItemState("Exit").withEventType(MenuEvent.Exit)
+        new MenuItemState()
+          .withLabel("Settings")
+          .withEventType(MenuEvent.Settings)
+          .withAccelerator("Ctrl+,")
+          .withEnabled(this.canAccessSettings),
+        new DividerMenuItemState(),
+        new MenuItemState()
+          .withLabel("Reload Graphics")
+          .withEventType(MenuEvent.ReloadGraphics)
+          .withEnabled(this.canReloadGraphics),
+        new DividerMenuItemState(),
+        new MenuItemState().withLabel("Exit").withEventType(MenuEvent.Exit)
       );
     }
 
@@ -128,7 +193,8 @@ export class MenubarController extends EventEmitter {
   generateRecentFilesMenu() {
     return new MenuState(
       this.recentFiles.map((handle, index) =>
-        new MenuItemState(handle.name)
+        new MenuItemState()
+          .withLabel(handle.name)
           .withEventType(MenuEvent.OpenRecent)
           .withEventDetail(index)
       )
@@ -137,11 +203,13 @@ export class MenubarController extends EventEmitter {
 
   generateEditMenu() {
     return new MenuState([
-      new MenuItemState("Undo")
+      new MenuItemState()
+        .withLabel("Undo")
         .withEventType(MenuEvent.Undo)
         .withAccelerator("Ctrl+Z")
         .withEnabled(this.canUndo),
-      new MenuItemState("Redo")
+      new MenuItemState()
+        .withLabel("Redo")
         .withEventType(MenuEvent.Redo)
         .withAccelerator("Ctrl+Y")
         .withEnabled(this.canRedo),
@@ -166,7 +234,8 @@ export class MenubarController extends EventEmitter {
 
     return new MenuState(
       MENU_ITEM_DATA.map((info, i) =>
-        new CheckboxMenuItemState(info.label)
+        new CheckboxMenuItemState()
+          .withLabel(info.label)
           .withEventType(MenuEvent.VisibilityFlagToggle)
           .withEventDetail(i)
           .withAccelerator(info.kbd)
@@ -177,16 +246,17 @@ export class MenubarController extends EventEmitter {
   }
 
   generateHelpMenu() {
-    let items = [new MenuItemState("About").withEventType(MenuEvent.About)];
-    if (window.isElectron) {
-      items = [
-        new MenuItemState("Toggle Developer Tools")
-          .withEventType(MenuEvent.DevTools)
-          .withAccelerator("Ctrl+Shift+I")
-          .withRegisterAccelerator(true),
-        new DividerMenuItemState(),
-        ...items,
-      ];
+    let items = [];
+    if (isElectron()) {
+      items.push(
+        new MenuItemState().withRole("toggleDevTools"),
+        new DividerMenuItemState()
+      );
+    }
+    if (!(isElectron() && isMac())) {
+      items.push(
+        new MenuItemState().withLabel("About").withEventType(MenuEvent.About)
+      );
     }
     return new MenuState(items);
   }

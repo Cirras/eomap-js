@@ -1,7 +1,8 @@
 export class MenuItemState {
-  constructor(label) {
-    this.label = label;
+  constructor() {
     this.type = "normal";
+    this.role = null;
+    this.label = null;
     this.eventType = null;
     this.eventDetail = null;
     this.accelerator = null;
@@ -11,11 +12,25 @@ export class MenuItemState {
 
   copy() {
     let copy = new MenuItemState(this.label);
+    copy.role = this.role;
+    copy.label = this.label;
     copy.eventType = this.eventType;
     copy.eventDetail = this.eventDetail;
     copy.accelerator = this.accelerator;
     copy.registerAccelerator = this.registerAccelerator;
     copy.enabled = this.enabled;
+    return copy;
+  }
+
+  withRole(role) {
+    let copy = this.copy();
+    copy.role = role;
+    return copy;
+  }
+
+  withLabel(label) {
+    let copy = this.copy();
+    copy.label = label;
     return copy;
   }
 
@@ -51,14 +66,16 @@ export class MenuItemState {
 }
 
 export class CheckboxMenuItemState extends MenuItemState {
-  constructor(label) {
-    super(label);
+  constructor() {
+    super();
     this.type = "checkbox";
     this.checked = false;
   }
 
   copy() {
-    let copy = new CheckboxMenuItemState(this.label);
+    let copy = new CheckboxMenuItemState();
+    copy.role = this.role;
+    copy.label = this.label;
     copy.eventType = this.eventType;
     copy.eventDetail = this.eventDetail;
     copy.accelerator = this.accelerator;
@@ -76,16 +93,38 @@ export class CheckboxMenuItemState extends MenuItemState {
 }
 
 export class SubmenuMenuItemState {
-  constructor(label, menu) {
+  constructor() {
     this.type = "submenu";
-    this.label = label;
-    this.menu = menu;
+    this.role = null;
+    this.label = null;
+    this.menu = null;
     this.enabled = true;
   }
 
   copy() {
-    let copy = new SubmenuMenuItemState(this.label, this.menu);
+    let copy = new SubmenuMenuItemState();
+    copy.role = this.role;
+    copy.label = this.label;
+    copy.menu = this.menu;
     copy.enabled = this.enabled;
+    return copy;
+  }
+
+  withRole(role) {
+    let copy = this.copy();
+    copy.role = role;
+    return copy;
+  }
+
+  withLabel(label) {
+    let copy = this.copy();
+    copy.label = label;
+    return copy;
+  }
+
+  withMenu(menu) {
+    let copy = this.copy();
+    copy.menu = menu;
     return copy;
   }
 
@@ -123,19 +162,7 @@ export class MenuState {
 }
 
 export class MenubarState {
-  constructor() {
-    this.menus = [];
-  }
-
-  copy() {
-    let copy = new MenubarState();
-    copy.menus = [...this.menus];
-    return copy;
-  }
-
-  withMenu(label, menu) {
-    let copy = this.copy();
-    copy.menus.push({ label, menu });
-    return copy;
+  constructor(items) {
+    this.items = items;
   }
 }

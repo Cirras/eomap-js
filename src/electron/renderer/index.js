@@ -5,10 +5,12 @@ import "./components/titlebar";
 import {
   DOMMenuEventSource,
   MenubarController,
+  MenuEventSource,
 } from "../../core/controllers/menubar-controller";
 import { titleFromMapState } from "../../core/util/title-utils";
 
 let menubarController = null;
+let nativeMenuEventSource = new MenuEventSource();
 
 function getTitlebar() {
   return document.getElementById("titlebar");
@@ -37,8 +39,10 @@ function setupMenubarController() {
 
   menubarController = new MenubarController(application);
   menubarController.addEventSource(new DOMMenuEventSource(titlebar));
+  menubarController.addEventSource(nativeMenuEventSource);
   menubarController.on("menubar-state-updated", (state) => {
     titlebar.menubarState = state;
+    window.bridge.setMenubarState(state);
   });
 }
 
@@ -70,3 +74,9 @@ window.addEventListener("DOMContentLoaded", (_event) => {
   setupApplication();
   setupMenubarController();
 });
+
+window.emitNativeMenuEvent = function (eventType, eventDetail) {
+  nativeMenuEventSource.emit(
+    new CustomEvent(eventType, { detail: eventDetail })
+  );
+};

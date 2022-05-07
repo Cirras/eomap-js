@@ -1,16 +1,17 @@
 import { ipcRenderer, contextBridge } from "electron";
 import os from "os";
 
-contextBridge.exposeInMainWorld("isElectron", true);
+contextBridge.exposeInMainWorld("_isElectron", true);
 
 contextBridge.exposeInMainWorld("bridge", {
   send: (channel, data) => ipcRenderer.send(channel, data),
   receive: (channel, func) =>
     ipcRenderer.on(channel, (_event, ...args) => func(args)),
+  getPlatform: () => os.platform(),
   getTitlebarHeight: () => {
-    if (process.platform === "darwin") {
-      let osVersion = parseFloat(os.version());
-      if (osVersion >= 20) {
+    if (os.platform() === "darwin") {
+      let release = parseFloat(os.release());
+      if (release >= 20) {
         return 28;
       }
       return 20;

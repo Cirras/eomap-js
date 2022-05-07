@@ -1,6 +1,48 @@
-import { app, BrowserWindow, ipcMain, session } from "electron";
+import { app, BrowserWindow, ipcMain, Menu, session } from "electron";
 import path from "path";
 import { createWindow } from "./window/create";
+
+const createMenuItemConstructorOptions = (state) => {
+  let result = {
+    type: state.type,
+    enabled: state.enabled,
+  };
+
+  if (result.type === "normal" || result.type === "checkbox") {
+    result.label = state.label;
+    result.role = state.role;
+    result.accelerator = state.accelerator;
+    result.registerAccelerator = state.registerAccelerator;
+    if (state.eventType) {
+      let eventType = JSON.stringify(state.eventType);
+      let eventDetail = JSON.stringify(state.eventDetail);
+      result.click = (_menuItem, browserWindow, _event) => {
+        browserWindow.webContents.executeJavaScript(
+          `emitNativeMenuEvent(${eventType}, ${eventDetail});`,
+          true
+        );
+      };
+    }
+  }
+
+  if (result.type === "checkbox") {
+    result.checked = state.checked;
+  }
+
+  if (result.type === "submenu") {
+    result.role = state.role;
+    result.label = state.label;
+    if (state.menu) {
+      result.submenu = state.menu.items.map(createMenuItemConstructorOptions);
+    }
+  }
+
+  return result;
+};
+
+const createMenubarTemplate = (state) => {
+  return state.items.map(createMenuItemConstructorOptions);
+};
 
 const setupCSP = () => {
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
@@ -19,7 +61,8 @@ const setupWindow = () => {
     height: 768,
     backgroundColor: "#1a1a1a",
     show: false,
-    frame: false,
+    frame: process.platform === "darwin",
+    titleBarStyle: "hidden",
     webPreferences: {
       v8CacheOptions: "bypassHeatCheck",
       preload: path.join(__dirname, "preload.js"),
@@ -51,6 +94,16 @@ const setupWindow = () => {
   mainWindow.on("close", (event) => {
     event.preventDefault();
     mainWindow.webContents.send("window:close-request");
+  });
+
+  ipcMain.on("set-menubar-state", (_event, state) => {
+    let template = createMenubarTemplate(state);
+    let menu = Menu.buildFromTemplate(template);
+    Menu.setApplicationMenu(menu);
+  });
+
+  ipcMain.on("toggle-developer-tools", (_event) => {
+    mainWindow.webContents.toggleDevTools();
   });
 
   ipcMain.on("window:set-title", (_event, title) => {
@@ -107,3 +160,5 @@ app.on("activate", (_event) => {
 
 // See: https://github.com/electron/electron/issues/28422
 app.commandLine.appendSwitch("enable-experimental-web-platform-features");
+
+Menu.setApplicationMenu(null);
