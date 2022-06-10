@@ -201,7 +201,13 @@ export class Application extends LitElement {
   maxPaletteWidth = Palette.DEFAULT_WIDTH;
 
   @state({ type: Boolean })
-  contextMenuOpen = false;
+  hasOpenModal = false;
+
+  @state({ type: Boolean })
+  hasOpenPrompt = false;
+
+  @state({ type: Boolean })
+  hasOpenContextMenu = false;
 
   pendingGFXLoader = null;
 
@@ -351,7 +357,7 @@ export class Application extends LitElement {
   showPrompt(promptState) {
     this.prompt.state = promptState;
     this.prompt.open = true;
-    this.requestUpdate();
+    this.hasOpenPrompt = true;
   }
 
   async firstUpdated(changes) {
@@ -369,6 +375,9 @@ export class Application extends LitElement {
     }
     if (changes.has("mapState")) {
       this.manageMapState(changes.get("mapState"));
+    }
+    if (changes.has("hasOpenPrompt")) {
+      this.emitHasOpenPromptChanged();
     }
     this.updateStartupStatus();
   }
@@ -541,7 +550,7 @@ export class Application extends LitElement {
         @save=${this.onSettingsSave}
       ></eomap-settings>
       <eomap-about @close=${this.onModalClose}></eomap-about>
-      <eomap-prompt></eomap-prompt>
+      <eomap-prompt @close=${this.onPromptClose}></eomap-prompt>
     `;
   }
 
@@ -605,11 +614,11 @@ export class Application extends LitElement {
   }
 
   onContextMenuOpen(_event) {
-    this.contextMenuOpen = true;
+    this.hasOpenContextMenu = true;
   }
 
   onContextMenuClose(_event) {
-    this.contextMenuOpen = false;
+    this.hasOpenContextMenu = false;
   }
 
   emfPickerOptions() {
@@ -777,14 +786,14 @@ export class Application extends LitElement {
     }
     this.dirtyCheck(() => {
       this.newMap.open = true;
-      this.requestUpdate();
+      this.updateHasOpenModal();
     });
   }
 
   showMapProperties() {
     this.properties.populate(this.mapState.emf);
     this.properties.open = true;
-    this.requestUpdate();
+    this.updateHasOpenModal();
   }
 
   showSettings() {
@@ -793,12 +802,12 @@ export class Application extends LitElement {
     }
     this.settings.populate(this.settingsState);
     this.settings.open = true;
-    this.requestUpdate();
+    this.updateHasOpenModal();
   }
 
   showAbout() {
     this.about.open = true;
-    this.requestUpdate();
+    this.updateHasOpenModal();
   }
 
   toggleVisibilityFlag(flag) {
@@ -874,11 +883,15 @@ export class Application extends LitElement {
   onEntityEditorRequested(event) {
     this.entityEditor.entityState = event.detail;
     this.entityEditor.open = true;
-    this.requestUpdate();
+    this.updateHasOpenModal();
   }
 
   onModalClose(_event) {
-    this.requestUpdate();
+    this.updateHasOpenModal();
+  }
+
+  onPromptClose(_event) {
+    this.hasOpenPrompt = false;
   }
 
   onEntityEditorSave(event) {
@@ -908,22 +921,12 @@ export class Application extends LitElement {
   }
 
   pointerEnabled() {
-    return !this.paletteResizing && !this.contextMenuOpen;
-  }
-
-  modalNotOpen(modal) {
-    return !modal || !modal.open;
+    return !this.paletteResizing && !this.hasOpenContextMenu;
   }
 
   keyboardEnabled() {
     return (
-      this.modalNotOpen(this.entityEditor) &&
-      this.modalNotOpen(this.newMap) &&
-      this.modalNotOpen(this.properties) &&
-      this.modalNotOpen(this.settings) &&
-      this.modalNotOpen(this.about) &&
-      this.modalNotOpen(this.prompt) &&
-      !this.contextMenuOpen
+      !this.hasOpenModal && !this.hasOpenPrompt && !this.hasOpenContextMenu
     );
   }
 
@@ -945,6 +948,25 @@ export class Application extends LitElement {
 
   canRedo() {
     return this.validGfx() && this.hasRedoCommands;
+  }
+
+  updateHasOpenModal() {
+    this.hasOpenModal =
+      this.modalOpen(this.entityEditor) ||
+      this.modalOpen(this.newMap) ||
+      this.modalOpen(this.properties) ||
+      this.modalOpen(this.settings) ||
+      this.modalOpen(this.about);
+  }
+
+  modalOpen(modal) {
+    return !!(modal && modal.open);
+  }
+
+  emitHasOpenPromptChanged() {
+    this.dispatchEvent(
+      new CustomEvent("has-open-prompt-changed", { detail: this.hasOpenPrompt })
+    );
   }
 
   async updateStartupStatus() {

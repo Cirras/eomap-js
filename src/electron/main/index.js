@@ -127,6 +127,10 @@ const setupIPC = () => {
     mainWindow.setDocumentEdited(documentEdited);
   });
 
+  ipcMain.on("window:set-closable", (_event, closable) => {
+    mainWindow?.setClosable(closable);
+  });
+
   ipcMain.on("window:close-request", (_event) => {
     mainWindow.webContents.send("window:close-request");
   });

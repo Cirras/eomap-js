@@ -34,6 +34,9 @@ function setupApplication() {
     bridge.setTitle(title);
     bridge.setDocumentEdited(mapState.dirty);
   });
+  application.addEventListener("has-open-prompt-changed", (event) => {
+    bridge.setClosable(!event.detail);
+  });
 }
 
 function setupMenubarController() {

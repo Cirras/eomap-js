@@ -20,6 +20,9 @@ contextBridge.exposeInMainWorld("bridge", {
   setDocumentEdited: (documentEdited) => {
     ipcRenderer.send("window:set-document-edited", documentEdited);
   },
+  setClosable: (closable) => {
+    ipcRenderer.send("window:set-closable", closable);
+  },
   minimize: () => {
     ipcRenderer.send("window:minimize");
   },
