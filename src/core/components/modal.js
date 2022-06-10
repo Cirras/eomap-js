@@ -23,6 +23,9 @@ export class Modal extends FocusVisiblePolyfillMixin(SpectrumElement) {
       modalWrapperStyles,
       modalStyles,
       css`
+        :host {
+          height: 100vh;
+        }
         .modal {
           border: 1px solid var(--spectrum-global-color-gray-50);
         }
