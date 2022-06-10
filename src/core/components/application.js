@@ -478,8 +478,10 @@ export class Application extends LitElement {
   }
 
   calculateMaxPaletteWidth() {
-    let width = this.clientWidth - this.sidebar.offsetWidth - 2;
-    this.maxPaletteWidth = Math.max(Palette.MIN_WIDTH, width);
+    this.maxPaletteWidth = Math.max(
+      Palette.MIN_WIDTH,
+      this.clientWidth - this.sidebar.offsetWidth
+    );
   }
 
   renderEditor() {
