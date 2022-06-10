@@ -252,15 +252,6 @@ export class Menubar extends LitElement {
 
   connectedCallback() {
     super.connectedCallback();
-    ro.observe(this);
-  }
-  disconnectedCallback() {
-    super.disconnectedCallback();
-    ro.unobserve(this);
-  }
-
-  connectedCallback() {
-    super.connectedCallback();
     this.resizeObserver.observe(this);
     window.addEventListener("keydown", this.onKeyDown);
     window.addEventListener("pointerdown", this.onWindowPointerDown);
