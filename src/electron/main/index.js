@@ -94,6 +94,14 @@ const setupWindow = () => {
     mainWindow.webContents.send("window:unmaximized");
   });
 
+  mainWindow.on("enter-full-screen", (_event) => {
+    mainWindow.webContents.send("window:enter-full-screen");
+  });
+
+  mainWindow.on("leave-full-screen", (_event) => {
+    mainWindow.webContents.send("window:leave-full-screen");
+  });
+
   mainWindow.on("close", (event) => {
     event.preventDefault();
     mainWindow.webContents.send("window:close-request");
@@ -131,8 +139,16 @@ const setupIPC = () => {
     mainWindow.unmaximize();
   });
 
+  ipcMain.on("window:toggle-full-screen", (_event) => {
+    mainWindow.setFullScreen(!mainWindow.isFullScreen());
+  });
+
   ipcMain.on("window:maximized-query", (event) => {
     event.returnValue = mainWindow.isMaximized();
+  });
+
+  ipcMain.on("window:full-screen-query", (event) => {
+    event.returnValue = mainWindow.isFullScreen();
   });
 
   ipcMain.on("window:close", (_event) => {

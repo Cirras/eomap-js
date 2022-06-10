@@ -32,7 +32,13 @@ contextBridge.exposeInMainWorld("bridge", {
   close: () => {
     ipcRenderer.send("window:close");
   },
+  toggleFullScreen: () => {
+    ipcRenderer.send("window:toggle-full-screen");
+  },
   isMaximized: () => {
     return ipcRenderer.sendSync("window:maximized-query");
+  },
+  isFullScreen: () => {
+    return ipcRenderer.sendSync("window:full-screen-query");
   },
 });

@@ -289,9 +289,9 @@ export class Palette extends LitElement {
 
   gutterTouch = false;
 
-  onResize = (_event) => {
+  resizeObserver = new ResizeObserver((_entries) => {
     this.updateViewportHeight();
-  };
+  });
 
   async firstUpdated(changes) {
     super.firstUpdated(changes);
@@ -299,6 +299,7 @@ export class Palette extends LitElement {
     const children = this.shadowRoot.querySelectorAll("*");
     await Promise.all(Array.from(children).map((c) => c.updateComplete));
 
+    this.resizeObserver.observe(this.paletteScrollContainer);
     this.checkLayerButtonsArrows();
     this.updateViewportHeight();
   }
@@ -579,15 +580,6 @@ export class Palette extends LitElement {
         </div>
       </div>
     `;
-  }
-
-  connectedCallback() {
-    super.connectedCallback();
-    window.addEventListener("resize", this.onResize);
-  }
-  disconnectedCallback() {
-    window.removeEventListener("resize", this.onResize);
-    super.disconnectedCallback();
   }
 
   updateViewportHeight() {

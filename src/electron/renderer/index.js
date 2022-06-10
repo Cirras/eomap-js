@@ -8,6 +8,7 @@ import {
   MenuEventSource,
 } from "../../core/controllers/menubar-controller";
 import { titleFromMapState } from "../../core/util/title-utils";
+import { isMac } from "../../core/util/platform-utils";
 
 let menubarController = null;
 let nativeMenuEventSource = new MenuEventSource();
@@ -20,6 +21,7 @@ function setupTitlebar() {
   let titlebar = document.createElement("eomap-titlebar");
   titlebar.id = "titlebar";
   titlebar.maximized = bridge.isMaximized();
+  titlebar.fullScreen = bridge.isFullScreen();
   getTheme().appendChild(titlebar);
 }
 
@@ -46,6 +48,24 @@ function setupMenubarController() {
   });
 }
 
+function setupKeyboardEvents() {
+  window.addEventListener("keydown", (event) => {
+    if (isFullScreenShortcut(event)) {
+      window.bridge.toggleFullScreen();
+      event.stopPropagation();
+      event.preventDefault();
+    }
+  });
+}
+
+function isFullScreenShortcut(event) {
+  if (isMac()) {
+    return event.ctrlKey && event.metaKey && event.key.toUpperCase() === "F";
+  } else {
+    return event.key === "F11";
+  }
+}
+
 bridge.receive("window:close-request", () => {
   let application = getApplication();
   let callback = () => {
@@ -69,10 +89,19 @@ bridge.receive("window:unmaximized", () => {
   getTitlebar().maximized = false;
 });
 
+bridge.receive("window:enter-full-screen", () => {
+  getTitlebar().fullScreen = true;
+});
+
+bridge.receive("window:leave-full-screen", () => {
+  getTitlebar().fullScreen = false;
+});
+
 window.addEventListener("DOMContentLoaded", (_event) => {
   setupTitlebar();
   setupApplication();
   setupMenubarController();
+  setupKeyboardEvents();
 });
 
 window.emitNativeMenuEvent = function (eventType, eventDetail) {

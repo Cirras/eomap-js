@@ -138,6 +138,12 @@ export class Titlebar extends LitElement {
   @property({ type: String })
   title = "Endless Map Editor";
 
+  @property({ type: Boolean })
+  maximized = false;
+
+  @property({ type: Boolean })
+  fullScreen = false;
+
   @state({ type: Object })
   titleStyle = {};
 
@@ -157,6 +163,13 @@ export class Titlebar extends LitElement {
     super.firstUpdated(changedProperties);
     this.resizeObserver.observe(this);
     this.resizeObserver.observe(this.windowTitle);
+  }
+
+  updated(changedProperties) {
+    super.updated(changedProperties);
+    if (changedProperties.has("fullScreen")) {
+      this.style.display = this.fullScreen ? "none" : "flex";
+    }
   }
 
   renderAppIcon() {
