@@ -97,7 +97,9 @@ const setupWindow = () => {
     event.preventDefault();
     mainWindow.webContents.send("window:close-request");
   });
+};
 
+const setupIPC = () => {
   ipcMain.on("set-menubar-state", (_event, state) => {
     let template = createMenubarTemplate(state);
     let menu = Menu.buildFromTemplate(template);
@@ -132,7 +134,7 @@ const setupWindow = () => {
     event.returnValue = mainWindow.isMaximized();
   });
 
-  ipcMain.once("window:close", (_event) => {
+  ipcMain.on("window:close", (_event) => {
     mainWindow.emit("pre-destroy");
     mainWindow.destroy();
     mainWindow = null;
@@ -142,6 +144,7 @@ const setupWindow = () => {
 app.on("ready", () => {
   setupCSP();
   setupWindow();
+  setupIPC();
 });
 
 // Quit when all windows are closed, except on macOS. There, it's common
