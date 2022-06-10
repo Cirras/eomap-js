@@ -84,6 +84,22 @@ export class Editor extends LitElement {
 
   updateZoom = () => {};
 
+  setupPhaserFramebufferPerformanceHack(game) {
+    // HACK: checkFramebufferStatus is pretty expensive and gets called every
+    //       time a framebuffer is created by Phaser's WebGLRenderer.
+    //
+    //       eomap-js uses RenderTextures for the eomap and cursor components,
+    //       which use framebuffers under the hood on WebGL.
+    //
+    //       In the interest of performance, we're going to just fudge the
+    //       result of checkFramebufferStatus and always assume that we've
+    //       created a valid/complete framebuffer.
+    let gl = game.renderer.gl;
+    if (gl) {
+      gl.checkFramebufferStatus = (_target) => gl.FRAMEBUFFER_COMPLETE;
+    }
+  }
+
   setupPhaserChangeDataEvents(scene) {
     for (let key of Editor.PHASER_DATA_KEYS) {
       let eventName = "changedata-" + key;
@@ -188,6 +204,7 @@ export class Editor extends LitElement {
       game.scene.add("editor", scene);
 
       scene.sys.events.once("ready", () => {
+        this.setupPhaserFramebufferPerformanceHack(game);
         this.setupPhaserChangeDataEvents(scene);
         this.setupComponentDataForwardingToPhaser(scene);
         this.setupEntityToolEvents(scene);
