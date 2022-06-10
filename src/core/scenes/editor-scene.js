@@ -12,6 +12,8 @@ import { FillTool } from "../tools/fill-tool";
 import { EntityTool } from "../tools/entity-tool";
 
 import "../gameobjects/eomap";
+import "../gameobjects/cursor";
+
 import { EntityState } from "../state/entity-state";
 import { EntityCommand } from "../command/entity-command";
 import { MapPropertiesState } from "../state/map-properties-state";
@@ -23,14 +25,13 @@ export class EditorScene extends Phaser.Scene {
     super("editor");
     this.ctrlKeyDown = false;
     this.currentPosDirty = false;
-    this.cursorDirty = false;
 
     this.currentPos = null;
     this.textureCache = null;
     this.map = null;
     this.tools = null;
     this.overrideTool = null;
-    this.cursorSprite = null;
+    this.cursor = null;
     this.cursors = null;
     this.yKey = null;
     this.zKey = null;
@@ -51,7 +52,7 @@ export class EditorScene extends Phaser.Scene {
       1024
     );
 
-    this.cursorSprite = this.createCursor();
+    this.cursor = this.add.cursor(this, this.textureCache).setDepth(1.0);
 
     // Preload the cursor in the texture cache
     this.textureCache.update();
@@ -133,49 +134,7 @@ export class EditorScene extends Phaser.Scene {
     ]);
   }
 
-  createCursor() {
-    let cursorSprite = this.add.sprite(0, 0);
-    cursorSprite.visible = false;
-    cursorSprite.setDepth(1.0);
-    cursorSprite.setOrigin(0);
-
-    let cacheEntry = this.textureCache.getCursor();
-    cacheEntry.incRef();
-
-    let onCursorLoad = () => {
-      cursorSprite.setTexture(
-        cacheEntry.asset.textureKey,
-        cacheEntry.asset.getFrame(0).name
-      );
-      cursorSprite.on("animationupdate", () => {
-        this.cursorDirty = true;
-      });
-      this.cursorDirty = true;
-    };
-
-    if (cacheEntry.loadingComplete) {
-      cacheEntry.loadingComplete.then(onCursorLoad);
-    } else {
-      onCursorLoad();
-    }
-
-    return cursorSprite;
-  }
-
-  setCursorFrame(frameIndex) {
-    let asset = this.textureCache.getCursor().asset;
-    this.cursorSprite.setFrame(asset.getFrame(frameIndex).name);
-    this.cursorDirty = true;
-  }
-
-  playCursorAnimation() {
-    let asset = this.textureCache.getCursor().asset;
-    this.cursorSprite.play(asset.animation);
-  }
-
   update(time, delta) {
-    this.render.shouldRender = false;
-
     this.cameraControls.update(delta);
     this.textureCache.update();
 
@@ -193,14 +152,13 @@ export class EditorScene extends Phaser.Scene {
 
     this.map.update(time, delta);
 
+    this.render.shouldRender =
+      this.map.shouldRender || this.cursor.shouldRender || this.currentPosDirty;
+
     if (this.currentPosDirty) {
       this.data.set("currentPos", this.currentPos);
+      this.currentPosDirty = false;
     }
-
-    this.render.shouldRender =
-      this.map.shouldRender || this.currentPosDirty || this.cursorDirty;
-    this.currentPosDirty = false;
-    this.cursorDirty = false;
   }
 
   resize() {
@@ -213,7 +171,7 @@ export class EditorScene extends Phaser.Scene {
     }
 
     this.cursorPos = tilePos;
-    this.cursorSprite.visible = this.cursorPos.valid;
+    this.cursor.visible = this.cursorPos.valid;
 
     if (this.cursorPos.valid) {
       this.positionCursor();
@@ -242,7 +200,7 @@ export class EditorScene extends Phaser.Scene {
 
     camMatrix.multiply(spriteMatrix);
 
-    this.cursorSprite
+    this.cursor
       .setScale(this.map.zoom)
       .setPosition(Math.round(camMatrix.e), Math.round(camMatrix.f));
   }

@@ -12,7 +12,7 @@ export class EyedropperTool extends Tool {
       return;
     }
 
-    mapEditor.playCursorAnimation();
+    mapEditor.cursor.playAnimation();
 
     mapEditor.data.set("eyedrop", new Eyedrop(drawID));
   }

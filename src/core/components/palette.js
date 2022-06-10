@@ -1,4 +1,4 @@
-import { css, html, LitElement } from "lit";
+import { css, html } from "lit";
 import {
   customElement,
   eventOptions,
@@ -16,29 +16,25 @@ import {
 
 import "./action-group";
 import "./sidebar-button";
+import { PhaserInstance } from "./phaser-instance";
 
 import "phaser";
 import { PaletteScene } from "../scenes/palette-scene";
-import { RenderControlPlugin } from "../plugins/render-control-plugin";
 
-import { GFXLoader } from "../gfx/load/gfx-loader";
 import { Eyedrop } from "../tools/eyedrop";
+
+import { merge } from "../util/object-utils";
 
 import scrollbarStyles from "../styles/scrollbar";
 
 @customElement("eomap-palette")
-export class Palette extends LitElement {
+export class Palette extends PhaserInstance {
   static DEFAULT_WIDTH = 351;
   static MIN_WIDTH = 159;
 
-  static PHASER_CONTAINER_ID = "phaser-palette";
-
-  static PHASER_DATA_KEYS = ["selectedDrawID"];
-
-  static COMPONENT_DATA_KEYS = ["gfxLoader", "selectedLayer", "eyedrop"];
-
   static get styles() {
     return [
+      super.styles,
       scrollbarStyles,
       css`
         :host {
@@ -216,9 +212,6 @@ export class Palette extends LitElement {
   @query("#palette-content", true)
   paletteContent;
 
-  @property({ type: GFXLoader })
-  gfxLoader;
-
   @property({ type: Number })
   selectedLayer;
 
@@ -258,17 +251,12 @@ export class Palette extends LitElement {
   @state({ type: Function })
   onPaletteContentScroll = null;
 
-  @state({ type: Phaser.Game })
-  game;
-
-  componentDataForwarders = new Map();
-
   headerScrolling = false;
   headerScrollStartTimestamp = null;
 
   gutterTouch = false;
 
-  resizeObserver = new ResizeObserver((_entries) => {
+  scrollContainerResizeObserver = new ResizeObserver((_entries) => {
     this.updateViewportHeight();
   });
 
@@ -278,28 +266,9 @@ export class Palette extends LitElement {
     const children = this.shadowRoot.querySelectorAll("*");
     await Promise.all(Array.from(children).map((c) => c.updateComplete));
 
-    this.resizeObserver.observe(this.paletteScrollContainer);
+    this.scrollContainerResizeObserver.observe(this.paletteScrollContainer);
     this.checkLayerButtonsArrows();
     this.updateViewportHeight();
-  }
-
-  setupPhaserChangeDataEvents(scene) {
-    for (let key of Palette.PHASER_DATA_KEYS) {
-      scene.data.set(key, null);
-      let eventName = "changedata-" + key;
-      scene.data.events.on(eventName, (_parent, value, _previousValue) => {
-        this.dispatchEvent(new CustomEvent(eventName, { detail: value }));
-      });
-    }
-  }
-
-  setupComponentDataForwardingToPhaser(scene) {
-    for (let key of Palette.COMPONENT_DATA_KEYS) {
-      scene.data.set(key, this[key]);
-      this.componentDataForwarders.set(key, () => {
-        scene.data.set(key, this[key]);
-      });
-    }
   }
 
   setupContentHeightListener(scene) {
@@ -328,76 +297,6 @@ export class Palette extends LitElement {
     });
   }
 
-  updateInputEnabledState() {
-    if (this.game) {
-      this.game.input.mouse.enabled = this.pointerEnabled;
-      this.game.input.touch.enabled = this.pointerEnabled;
-    }
-  }
-
-  async setupPhaser() {
-    let game = new Phaser.Game({
-      type: Phaser.AUTO,
-      disableContextMenu: true,
-      banner: false,
-      scale: {
-        width: "100%",
-        height: "100%",
-        parent: this.shadowRoot.querySelector(
-          "#" + Palette.PHASER_CONTAINER_ID
-        ),
-        mode: Phaser.Scale.ScaleModes.RESIZE,
-        resizeInterval: 16,
-      },
-      render: {
-        pixelArt: true,
-        powerPreference: "high-performance",
-        transparent: true,
-      },
-      input: {
-        keyboard: false,
-        mouse: {
-          preventDefaultWheel: false,
-          preventDefaultDown: false,
-          preventDefaultMove: false,
-          preventDefaultUp: false,
-        },
-        touch: {
-          capture: false,
-        },
-      },
-      audio: {
-        noAudio: true,
-      },
-      plugins: {
-        global: [
-          {
-            key: "RenderControlPluginPalette",
-            plugin: RenderControlPlugin,
-            mapping: "render",
-          },
-        ],
-      },
-    });
-
-    game.events.once("ready", () => {
-      let scene = new PaletteScene();
-      game.scene.add("palette", scene);
-
-      scene.sys.events.once("ready", () => {
-        this.setupPhaserChangeDataEvents(scene);
-        this.setupComponentDataForwardingToPhaser(scene);
-        this.setupContentHeightListener(scene);
-        this.setupContentScrollMirroring(scene);
-        this.game = game;
-        this.updateInputEnabledState();
-        this.updateViewportHeight();
-      });
-
-      game.scene.start("palette");
-    });
-  }
-
   shouldUpdate(changedProperties) {
     if (changedProperties.length === 1 && changedProperties.has("maxWidth")) {
       return this.width !== this.calcWidth();
@@ -406,6 +305,8 @@ export class Palette extends LitElement {
   }
 
   updated(changedProperties) {
+    super.updated(changedProperties);
+
     if (changedProperties.has("gfxLoader")) {
       this.destroyPhaser();
       if (this.gfxLoader && this.gfxErrors === 0) {
@@ -415,17 +316,6 @@ export class Palette extends LitElement {
 
     if (changedProperties.has("width")) {
       this.checkLayerButtonsArrows();
-    }
-
-    if (changedProperties.has("pointerEnabled")) {
-      this.updateInputEnabledState();
-    }
-
-    for (let changed of changedProperties.keys()) {
-      let dataForwarder = this.componentDataForwarders.get(changed);
-      if (dataForwarder) {
-        dataForwarder();
-      }
     }
   }
 
@@ -554,7 +444,7 @@ export class Palette extends LitElement {
           <div class="palette-viewport" style="height: ${
             this.viewportHeight
           }px">
-            <div id="${Palette.PHASER_CONTAINER_ID}"></div>
+            ${super.render()}
           </div>
         </div>
       </div>
@@ -652,28 +542,32 @@ export class Palette extends LitElement {
     );
   }
 
-  disconnectedCallback() {
-    this.destroyPhaser();
-    this.componentDataForwarders.clear();
-    super.disconnectedCallback();
+  createScene() {
+    return new PaletteScene();
   }
 
-  destroyPhaser() {
-    if (this.game) {
-      // The canvas and WebGLRendererContext won't be cleaned up properly
-      // unless this touchcancel event listener is removed.
-      //
-      // Fixed in Phaser 3.60.
-      // See: https://github.com/photonstorm/phaser/pull/5921
-      if (window) {
-        window.removeEventListener(
-          "touchcancel",
-          this.game.input.touch.onTouchCancelWindow
-        );
-      }
-      this.game.destroy(true);
-      Phaser.Plugins.PluginCache.removeCustom("RenderControlPluginPalette");
-      this.game = null;
-    }
+  onSceneReady(scene) {
+    this.setupContentHeightListener(scene);
+    this.setupContentScrollMirroring(scene);
+    this.updateViewportHeight();
+  }
+
+  get config() {
+    return merge(super.config, {
+      render: {
+        transparent: true,
+      },
+      input: {
+        keyboard: false,
+      },
+    });
+  }
+
+  get phaserDataKeys() {
+    return ["selectedDrawID"];
+  }
+
+  get componentDataKeys() {
+    return ["gfxLoader", "selectedLayer", "eyedrop"];
   }
 }

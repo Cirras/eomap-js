@@ -14,14 +14,16 @@ export class MoveTool extends Tool {
       this.startX = camera.scrollX;
       this.startY = camera.scrollY;
       this.dragging = true;
-      mapEditor.setCursorFrame(1);
+      mapEditor.cursor.stopAnimation();
+      mapEditor.cursor.setFrame(1);
     }
   }
 
   stopDragging(mapEditor) {
     if (this.dragging) {
       this.dragging = false;
-      mapEditor.setCursorFrame(0);
+      mapEditor.cursor.stopAnimation();
+      mapEditor.cursor.setFrame(0);
     }
   }
 

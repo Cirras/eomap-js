@@ -634,7 +634,7 @@ export class EOMap extends Phaser.GameObjects.GameObject {
   }
 
   updateDrawScale() {
-    this.drawScale = 0.25;
+    this.drawScale = 0.5;
     while (this.drawScale < this.zoom) {
       this.drawScale *= 2;
     }
@@ -679,6 +679,8 @@ export class EOMap extends Phaser.GameObjects.GameObject {
       .setSize(drawWidth, drawHeight)
       .clear();
 
+    renderTexture.texture.setFilter(Phaser.Textures.LINEAR);
+
     let cameraDirty = this.camera.dirty;
     this.camera.preRender();
     this.camera.dirty = cameraDirty;
@@ -710,22 +712,14 @@ export class EOMap extends Phaser.GameObjects.GameObject {
   }
 
   batchDrawFrame(renderTexture, textureFrame, x, y, alpha) {
-    let flipY;
-
-    if (renderTexture.renderTarget) {
-      flipY = -1;
-      y += textureFrame.height;
-    } else {
-      flipY = 1;
-      x += renderTexture.frame.cutX;
-      y += renderTexture.frame.cutY;
-    }
+    x += renderTexture.frame.cutX;
+    y += renderTexture.frame.cutY;
 
     let matrix = this._tempMatrix1;
     matrix.copyFrom(renderTexture.camera.matrix);
 
     let spriteMatrix = this._tempMatrix2;
-    spriteMatrix.applyITRS(x, y, 0, 1, flipY);
+    spriteMatrix.applyITRS(x, y, 0, 1, 1);
     spriteMatrix.e -= renderTexture.camera.scrollX;
     spriteMatrix.f -= renderTexture.camera.scrollY;
 
@@ -801,7 +795,14 @@ export class EOMap extends Phaser.GameObjects.GameObject {
   renderCanvas(renderer, _src, camera) {
     if (this.width > 0 && this.height > 0) {
       let renderTexture = this.getFrame().renderTexture;
+
+      // See: https://github.com/photonstorm/phaser/pull/6141
+      let antialias = renderer.antialias;
+      renderer.antialias = true;
+
       renderTexture.renderCanvas(renderer, renderTexture, camera);
+
+      renderer.antialias = antialias;
     }
   }
 

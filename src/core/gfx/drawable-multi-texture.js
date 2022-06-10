@@ -117,7 +117,6 @@ class WebGLTexturePage {
       let currentTexture = gl.getParameter(gl.TEXTURE_BINDING_2D);
       gl.bindTexture(gl.TEXTURE_2D, this.glTexture);
 
-      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
       gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
 
       gl.texSubImage2D(

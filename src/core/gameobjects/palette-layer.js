@@ -313,7 +313,7 @@ export class PaletteLayer extends Phaser.GameObjects.GameObject {
         1,
         0,
         false,
-        true,
+        false,
         1,
         1,
         0,

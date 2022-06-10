@@ -1,54 +1,34 @@
-import { css, html, LitElement } from "lit";
-import { customElement, property, query, state } from "lit/decorators.js";
+import { css, html } from "lit";
+import { customElement, property, query } from "lit/decorators.js";
 
 import "phaser";
 import { EditorScene } from "../scenes/editor-scene";
-import { RenderControlPlugin } from "../plugins/render-control-plugin";
 
 import "./context-menu";
+import { PhaserInstance } from "./phaser-instance";
 
-import { GFXLoader } from "../gfx/load/gfx-loader";
 import { EntityState } from "../state/entity-state";
 import { MapPropertiesState } from "../state/map-properties-state";
 import { MapState } from "../state/map-state";
 
 @customElement("eomap-editor")
-export class Editor extends LitElement {
-  static EDITOR_ID = "phaser-container";
-
-  static PHASER_DATA_KEYS = ["currentPos", "eyedrop"];
-
-  static COMPONENT_DATA_KEYS = [
-    "mapState",
-    "selectedTool",
-    "layerVisibility",
-    "gfxLoader",
-    "selectedLayer",
-    "selectedDrawID",
-    "entityState",
-    "mapPropertiesState",
-  ];
-
+export class Editor extends PhaserInstance {
   static get styles() {
-    return css`
-      :host {
-        overflow: hidden;
-        display: grid;
-        grid-template-rows: 100%;
-        grid-template-columns: 100%;
-      }
-      .editor {
-        grid-column: 1;
-        grid-row: 1;
-      }
-    `;
+    return [
+      super.styles,
+      css`
+        :host {
+          overflow: hidden;
+          display: grid;
+          grid-template-rows: 100%;
+          grid-template-columns: 100%;
+        }
+      `,
+    ];
   }
 
   @query("eomap-context-menu")
   contextMenu;
-
-  @property({ type: GFXLoader })
-  gfxLoader;
 
   @property({ type: MapState })
   mapState;
@@ -71,43 +51,7 @@ export class Editor extends LitElement {
   @property({ type: MapPropertiesState })
   mapPropertiesState;
 
-  @property({ type: Boolean })
-  pointerEnabled = true;
-
-  @property({ type: Boolean })
-  keyboardEnabled = true;
-
-  @state({ type: Phaser.Game })
-  game;
-
-  componentDataForwarders = new Map();
-
   updateZoom = () => {};
-
-  setupPhaserFramebufferPerformanceHack(game) {
-    // HACK: checkFramebufferStatus is pretty expensive and gets called every
-    //       time a framebuffer is created by Phaser's WebGLRenderer.
-    //
-    //       eomap-js uses RenderTextures for the eomap and cursor components,
-    //       which use framebuffers under the hood on WebGL.
-    //
-    //       In the interest of performance, we're going to just fudge the
-    //       result of checkFramebufferStatus and always assume that we've
-    //       created a valid/complete framebuffer.
-    let gl = game.renderer.gl;
-    if (gl) {
-      gl.checkFramebufferStatus = (_target) => gl.FRAMEBUFFER_COMPLETE;
-    }
-  }
-
-  setupPhaserChangeDataEvents(scene) {
-    for (let key of Editor.PHASER_DATA_KEYS) {
-      let eventName = "changedata-" + key;
-      scene.data.events.on(eventName, (_parent, value, _previousValue) => {
-        this.dispatchEvent(new CustomEvent(eventName, { detail: value }));
-      });
-    }
-  }
 
   setupEntityToolEvents(scene) {
     scene.events.on("request-entity-editor", (entityState) => {
@@ -135,141 +79,48 @@ export class Editor extends LitElement {
     });
   }
 
-  setupComponentDataForwardingToPhaser(scene) {
-    this.componentDataForwarders = new Map();
-    for (let key of Editor.COMPONENT_DATA_KEYS) {
-      scene.data.set(key, this[key]);
-      this.componentDataForwarders.set(key, () => {
-        scene.data.set(key, this[key]);
-      });
-    }
-  }
-
-  updateInputEnabledState() {
-    if (this.game) {
-      this.game.input.mouse.enabled = this.pointerEnabled;
-      this.game.input.touch.enabled = this.pointerEnabled;
-      this.game.input.keyboard.enabled = this.keyboardEnabled;
-    }
-  }
-
-  setupPhaser() {
-    let game = new Phaser.Game({
-      type: Phaser.AUTO,
-      disableContextMenu: true,
-      banner: false,
-      scale: {
-        width: "100%",
-        height: "100%",
-        zoom: 1,
-        parent: this.shadowRoot.querySelector("#" + Editor.EDITOR_ID),
-        mode: Phaser.Scale.ScaleModes.RESIZE,
-        resizeInterval: 16,
-      },
-      loader: {
-        maxParallelDownloads: 100,
-        async: true,
-      },
-      render: {
-        antialias: false,
-        powerPreference: "high-performance",
-      },
-      input: {
-        mouse: {
-          preventDefaultWheel: false,
-          preventDefaultDown: false,
-          preventDefaultMove: false,
-          preventDefaultUp: false,
-        },
-        touch: {
-          capture: false,
-        },
-      },
-      audio: {
-        noAudio: true,
-      },
-      plugins: {
-        global: [
-          {
-            key: "RenderControlPluginEditor",
-            plugin: RenderControlPlugin,
-            mapping: "render",
-          },
-        ],
-      },
-    });
-
-    game.events.once("ready", () => {
-      let scene = new EditorScene();
-      game.scene.add("editor", scene);
-
-      scene.sys.events.once("ready", () => {
-        this.setupPhaserFramebufferPerformanceHack(game);
-        this.setupPhaserChangeDataEvents(scene);
-        this.setupComponentDataForwardingToPhaser(scene);
-        this.setupEntityToolEvents(scene);
-        this.setupContextMenuEvents(scene);
-        this.setupZoomEvents(scene);
-        this.game = game;
-        this.updateInputEnabledState();
-      });
-
-      game.scene.start("editor");
-    });
-  }
-
-  destroyPhaser() {
-    if (this.game) {
-      // The canvas and WebGLRendererContext won't be cleaned up properly
-      // unless this touchcancel event listener is removed.
-      //
-      // Fixed in Phaser 3.60.
-      // See: https://github.com/photonstorm/phaser/pull/5921
-      if (window) {
-        window.removeEventListener(
-          "touchcancel",
-          this.game.input.touch.onTouchCancelWindow
-        );
-      }
-      this.game.destroy(true);
-      Phaser.Plugins.PluginCache.removeCustom("RenderControlPluginEditor");
-      this.game = null;
-    }
-  }
-
   updated(changedProperties) {
+    super.updated(changedProperties);
+
     if (changedProperties.has("mapState")) {
       this.destroyPhaser();
       if (this.mapState.loaded) {
         this.setupPhaser();
       }
     }
-
-    if (
-      changedProperties.has("pointerEnabled") ||
-      changedProperties.has("keyboardEnabled")
-    ) {
-      this.updateInputEnabledState();
-    }
-
-    for (let changed of changedProperties.keys()) {
-      let dataForwarder = this.componentDataForwarders.get(changed);
-      if (dataForwarder) {
-        dataForwarder();
-      }
-    }
   }
 
   render() {
     return html`
-      <div id="${Editor.EDITOR_ID}" class="editor"></div>
+      ${super.render()}
       <eomap-context-menu></eomap-context-menu>
     `;
   }
 
-  disconnectedCallback() {
-    this.destroyPhaser();
-    this.componentDataForwarders.clear();
-    super.disconnectedCallback();
+  createScene() {
+    return new EditorScene();
+  }
+
+  onSceneReady(scene) {
+    this.setupEntityToolEvents(scene);
+    this.setupContextMenuEvents(scene);
+    this.setupZoomEvents(scene);
+  }
+
+  get phaserDataKeys() {
+    return ["currentPos", "eyedrop"];
+  }
+
+  get componentDataKeys() {
+    return [
+      "mapState",
+      "selectedTool",
+      "layerVisibility",
+      "gfxLoader",
+      "selectedLayer",
+      "selectedDrawID",
+      "entityState",
+      "mapPropertiesState",
+    ];
   }
 }
