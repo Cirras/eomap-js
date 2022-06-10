@@ -123,6 +123,10 @@ const setupIPC = () => {
     mainWindow.setTitle(title);
   });
 
+  ipcMain.on("window:set-document-edited", (_event, documentEdited) => {
+    mainWindow.setDocumentEdited(documentEdited);
+  });
+
   ipcMain.on("window:close-request", (_event) => {
     mainWindow.webContents.send("window:close-request");
   });

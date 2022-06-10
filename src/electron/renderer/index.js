@@ -32,6 +32,7 @@ function setupApplication() {
     let title = titleFromMapState(mapState);
     getTitlebar().title = title;
     bridge.setTitle(title);
+    bridge.setDocumentEdited(mapState.dirty);
   });
 }
 

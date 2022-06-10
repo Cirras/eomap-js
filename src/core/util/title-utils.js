@@ -1,6 +1,8 @@
+import { isElectron, isMac } from "./platform-utils";
+
 export function titleFromMapState(mapState) {
   let title = "";
-  if (mapState.dirty) {
+  if (mapState.dirty && !(isElectron() && isMac())) {
     title += "● ";
   }
   if (mapState.emf) {

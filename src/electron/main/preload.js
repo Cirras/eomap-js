@@ -17,6 +17,9 @@ contextBridge.exposeInMainWorld("bridge", {
   setTitle: (title) => {
     ipcRenderer.send("window:set-title", title);
   },
+  setDocumentEdited: (documentEdited) => {
+    ipcRenderer.send("window:set-document-edited", documentEdited);
+  },
   minimize: () => {
     ipcRenderer.send("window:minimize");
   },
