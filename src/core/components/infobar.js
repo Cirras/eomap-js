@@ -153,6 +153,9 @@ export class InfoBar extends LitElement {
   }
 
   onZoomBlur(_event) {
+    if (this.zoomField.value === NaN) {
+      this.zoomField.value = this.zoom;
+    }
     if (this.zoomField.value !== this.zoom) {
       this.dispatchEvent(
         new CustomEvent("zoom-changed", { detail: this.zoomField.value })
