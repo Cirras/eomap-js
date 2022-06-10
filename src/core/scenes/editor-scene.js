@@ -66,6 +66,9 @@ export class EditorScene extends Phaser.Scene {
     this.mapState.gameObject = this.map;
 
     this.tools = this.createTools();
+    this.spacebarKey = this.input.keyboard.addKey(
+      Phaser.Input.Keyboard.KeyCodes.SPACE
+    );
 
     let cursorKeys = this.input.keyboard.createCursorKeys();
     this.cameraControls = new Phaser.Cameras.Controls.FixedKeyControl({
@@ -346,7 +349,7 @@ export class EditorScene extends Phaser.Scene {
       return;
     }
 
-    if (pointer.middleButtonDown()) {
+    if (pointer.middleButtonDown() || this.spacebarKey.isDown) {
       this.overrideTool = "move";
     } else if (isMac() ? pointer.event.metaKey : pointer.event.ctrlKey) {
       this.overrideTool = "eyedropper";
