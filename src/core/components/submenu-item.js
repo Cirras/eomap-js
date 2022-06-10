@@ -11,6 +11,9 @@ export class SubmenuItem extends MenuItem {
     return [
       ...super.styles,
       css`
+        :host {
+          padding-right: var(--spectrum-global-dimension-size-400);
+        }
         ::slotted(eomap-menu) {
           background-color: var(--spectrum-global-color-gray-200);
           border: 1px solid var(--spectrum-global-color-gray-100);
