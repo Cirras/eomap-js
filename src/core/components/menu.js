@@ -60,11 +60,9 @@ export class Menu extends SpectrumElement {
       return;
     }
 
-    const oldFocusedItem = this.menuItems[this.focusedItemIndex];
     const newFocusedItem = this.focusMenuItemByIndex(index);
     if (
       newFocusedItem instanceof SubmenuItem &&
-      oldFocusedItem !== newFocusedItem &&
       this.submenu !== newFocusedItem
     ) {
       this.scheduleOpenSubmenu();
@@ -73,9 +71,6 @@ export class Menu extends SpectrumElement {
 
   handleMenuItemPointerUp = (event) => {
     const focusedMenuItem = this.menuItems[this.focusedItemIndex];
-    if (focusedMenuItem instanceof SubmenuItem) {
-      return;
-    }
     if (event.target === focusedMenuItem) {
       this.pressFocusedMenuItem(true);
     }
@@ -314,6 +309,7 @@ export class Menu extends SpectrumElement {
   }
 
   closeSubmenu(force) {
+    this.cancelOpenSubmenu();
     this.cancelCloseSubmenu();
     if (force === undefined) {
       force = false;
