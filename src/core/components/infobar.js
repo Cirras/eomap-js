@@ -27,6 +27,7 @@ export class InfoBar extends LitElement {
       }
       .filler {
         flex-grow: 1;
+        min-width: 1px;
       }
       .zoom {
         --spectrum-textfield-m-texticon-text-size: var(
@@ -39,6 +40,7 @@ export class InfoBar extends LitElement {
         background-color: var(--spectrum-global-color-gray-300);
         width: 65px;
         height: 18px;
+        flex-shrink: 0;
         contain: strict style;
         overflow: hidden;
         border-right: var(--spectrum-alias-border-size-thin) solid
