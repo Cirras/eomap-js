@@ -35,7 +35,11 @@ function setupApplication() {
     bridge.setDocumentEdited(mapState.dirty);
   });
   application.addEventListener("has-open-prompt-changed", (event) => {
-    bridge.setClosable(!event.detail);
+    let hasOpenPrompt = event.detail;
+    if (hasOpenPrompt) {
+      bridge.restore();
+    }
+    bridge.setClosable(!hasOpenPrompt);
   });
 }
 
@@ -73,6 +77,7 @@ function isFullScreenShortcut(event) {
 bridge.receive("window:close-request", () => {
   let application = getApplication();
   let callback = () => {
+    menubarController.closed = true;
     bridge.close();
   };
 
@@ -83,6 +88,14 @@ bridge.receive("window:close-request", () => {
   } else {
     callback();
   }
+});
+
+bridge.receive("window:minimized", () => {
+  menubarController.minimized = true;
+});
+
+bridge.receive("window:restored", () => {
+  menubarController.minimized = false;
 });
 
 bridge.receive("window:maximized", () => {

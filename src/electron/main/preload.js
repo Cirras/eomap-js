@@ -26,6 +26,9 @@ contextBridge.exposeInMainWorld("bridge", {
   minimize: () => {
     ipcRenderer.send("window:minimize");
   },
+  restore: () => {
+    ipcRenderer.send("window:restore");
+  },
   maximize: () => {
     ipcRenderer.send("window:maximize");
   },

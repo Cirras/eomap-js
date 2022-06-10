@@ -37,6 +37,7 @@ import { EOReader } from "../data/eo-reader";
 import { EOBuilder } from "../data/eo-builder";
 
 import { asyncFilter } from "../util/array-utils";
+import { PendingPromise } from "../util/pending-promise";
 
 @customElement("eomap-application")
 export class Application extends LitElement {
@@ -209,6 +210,7 @@ export class Application extends LitElement {
   @state({ type: Boolean })
   hasOpenContextMenu = false;
 
+  recentFilesLoaded = null;
   pendingGFXLoader = null;
 
   onResize = (_event) => {
@@ -254,14 +256,21 @@ export class Application extends LitElement {
   }
 
   async loadRecentFiles() {
+    let pendingPromise = new PendingPromise();
+    this.recentFilesLoaded = pendingPromise.promise;
     try {
       this.recentFiles = (await get("recentFiles")) || [];
+      pendingPromise.resolve();
     } catch (e) {
       console.error("Failed to load recent files", e);
+      pendingPromise.reject(e);
+    } finally {
+      this.recentFilesLoaded = null;
     }
   }
 
   async saveRecentFiles() {
+    await this.recentFilesLoaded;
     try {
       await set("recentFiles", this.recentFiles);
     } catch (e) {
@@ -270,6 +279,7 @@ export class Application extends LitElement {
   }
 
   async addRecentFile(handle) {
+    await this.recentFilesLoaded;
     await this.removeRecentFile(handle);
     this.recentFiles.unshift(handle);
     while (this.recentFiles.length > 10) {
@@ -279,6 +289,7 @@ export class Application extends LitElement {
   }
 
   async removeRecentFile(handle) {
+    await this.recentFilesLoaded;
     this.recentFiles = await asyncFilter(
       this.recentFiles,
       async (recent) => !(await recent.isSameEntry(handle))
@@ -376,6 +387,9 @@ export class Application extends LitElement {
     if (changes.has("mapState")) {
       this.manageMapState(changes.get("mapState"));
     }
+    if (changes.has("startupStatus")) {
+      this.managePendingMapLoad();
+    }
     if (changes.has("hasOpenPrompt")) {
       this.emitHasOpenPromptChanged();
     }
@@ -404,6 +418,12 @@ export class Application extends LitElement {
     }
     this.mapState.commandInvoker.on("change", this.onMapStateChange);
     this.onMapStateChange();
+  }
+
+  managePendingMapLoad() {
+    if (this.validGfx() && this.mapState && this.mapState.pending) {
+      this.openFile(this.mapState.fileHandle);
+    }
   }
 
   async settingsChangeRequiresGFXReload(previous) {
@@ -667,23 +687,18 @@ export class Application extends LitElement {
   }
 
   async open() {
-    if (!this.validGfx()) {
-      return;
-    }
-
     let fileHandle;
     try {
       [fileHandle] = await showOpenFilePicker(this.emfPickerOptions());
     } catch {
       return;
     }
-
-    this.dirtyCheck(() => {
-      this.openFile(fileHandle);
-    });
+    this.dirtyCheck(() => this.openFile(fileHandle));
   }
 
   async openRecent(index) {
+    await this.recentFilesLoaded;
+
     let fileHandle = this.recentFiles[index];
     if (!fileHandle) {
       throw new Error(`Invalid recent file index: ${index}`);
@@ -693,6 +708,7 @@ export class Application extends LitElement {
         return;
       }
     }
+
     this.dirtyCheck(async () => {
       await this.openFile(fileHandle);
       if (this.mapState.error) {
@@ -702,9 +718,15 @@ export class Application extends LitElement {
   }
 
   async openFile(fileHandle) {
-    this.mapState = MapState.fromFileHandle(fileHandle);
+    const pending = !this.validGfx();
+    this.mapState = MapState.fromFileHandle(fileHandle).withPending(pending);
+    if (pending) {
+      return;
+    }
+
     this.startupStatus = Startup.Status.LOADING_EMF;
     this.zoom = null;
+
     try {
       let file = await fileHandle.getFile();
       let buffer = await file.arrayBuffer();

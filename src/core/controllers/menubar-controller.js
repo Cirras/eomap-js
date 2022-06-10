@@ -78,6 +78,9 @@ export class MenubarController extends EventEmitter {
     this.keybindingMap = new Map();
     this.eventSources = [];
 
+    this._closed = false;
+    this._minimized = false;
+
     application.addController(this);
     window.addEventListener("keydown", this.onWindowKeyDown);
   }
@@ -85,6 +88,15 @@ export class MenubarController extends EventEmitter {
   addEventSource(eventSource) {
     eventSource.addEventListener((event) => this.handleMenuEvent(event));
     this.eventSources.push(eventSource);
+  }
+
+  updateMenubarState() {
+    let newMenubarState = this.generateMenubarState();
+    if (JSON.stringify(this.menubarState) !== JSON.stringify(newMenubarState)) {
+      this.menubarState = newMenubarState;
+      this.collectKeybindings();
+      this.emit("menubar-state-updated", this.menubarState);
+    }
   }
 
   generateMenubarState() {
@@ -157,17 +169,14 @@ export class MenubarController extends EventEmitter {
       new MenuItemState()
         .withLabel("New")
         .withEventType(MenuEvent.New)
-        .withKeybinding("CommandOrControl+Alt+N")
-        .withEnabled(this.canOpenMaps),
+        .withKeybinding("CommandOrControl+Alt+N"),
       new MenuItemState()
         .withLabel("Open")
         .withEventType(MenuEvent.Open)
-        .withKeybinding("CommandOrControl+O")
-        .withEnabled(this.canOpenMaps),
+        .withKeybinding("CommandOrControl+O"),
       new SubmenuMenuItemState()
         .withLabel("Open Recent")
-        .withMenu(this.generateRecentFilesMenu())
-        .withEnabled(this.canOpenMaps),
+        .withMenu(this.generateRecentFilesMenu()),
       new DividerMenuItemState(),
       new MenuItemState()
         .withLabel("Save")
@@ -265,7 +274,9 @@ export class MenubarController extends EventEmitter {
           .withEventDetail(i)
           .withKeybinding(info.kbd)
           .withChecked(this.layerVisibility.isFlagActive(i))
-          .withEnabled(!this.layerVisibility.isFlagOverridden(i))
+          .withEnabled(
+            !this.layerVisibility.isFlagOverridden(i) && this.windowVisible
+          )
       )
     );
   }
@@ -277,7 +288,8 @@ export class MenubarController extends EventEmitter {
         new MenuItemState()
           .withLabel("Toggle Developer Tools")
           .withEventType(MenuEvent.DevTools)
-          .withKeybinding(isMac() ? "Alt+Command+I" : "Ctrl+Shift+I"),
+          .withKeybinding(isMac() ? "Alt+Command+I" : "Ctrl+Shift+I")
+          .withEnabled(this.windowVisible),
         new DividerMenuItemState()
       );
     }
@@ -314,12 +326,7 @@ export class MenubarController extends EventEmitter {
   }
 
   hostUpdated() {
-    let newMenubarState = this.generateMenubarState();
-    if (JSON.stringify(this.menubarState) !== JSON.stringify(newMenubarState)) {
-      this.menubarState = newMenubarState;
-      this.collectKeybindings();
-      this.emit("menubar-state-updated", this.menubarState);
-    }
+    this.updateMenubarState();
   }
 
   async handleMenuEvent(event) {
@@ -372,32 +379,32 @@ export class MenubarController extends EventEmitter {
     }
   }
 
-  get canOpenMaps() {
-    return this.application.validGfx();
-  }
-
   get canSaveMaps() {
-    return this.application.mapState.loaded;
+    return this.application.mapState.loaded && this.windowVisible;
   }
 
   get canAccessMapProperties() {
-    return this.application.validGfx() && this.application.mapState.loaded;
+    return (
+      this.application.validGfx() &&
+      this.application.mapState.loaded &&
+      this.windowVisible
+    );
   }
 
   get canAccessSettings() {
-    return this.application.settingsState != null;
+    return this.application.settingsState != null && this.windowVisible;
   }
 
   get canReloadGraphics() {
-    return this.application.canReloadGraphics();
+    return this.application.canReloadGraphics() && this.windowVisible;
   }
 
   get canUndo() {
-    return this.application.canUndo();
+    return this.application.canUndo() && this.windowVisible;
   }
 
   get canRedo() {
-    return this.application.canRedo();
+    return this.application.canRedo() && this.windowVisible;
   }
 
   get recentFiles() {
@@ -406,5 +413,19 @@ export class MenubarController extends EventEmitter {
 
   get layerVisibility() {
     return this.application.layerVisibility;
+  }
+
+  get windowVisible() {
+    return !this._closed && !this._minimized;
+  }
+
+  set closed(value) {
+    this._closed = value;
+    this.updateMenubarState();
+  }
+
+  set minimized(value) {
+    this._minimized = value;
+    this.updateMenubarState();
   }
 }

@@ -3,6 +3,7 @@ import { CommandInvoker } from "../command/command";
 export class MapState {
   constructor() {
     this.fileHandle = null;
+    this.pending = false;
     this.emf = null;
     this.error = null;
     this.gameObject = null;
@@ -24,6 +25,7 @@ export class MapState {
   copy() {
     let copy = new MapState();
     copy.fileHandle = this.fileHandle;
+    copy.pending = this.pending;
     copy.emf = this.emf;
     copy.error = this.error;
     copy.gameObject = this.gameObject;
@@ -37,6 +39,12 @@ export class MapState {
   withFileHandle(fileHandle) {
     let copy = this.copy();
     copy.fileHandle = fileHandle;
+    return copy;
+  }
+
+  withPending(pending) {
+    let copy = this.copy();
+    copy.pending = pending;
     return copy;
   }
 
@@ -59,7 +67,7 @@ export class MapState {
   }
 
   get loading() {
-    return this.fileHandle !== null && !this.loaded;
+    return this.fileHandle !== null && !this.pending && !this.loaded;
   }
 
   get loaded() {

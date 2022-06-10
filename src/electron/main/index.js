@@ -19,11 +19,17 @@ const createMenuItemConstructorOptions = (state) => {
     if (state.eventType) {
       let eventType = JSON.stringify(state.eventType);
       let eventDetail = JSON.stringify(state.eventDetail);
-      result.click = (_menuItem, browserWindow, _event) => {
-        browserWindow.webContents.executeJavaScript(
+      result.click = (_menuItem, _browserWindow, _event) => {
+        if (!mainWindow) {
+          setupWindow();
+        }
+        mainWindow.webContents.executeJavaScript(
           `emitNativeMenuEvent(${eventType}, ${eventDetail});`,
           true
         );
+        if (mainWindow.isMinimized()) {
+          mainWindow.restore();
+        }
       };
     }
   }
@@ -86,6 +92,14 @@ const setupWindow = () => {
     mainWindow.show();
   });
 
+  mainWindow.on("minimize", (_event) => {
+    mainWindow.webContents.send("window:minimized");
+  });
+
+  mainWindow.on("restore", (_event) => {
+    mainWindow.webContents.send("window:restored");
+  });
+
   mainWindow.on("maximize", (_event) => {
     mainWindow.webContents.send("window:maximized");
   });
@@ -137,6 +151,12 @@ const setupIPC = () => {
 
   ipcMain.on("window:minimize", (_event) => {
     mainWindow.minimize();
+  });
+
+  ipcMain.on("window:restore", (_event) => {
+    if (mainWindow.isMinimized()) {
+      mainWindow.restore();
+    }
   });
 
   ipcMain.on("window:maximize", (_event) => {
