@@ -139,7 +139,8 @@ export class MenubarController extends EventEmitter {
     return new MenuState([
       new MenuItemState()
         .withLabel("About Endless Map Editor")
-        .withEventType(MenuEvent.About),
+        .withEventType(MenuEvent.About)
+        .withEnabled(this.canShowAbout),
       new DividerMenuItemState(),
       new MenuItemState()
         .withLabel("Preferences...")
@@ -169,14 +170,17 @@ export class MenubarController extends EventEmitter {
       new MenuItemState()
         .withLabel("New")
         .withEventType(MenuEvent.New)
-        .withKeybinding("CommandOrControl+Alt+N"),
+        .withKeybinding("CommandOrControl+Alt+N")
+        .withEnabled(this.canOpenMaps),
       new MenuItemState()
         .withLabel("Open")
         .withEventType(MenuEvent.Open)
-        .withKeybinding("CommandOrControl+O"),
+        .withKeybinding("CommandOrControl+O")
+        .withEnabled(this.canOpenMaps),
       new SubmenuMenuItemState()
         .withLabel("Open Recent")
-        .withMenu(this.generateRecentFilesMenu()),
+        .withMenu(this.generateRecentFilesMenu())
+        .withEnabled(this.canOpenMaps),
       new DividerMenuItemState(),
       new MenuItemState()
         .withLabel("Save")
@@ -223,6 +227,7 @@ export class MenubarController extends EventEmitter {
           .withLabel(handle.name)
           .withEventType(MenuEvent.OpenRecent)
           .withEventDetail(index)
+          .withEnabled(this.canOpenMaps)
       )
     );
   }
@@ -274,9 +279,7 @@ export class MenubarController extends EventEmitter {
           .withEventDetail(i)
           .withKeybinding(info.kbd)
           .withChecked(this.layerVisibility.isFlagActive(i))
-          .withEnabled(
-            !this.layerVisibility.isFlagOverridden(i) && this.windowVisible
-          )
+          .withEnabled(this.canToggleLayerVisibility(i))
       )
     );
   }
@@ -289,13 +292,16 @@ export class MenubarController extends EventEmitter {
           .withLabel("Toggle Developer Tools")
           .withEventType(MenuEvent.DevTools)
           .withKeybinding(isMac() ? "Alt+Command+I" : "Ctrl+Shift+I")
-          .withEnabled(this.windowVisible),
+          .withEnabled(this.canToggleDevTools),
         new DividerMenuItemState()
       );
     }
     if (!(isElectron() && isMac())) {
       items.push(
-        new MenuItemState().withLabel("About").withEventType(MenuEvent.About)
+        new MenuItemState()
+          .withLabel("About")
+          .withEventType(MenuEvent.About)
+          .withEnabled(this.canShowAbout)
       );
     }
     return new MenuState(items);
@@ -332,6 +338,10 @@ export class MenubarController extends EventEmitter {
   async handleMenuEvent(event) {
     // Defer to next tick
     await new Promise((resolve) => setTimeout(resolve, 0));
+
+    if (this.hasOpenOverlay) {
+      return;
+    }
 
     switch (event.type) {
       case MenuEvent.New:
@@ -379,32 +389,69 @@ export class MenubarController extends EventEmitter {
     }
   }
 
+  get canOpenMaps() {
+    return !this.hasOpenOverlay;
+  }
+
   get canSaveMaps() {
-    return this.application.mapState.loaded && this.windowVisible;
+    return (
+      this.application.mapState.loaded &&
+      this.windowVisible &&
+      !this.hasOpenOverlay
+    );
   }
 
   get canAccessMapProperties() {
     return (
       this.application.validGfx() &&
       this.application.mapState.loaded &&
-      this.windowVisible
+      this.windowVisible &&
+      !this.hasOpenOverlay
     );
   }
 
   get canAccessSettings() {
-    return this.application.settingsState != null && this.windowVisible;
+    return (
+      this.application.settingsState != null &&
+      this.windowVisible &&
+      !this.hasOpenOverlay
+    );
   }
 
   get canReloadGraphics() {
-    return this.application.canReloadGraphics() && this.windowVisible;
+    return (
+      this.application.canReloadGraphics() &&
+      this.windowVisible &&
+      !this.hasOpenOverlay
+    );
   }
 
   get canUndo() {
-    return this.application.canUndo() && this.windowVisible;
+    return (
+      this.application.canUndo() && this.windowVisible && !this.hasOpenOverlay
+    );
   }
 
   get canRedo() {
-    return this.application.canRedo() && this.windowVisible;
+    return (
+      this.application.canRedo() && this.windowVisible && !this.hasOpenOverlay
+    );
+  }
+
+  canToggleLayerVisibility(flag) {
+    return (
+      !this.layerVisibility.isFlagOverridden(flag) &&
+      this.windowVisible &&
+      !this.hasOpenOverlay
+    );
+  }
+
+  get canToggleDevTools() {
+    return this.windowVisible && !this.hasOpenOverlay;
+  }
+
+  get canShowAbout() {
+    return !this.hasOpenOverlay;
   }
 
   get recentFiles() {
@@ -417,6 +464,10 @@ export class MenubarController extends EventEmitter {
 
   get windowVisible() {
     return !this._closed && !this._minimized;
+  }
+
+  get hasOpenOverlay() {
+    return this.application.hasOpenPrompt || this.application.hasOpenModal;
   }
 
   set closed(value) {
