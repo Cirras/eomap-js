@@ -133,6 +133,7 @@ export class EOMap extends Phaser.GameObjects.GameObject {
     this.cachedFrame = null;
     this.animationFrame = 0;
 
+    this.renderListChangesSinceLastTick = 0;
     this.dirtyRenderList = false;
 
     this._tempMatrix1 = new Phaser.GameObjects.Components.TransformMatrix();
@@ -448,7 +449,13 @@ export class EOMap extends Phaser.GameObjects.GameObject {
         }
 
         delete this.tileGraphics[graphicIndex];
-        removeFirst(this.renderList, oldGraphic);
+
+        if (!this.dirtyRenderList) {
+          removeFirst(this.renderList, oldGraphic);
+          if (++this.renderListChangesSinceLastTick > 100) {
+            this.dirtyRenderList = true;
+          }
+        }
 
         oldGraphic.cacheEntry.decRef();
         this.checkEntityOffsets(x, y, layer);
@@ -503,8 +510,11 @@ export class EOMap extends Phaser.GameObjects.GameObject {
 
     this.tileGraphics[graphicIndex] = tileGraphic;
 
-    if (this.layerVisibility.isLayerVisible(layer)) {
+    if (!this.dirtyRenderList && this.layerVisibility.isLayerVisible(layer)) {
       binaryInsert(this.renderList, tileGraphic, depthComparator);
+      if (++this.renderListChangesSinceLastTick > 100) {
+        this.dirtyRenderList = true;
+      }
     }
 
     this.checkEntityOffsets(x, y, layer);
@@ -807,6 +817,7 @@ export class EOMap extends Phaser.GameObjects.GameObject {
       this.invalidateCachedFrame();
     }
 
+    this.renderListChangesSinceLastTick = 0;
     this.camera.dirty = false;
 
     this.updateAnimationFrame();
