@@ -68,7 +68,7 @@ export class Palette extends LitElement {
         bottom: 0px;
         width: var(--palette-gutter-handle-width);
         touch-action: none;
-        cursor: w-resize;
+        cursor: ew-resize;
         z-index: 999;
       }
       .palette-gutter-hover {
