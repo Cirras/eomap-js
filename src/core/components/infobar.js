@@ -16,6 +16,7 @@ export class InfoBar extends LitElement {
         color: var(--spectrum-global-color-gray-700);
         font-family: var(--spectrum-global-font-family-code);
         font-size: var(--spectrum-global-dimension-font-size-75);
+        line-height: var(--spectrum-global-dimension-size-175);
         display: flex;
         position: relative;
         box-sizing: border-box;

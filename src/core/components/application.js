@@ -45,7 +45,7 @@ export class Application extends LitElement {
     return css`
       :host {
         --spectrum-divider-size: 1px;
-        --spectrum-global-font-family-code: "Source Code Pro", Monaco, Consolas,
+        --spectrum-global-font-family-code: "Source Code Pro", Monaco_, Consolas,
           monospace;
         background-color: var(--spectrum-global-color-gray-200);
         color: var(--spectrum-global-color-gray-800);

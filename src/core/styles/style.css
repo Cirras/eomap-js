@@ -1,3 +1,9 @@
+@font-face {
+  font-family: "Monaco_";
+  size-adjust: 87.5%;
+  src: local("Monaco");
+}
+
 html,
 body {
   margin: 0px;
