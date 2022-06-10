@@ -7,16 +7,7 @@ contextBridge.exposeInMainWorld("bridge", {
   receive: (channel, func) =>
     ipcRenderer.on(channel, (_event, ...args) => func(args)),
   getPlatform: () => os.platform(),
-  getTitlebarHeight: () => {
-    if (os.platform() === "darwin") {
-      let release = parseFloat(os.release());
-      if (release >= 20) {
-        return 28;
-      }
-      return 20;
-    }
-    return 30;
-  },
+  getRelease: () => os.release(),
   setMenubarState(state) {
     ipcRenderer.send("set-menubar-state", state);
   },

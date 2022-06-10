@@ -14,15 +14,24 @@ import "./menubar";
 import { MenubarState } from "../../../core/state/menubar-state";
 import { isMac } from "../../../core/util/platform-utils";
 
+const titlebarHeight = (() => {
+  if (isMac()) {
+    let release = parseFloat(window.bridge.getRelease());
+    if (release >= 20) {
+      return 28;
+    }
+    return 20;
+  }
+  return 30;
+})();
+
 @customElement("eomap-titlebar")
 export class Titlebar extends LitElement {
-  static TITLEBAR_HEIGHT = window.bridge.getTitlebarHeight();
-
   static get styles() {
     return css`
       :host {
         width: 100%;
-        height: ${this.TITLEBAR_HEIGHT}px;
+        height: ${titlebarHeight}px;
         box-sizing: border-box;
         justify-content: left;
         flex-shrink: 1;
@@ -40,7 +49,7 @@ export class Titlebar extends LitElement {
         display: block;
         position: absolute;
         width: 100%;
-        height: ${this.TITLEBAR_HEIGHT}px;
+        height: ${titlebarHeight}px;
         -webkit-app-region: drag;
       }
       .app-icon {
@@ -60,7 +69,7 @@ export class Titlebar extends LitElement {
         height: 16px;
       }
       .menubar {
-        --eomap-menubar-height: ${this.TITLEBAR_HEIGHT}px;
+        --eomap-menubar-height: ${titlebarHeight}px;
         z-index: 2500;
         -webkit-app-region: no-drag;
         min-width: 36px;
@@ -89,7 +98,7 @@ export class Titlebar extends LitElement {
         display: flex;
         align-items: center;
         justify-content: center;
-        height: ${this.TITLEBAR_HEIGHT}px;
+        height: ${titlebarHeight}px;
         width: 46px;
       }
       .window-icon:hover {
