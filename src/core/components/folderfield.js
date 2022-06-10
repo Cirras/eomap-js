@@ -30,6 +30,7 @@ export class FolderTextfield extends Textfield {
           --spectrum-textfield-texticon-success-icon-height: 15px;
           --spectrum-textfield-texticon-invalid-icon-width: 15px;
           --spectrum-textfield-texticon-invalid-icon-height: 15px;
+          --spectrum-textfield-texticon-padding-top: 7px;
           width: unset;
         }
         .input {
