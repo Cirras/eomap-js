@@ -4,6 +4,23 @@ import { createWindow } from "./window/create";
 
 let mainWindow = null;
 
+const createMenuItemClick = (state) => {
+  let eventType = JSON.stringify(state.eventType);
+  let eventDetail = JSON.stringify(state.eventDetail);
+  return (_menuItem, _browserWindow, _event) => {
+    if (!mainWindow) {
+      setupWindow();
+    }
+    mainWindow.webContents.executeJavaScript(
+      `emitNativeMenuEvent(${eventType}, ${eventDetail});`,
+      true
+    );
+    if (mainWindow.isMinimized()) {
+      mainWindow.restore();
+    }
+  };
+};
+
 const createMenuItemConstructorOptions = (state) => {
   let result = {
     type: state.type,
@@ -17,20 +34,7 @@ const createMenuItemConstructorOptions = (state) => {
       result.accelerator = state.keybinding.electronLabel.string;
     }
     if (state.eventType) {
-      let eventType = JSON.stringify(state.eventType);
-      let eventDetail = JSON.stringify(state.eventDetail);
-      result.click = (_menuItem, _browserWindow, _event) => {
-        if (!mainWindow) {
-          setupWindow();
-        }
-        mainWindow.webContents.executeJavaScript(
-          `emitNativeMenuEvent(${eventType}, ${eventDetail});`,
-          true
-        );
-        if (mainWindow.isMinimized()) {
-          mainWindow.restore();
-        }
-      };
+      result.click = createMenuItemClick(state);
     }
   }
 
