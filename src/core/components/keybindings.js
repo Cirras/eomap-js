@@ -1,5 +1,6 @@
 import { css, html, LitElement } from "lit";
 import { customElement, property } from "lit/decorators.js";
+
 @customElement("eomap-keybindings")
 export class Keybindings extends LitElement {
   static get styles() {
@@ -49,27 +50,30 @@ export class Keybindings extends LitElement {
     `;
   }
 
-  @property({ type: Array })
-  bindings = [];
+  @property({ type: Map })
+  bindings = new Map();
 
-  renderKeybindingParts(parts) {
+  renderKeybindingParts(parts, separator) {
     let result = [];
     for (let i = 0; i < parts.length; ++i) {
-      if (i > 0) {
-        result.push(html`<div class="keybinding-separator">+</div>`);
+      if (separator && i > 0) {
+        result.push(html`<div class="keybinding-separator">${separator}</div>`);
       }
       result.push(html`<div class="keybinding-key">${parts[i]}</div>`);
     }
     return result;
   }
 
-  renderKeybinding(binding) {
+  renderKeybinding(label, binding) {
     return html`
       <div class="keybinding-row">
-        <div class="keybinding-label">${binding.label}</div>
+        <div class="keybinding-label">${label}</div>
         <div class="keybinding-cell">
           <div class="keybinding">
-            ${this.renderKeybindingParts(binding.parts)}
+            ${this.renderKeybindingParts(
+              binding.uiLabel.parts,
+              binding.uiLabel.separator
+            )}
           </div>
         </div>
       </div>
@@ -77,13 +81,10 @@ export class Keybindings extends LitElement {
   }
 
   render() {
-    return this.bindings.map((binding) => this.renderKeybinding(binding));
-  }
-}
-
-export class Keybinding {
-  constructor(label, parts) {
-    this.label = label;
-    this.parts = parts;
+    let result = [];
+    for (let entry of this.bindings.entries()) {
+      result.push(this.renderKeybinding(entry[0], entry[1]));
+    }
+    return result;
   }
 }

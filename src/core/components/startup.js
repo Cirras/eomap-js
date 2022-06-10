@@ -5,10 +5,12 @@ import { unsafeHTML } from "lit/directives/unsafe-html.js";
 import "@spectrum-web-components/progress-bar/sp-progress-bar.js";
 import "@spectrum-web-components/button/sp-button.js";
 
+import "./keybindings";
+
 import AppIcon from "../assets/icon.svg";
 
-import { Keybinding } from "./keybindings";
 import { MapState } from "../state/map-state";
+import { KeybindingState } from "../state/keybinding-state";
 
 @customElement("eomap-startup")
 export class Startup extends LitElement {
@@ -128,16 +130,18 @@ export class Startup extends LitElement {
     }
   }
 
+  getBindingsMap() {
+    let bindings = new Map();
+    bindings.set("New Map", new KeybindingState("CommandOrControl+Alt+N"));
+    bindings.set("Open Map", new KeybindingState("CommandOrControl+O"));
+    bindings.set("Settings", new KeybindingState("CommandOrControl+,"));
+    return bindings;
+  }
+
   renderContent() {
     if (this.status === Startup.Status.READY) {
       return html`
-        <eomap-keybindings
-          .bindings=${[
-            new Keybinding("New Map", ["Ctrl", "Alt", "N"]),
-            new Keybinding("Open Map", ["Ctrl", "O"]),
-            new Keybinding("Settings", ["Ctrl", ","]),
-          ]}
-        >
+        <eomap-keybindings .bindings=${this.getBindingsMap()}>
         </eomap-keybindings>
       `;
     } else {
