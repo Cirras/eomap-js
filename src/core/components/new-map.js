@@ -70,6 +70,7 @@ export class NewMap extends LitElement {
               <sp-field-label for="width">Width</sp-field-label>
               <eomap-number-field
                 id="width"
+                min="1"
                 max="${CHAR_MAX - 1}"
               ></eomap-number-field>
             </div>
@@ -77,6 +78,7 @@ export class NewMap extends LitElement {
               <sp-field-label for="height">Height</sp-field-label>
               <eomap-number-field
                 id="height"
+                min="1"
                 max="${CHAR_MAX - 1}"
               ></eomap-number-field>
             </div>
