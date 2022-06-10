@@ -205,14 +205,6 @@ export class Application extends LitElement {
 
   pendingGFXLoader = null;
 
-  onWindowKeyDown = (event) => {
-    if (this.keyboardEnabled()) {
-      this.handleLayerVisibilityShortcuts(event);
-      this.handleUndoRedoShortcuts(event);
-      this.handleFileShortcuts(event);
-    }
-  };
-
   onResize = (_event) => {
     this.calculateMaxPaletteWidth();
   };
@@ -286,91 +278,6 @@ export class Application extends LitElement {
       async (recent) => !(await recent.isSameEntry(handle))
     );
     this.saveRecentFiles();
-  }
-
-  handleLayerVisibilityShortcuts(event) {
-    if (!event.altKey) {
-      return;
-    }
-
-    if (event.repeat) {
-      return;
-    }
-
-    let flag = [
-      "Digit1",
-      "Digit2",
-      "Digit3",
-      "Digit4",
-      "Digit5",
-      "Digit6",
-      "Digit7",
-      "Digit8",
-      "Digit9",
-      "Digit0",
-      "KeyE",
-    ].indexOf(event.code);
-
-    if (flag === -1) {
-      return;
-    }
-
-    if (this.layerVisibility.isFlagOverridden(flag)) {
-      return;
-    }
-
-    this.layerVisibility = this.layerVisibility.withFlagToggled(flag);
-    event.preventDefault();
-  }
-
-  handleUndoRedoShortcuts(event) {
-    if (!event.ctrlKey) {
-      return;
-    }
-
-    switch (event.code) {
-      case "KeyY":
-        this.redo();
-        break;
-      case "KeyZ":
-        if (event.shiftKey) {
-          this.redo();
-        } else {
-          this.undo();
-        }
-        break;
-    }
-  }
-
-  handleFileShortcuts(event) {
-    if (!event.ctrlKey) {
-      return;
-    }
-
-    switch (event.code) {
-      case "KeyN":
-        if (event.altKey) {
-          this.showNewMap();
-          event.preventDefault();
-        }
-        break;
-      case "KeyO":
-        this.open();
-        event.preventDefault();
-        break;
-      case "KeyS":
-        if (event.shiftKey) {
-          this.saveAs();
-        } else {
-          this.save();
-        }
-        event.preventDefault();
-        break;
-      case "Comma":
-        this.showSettings();
-        event.preventDefault();
-        break;
-    }
   }
 
   undo() {
@@ -640,13 +547,11 @@ export class Application extends LitElement {
 
   connectedCallback() {
     super.connectedCallback();
-    window.addEventListener("keydown", this.onWindowKeyDown);
     window.addEventListener("resize", this.onResize);
     window.addEventListener("beforeunload", this.onBeforeUnload);
   }
 
   disconnectedCallback() {
-    window.removeEventListener("keydown", this.onWindowKeyDown);
     window.removeEventListener("resize", this.onResize);
     window.removeEventListener("beforeunload", this.onBeforeUnload);
     super.disconnectedCallback();

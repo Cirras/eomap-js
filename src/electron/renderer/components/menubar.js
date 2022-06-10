@@ -133,7 +133,7 @@ export class Menubar extends LitElement {
     let currentSize = 0;
     let menuButtons = this.shadowRoot.querySelectorAll("eomap-menubar-button");
 
-    for (let i = 0; i < this.state.menus.length; ++i) {
+    for (let i = 0; i < this.state.items.length; ++i) {
       if (i === menuButtons.length) {
         break;
       }
@@ -177,23 +177,25 @@ export class Menubar extends LitElement {
     let visibleButtonCount = this.calculateVisibleButtons();
 
     let overflowMenus = [];
-    for (let i = visibleButtonCount; i < this.state.menus.length; ++i) {
-      let { label, menu } = this.state.menus[i];
-      let submenu = renderMenuItem(new SubmenuMenuItemState(label, menu));
+    for (let i = visibleButtonCount; i < this.state.items.length; ++i) {
+      let { label, menu } = this.state.items[i];
+      let submenu = renderMenuItem(
+        new SubmenuMenuItemState().withLabel(label).withMenu(menu)
+      );
       overflowMenus.push(submenu);
     }
 
     let result = [];
 
     for (let i = 0; i < visibleButtonCount; ++i) {
-      result.push(this.renderMenubarButton(this.state.menus[i], true));
+      result.push(this.renderMenubarButton(this.state.items[i], true));
     }
 
     result.push(html`
       <eomap-more-button
         label="More"
         tabindex="-1"
-        ?hidden=${visibleButtonCount === this.state.menus.length}
+        ?hidden=${visibleButtonCount === this.state.items.length}
         @button-pointerenter=${this.onButtonPointerEnter}
         @button-pointerdown=${this.onButtonPointerDown}
         @menu-item-press=${this.onMenuItemPress}
@@ -202,8 +204,8 @@ export class Menubar extends LitElement {
       </eomap-more-button>
     `);
 
-    for (let i = visibleButtonCount; i < this.state.menus.length; ++i) {
-      result.push(this.renderMenubarButton(this.state.menus[i], false));
+    for (let i = visibleButtonCount; i < this.state.items.length; ++i) {
+      result.push(this.renderMenubarButton(this.state.items[i], false));
     }
 
     return result;

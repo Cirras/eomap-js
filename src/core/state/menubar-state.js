@@ -1,3 +1,5 @@
+import { KeybindingState } from "./keybinding-state";
+
 export class MenuItemState {
   constructor() {
     this.type = "normal";
@@ -5,8 +7,8 @@ export class MenuItemState {
     this.label = null;
     this.eventType = null;
     this.eventDetail = null;
-    this.accelerator = null;
-    this.registerAccelerator = false;
+    this.keybinding = null;
+    this.alternateKeybindings = [];
     this.enabled = true;
   }
 
@@ -16,8 +18,8 @@ export class MenuItemState {
     copy.label = this.label;
     copy.eventType = this.eventType;
     copy.eventDetail = this.eventDetail;
-    copy.accelerator = this.accelerator;
-    copy.registerAccelerator = this.registerAccelerator;
+    copy.keybinding = this.keybinding;
+    copy.alternateKeybindings = [...this.alternateKeybindings];
     copy.enabled = this.enabled;
     return copy;
   }
@@ -46,15 +48,18 @@ export class MenuItemState {
     return copy;
   }
 
-  withAccelerator(accelerator) {
+  withKeybinding(...accelerators) {
     let copy = this.copy();
-    copy.accelerator = accelerator;
-    return copy;
-  }
-
-  withRegisterAccelerator(registerAccelerator) {
-    let copy = this.copy();
-    copy.registerAccelerator = registerAccelerator;
+    copy.keybinding = null;
+    copy.alternateKeybindings = [];
+    for (let i = 0; i < accelerators.length; ++i) {
+      let keybinding = new KeybindingState(accelerators[i]);
+      if (i === 0) {
+        copy.keybinding = keybinding;
+      } else {
+        copy.alternateKeybindings.push(keybinding);
+      }
+    }
     return copy;
   }
 
@@ -78,8 +83,8 @@ export class CheckboxMenuItemState extends MenuItemState {
     copy.label = this.label;
     copy.eventType = this.eventType;
     copy.eventDetail = this.eventDetail;
-    copy.accelerator = this.accelerator;
-    copy.registerAccelerator = this.registerAccelerator;
+    copy.keybinding = this.keybinding;
+    copy.alternateKeybindings = [...this.alternateKeybindings];
     copy.enabled = this.enabled;
     copy.checked = this.checked;
     return copy;
@@ -163,6 +168,6 @@ export class MenuState {
 
 export class MenubarState {
   constructor(items) {
-    this.items = items;
+    this.items = items || [];
   }
 }

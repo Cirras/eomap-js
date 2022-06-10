@@ -57,12 +57,29 @@ export class DOMMenuEventSource extends MenuEventSource {
 }
 
 export class MenubarController extends EventEmitter {
+  onWindowKeyDown = (event) => {
+    for (let keybinding of this.keybindingMap.keys()) {
+      if (keybinding.triggeredBy(event)) {
+        let item = this.keybindingMap.get(keybinding);
+        if (item.enabled) {
+          this.handleMenuEvent(
+            new CustomEvent(item.eventType, { detail: item.eventDetail })
+          );
+        }
+        break;
+      }
+    }
+  };
+
   constructor(application) {
     super();
     this.application = application;
     this.menubarState = new MenubarState();
+    this.keybindingMap = new Map();
     this.eventSources = [];
+
     application.addController(this);
+    window.addEventListener("keydown", this.onWindowKeyDown);
   }
 
   addEventSource(eventSource) {
@@ -115,7 +132,7 @@ export class MenubarController extends EventEmitter {
       new MenuItemState()
         .withLabel("Preferences...")
         .withEventType(MenuEvent.Settings)
-        .withAccelerator("Ctrl+,")
+        .withKeybinding("Command+,")
         .withEnabled(this.canAccessSettings),
       new DividerMenuItemState(),
       new SubmenuMenuItemState()
@@ -140,12 +157,12 @@ export class MenubarController extends EventEmitter {
       new MenuItemState()
         .withLabel("New")
         .withEventType(MenuEvent.New)
-        .withAccelerator("Ctrl+Alt+N")
+        .withKeybinding("CommandOrControl+Alt+N")
         .withEnabled(this.canOpenMaps),
       new MenuItemState()
         .withLabel("Open")
         .withEventType(MenuEvent.Open)
-        .withAccelerator("Ctrl+O")
+        .withKeybinding("CommandOrControl+O")
         .withEnabled(this.canOpenMaps),
       new SubmenuMenuItemState()
         .withLabel("Open Recent")
@@ -155,12 +172,12 @@ export class MenubarController extends EventEmitter {
       new MenuItemState()
         .withLabel("Save")
         .withEventType(MenuEvent.Save)
-        .withAccelerator("Ctrl+S")
+        .withKeybinding("CommandOrControl+S")
         .withEnabled(this.canSaveMaps),
       new MenuItemState()
         .withLabel("Save As")
         .withEventType(MenuEvent.SaveAs)
-        .withAccelerator("Ctrl+Shift+S")
+        .withKeybinding("CommandOrControl+Shift+S")
         .withEnabled(this.canSaveMaps),
       new DividerMenuItemState(),
       new MenuItemState()
@@ -175,7 +192,7 @@ export class MenubarController extends EventEmitter {
         new MenuItemState()
           .withLabel("Settings")
           .withEventType(MenuEvent.Settings)
-          .withAccelerator("Ctrl+,")
+          .withKeybinding("CommandOrControl+,")
           .withEnabled(this.canAccessSettings),
         new DividerMenuItemState(),
         new MenuItemState()
@@ -206,14 +223,22 @@ export class MenubarController extends EventEmitter {
       new MenuItemState()
         .withLabel("Undo")
         .withEventType(MenuEvent.Undo)
-        .withAccelerator("Ctrl+Z")
+        .withKeybinding("CommandOrControl+Z")
         .withEnabled(this.canUndo),
       new MenuItemState()
         .withLabel("Redo")
         .withEventType(MenuEvent.Redo)
-        .withAccelerator("Ctrl+Y")
+        .withKeybinding(...this.getRedoAccelerators())
         .withEnabled(this.canRedo),
     ]);
+  }
+
+  getRedoAccelerators() {
+    let result = ["CommandOrControl+Shift+Z"];
+    if (!isMac()) {
+      result.unshift("Control+Y");
+    }
+    return result;
   }
 
   generateViewMenu() {
@@ -238,7 +263,7 @@ export class MenubarController extends EventEmitter {
           .withLabel(info.label)
           .withEventType(MenuEvent.VisibilityFlagToggle)
           .withEventDetail(i)
-          .withAccelerator(info.kbd)
+          .withKeybinding(info.kbd)
           .withChecked(this.layerVisibility.isFlagActive(i))
           .withEnabled(!this.layerVisibility.isFlagOverridden(i))
       )
@@ -249,7 +274,10 @@ export class MenubarController extends EventEmitter {
     let items = [];
     if (isElectron()) {
       items.push(
-        new MenuItemState().withRole("toggleDevTools"),
+        new MenuItemState()
+          .withLabel("Toggle Developer Tools")
+          .withEventType(MenuEvent.DevTools)
+          .withKeybinding(isMac() ? "Alt+Command+I" : "Ctrl+Shift+I"),
         new DividerMenuItemState()
       );
     }
@@ -261,10 +289,35 @@ export class MenubarController extends EventEmitter {
     return new MenuState(items);
   }
 
+  collectKeybindings() {
+    this.keybindingMap.clear();
+    this.menubarState.items.forEach((item) =>
+      this.collectKeybindingsFromMenuItem(item)
+    );
+  }
+
+  collectKeybindingsFromMenuItem(item) {
+    if (item.keybinding) {
+      if (!(isElectron() && isMac())) {
+        this.keybindingMap.set(item.keybinding, item);
+      }
+      for (let keybinding of item.alternateKeybindings) {
+        this.keybindingMap.set(keybinding, item);
+      }
+    }
+
+    if (item.type === "submenu" && item.menu) {
+      item.menu.items.forEach((subItem) =>
+        this.collectKeybindingsFromMenuItem(subItem)
+      );
+    }
+  }
+
   hostUpdated() {
     let newMenubarState = this.generateMenubarState();
     if (JSON.stringify(this.menubarState) !== JSON.stringify(newMenubarState)) {
       this.menubarState = newMenubarState;
+      this.collectKeybindings();
       this.emit("menubar-state-updated", this.menubarState);
     }
   }

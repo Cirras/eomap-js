@@ -16,6 +16,7 @@ import { EntityState } from "../state/entity-state";
 import { EntityCommand } from "../command/entity-command";
 import { MapPropertiesState } from "../state/map-properties-state";
 import { PropertiesCommand } from "../command/properties-command";
+import { isMac } from "../util/platform-utils";
 
 export class EditorScene extends Phaser.Scene {
   constructor() {
@@ -347,7 +348,7 @@ export class EditorScene extends Phaser.Scene {
 
     if (pointer.middleButtonDown()) {
       this.overrideTool = "move";
-    } else if (pointer.event.ctrlKey) {
+    } else if (isMac() ? pointer.event.metaKey : pointer.event.ctrlKey) {
       this.overrideTool = "eyedropper";
     } else {
       this.overrideTool = null;

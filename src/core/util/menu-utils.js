@@ -22,10 +22,12 @@ function renderNormal(item) {
   return html`
     <eomap-menu-item
       role="${getRole(item)}"
+      aria-label="${item.label}"
+      aria-keyshortcuts="${getKeyshortcuts(item)}"
       ?disabled=${!item.enabled}
       @menu-item-press=${getOnMenuItemPress(item)}
     >
-      ${item.label} ${renderAccelerator(item)}
+      ${item.label} ${renderKeybinding(item)}
     </eomap-menu-item>
   `;
 }
@@ -34,14 +36,23 @@ function renderCheckbox(item) {
   return html`
     <eomap-menu-item
       role="${getRole(item)}"
+      aria-label="${item.label}"
       aria-checked="${item.checked}"
+      aria-keyshortcuts="${getKeyshortcuts(item)}"
       ?disabled=${!item.enabled}
       .selected=${item.checked}
       @menu-item-press=${getOnMenuItemPress(item)}
     >
-      ${item.label} ${renderAccelerator(item)}
+      ${item.label} ${renderKeybinding(item)}
     </eomap-menu-item>
   `;
+}
+
+function getKeyshortcuts(item) {
+  if (item.keybinding) {
+    return item.keybinding.ariaLabel.string;
+  }
+  return "";
 }
 
 function getOnMenuItemPress(item) {
@@ -58,9 +69,9 @@ function getOnMenuItemPress(item) {
   };
 }
 
-function renderAccelerator(item) {
-  if (item.accelerator) {
-    return html` <kbd slot="value"> ${item.accelerator} </kbd>`;
+function renderKeybinding(item) {
+  if (item.keybinding) {
+    return html` <kbd slot="value"> ${item.keybinding.uiLabel.string} </kbd>`;
   }
 }
 
@@ -72,6 +83,7 @@ function renderSubmenu(item) {
   return html`
     <eomap-submenu-item
       role="${getRole(item)}"
+      aria-label="${item.label}"
       ?disabled=${!item.enabled || item.menu.items.length === 0}
     >
       ${item.label}

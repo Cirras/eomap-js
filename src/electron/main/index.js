@@ -13,8 +13,9 @@ const createMenuItemConstructorOptions = (state) => {
   if (result.type === "normal" || result.type === "checkbox") {
     result.label = state.label;
     result.role = state.role;
-    result.accelerator = state.accelerator;
-    result.registerAccelerator = state.registerAccelerator;
+    if (state.keybinding) {
+      result.accelerator = state.keybinding.electronLabel.string;
+    }
     if (state.eventType) {
       let eventType = JSON.stringify(state.eventType);
       let eventDetail = JSON.stringify(state.eventDetail);
