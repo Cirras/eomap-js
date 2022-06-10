@@ -339,7 +339,7 @@ export class MenubarController extends EventEmitter {
     // Defer to next tick
     await new Promise((resolve) => setTimeout(resolve, 0));
 
-    if (this.hasOpenOverlay) {
+    if (this.hasOpenOverlay && event.type !== MenuEvent.DevTools) {
       return;
     }
 
@@ -447,7 +447,7 @@ export class MenubarController extends EventEmitter {
   }
 
   get canToggleDevTools() {
-    return this.windowVisible && !this.hasOpenOverlay;
+    return this.windowVisible;
   }
 
   get canShowAbout() {
