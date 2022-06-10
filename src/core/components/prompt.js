@@ -149,7 +149,7 @@ export class About extends LitElement {
   }
 
   clickButton(buttonIndex) {
-    this.state.onButtonPress(buttonIndex);
+    this.state.onButtonPress?.(buttonIndex);
     this.open = false;
     this.dispatchEvent(new CustomEvent("close"));
   }

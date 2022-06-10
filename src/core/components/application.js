@@ -38,6 +38,7 @@ import { EOBuilder } from "../data/eo-builder";
 
 import { asyncFilter } from "../util/array-utils";
 import { PendingPromise } from "../util/pending-promise";
+import { CHAR_MAX } from "../data/eo-numeric-limits";
 
 @customElement("eomap-application")
 export class Application extends LitElement {
@@ -919,7 +920,57 @@ export class Application extends LitElement {
   }
 
   onEntityEditorSave(event) {
-    this.entityState = event.detail;
+    if (this.checkEntityOverflow(event.detail)) {
+      this.entityState = event.detail;
+    } else {
+      this.entityEditor.open = true;
+    }
+  }
+
+  checkEntityOverflow(entityState) {
+    let emf = this.mapState.emf;
+    let x = entityState.x;
+    let y = entityState.y;
+
+    let npcCount = emf.npcs.filter((n) => n.x !== x && n.y !== y).length;
+    let itemCount = emf.items.filter((it) => it.x !== x && it.y !== y).length;
+    let signCount = emf.tiles.filter((t) => t.sign).length;
+
+    npcCount += entityState.npcs.length;
+    itemCount += entityState.items.length;
+
+    if (emf.getTile(x, y).sign) {
+      --signCount;
+    }
+
+    if (entityState.sign) {
+      ++signCount;
+    }
+
+    if (npcCount >= CHAR_MAX) {
+      this.showEntityOverflowError("NPC", npcCount);
+      return false;
+    } else if (itemCount >= CHAR_MAX) {
+      this.showEntityOverflowError("item", itemCount);
+      return false;
+    } else if (signCount >= CHAR_MAX) {
+      this.showEntityOverflowError("sign", signCount);
+      return false;
+    }
+
+    return true;
+  }
+
+  showEntityOverflowError(entityType, count) {
+    let limit = CHAR_MAX - 1;
+    this.showPrompt(
+      new PromptState(
+        PromptType.Error,
+        `Entity limit exceeded`,
+        `Only ${limit} ${entityType}s are allowed. (${count}/${limit})`,
+        ["OK"]
+      )
+    );
   }
 
   onNewMapConfirm(event) {
