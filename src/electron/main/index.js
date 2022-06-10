@@ -2,6 +2,8 @@ import { app, BrowserWindow, ipcMain, Menu, session } from "electron";
 import path from "path";
 import { createWindow } from "./window/create";
 
+let mainWindow = null;
+
 const createMenuItemConstructorOptions = (state) => {
   let result = {
     type: state.type,
@@ -56,7 +58,7 @@ const setupCSP = () => {
 };
 
 const setupWindow = () => {
-  const mainWindow = createWindow("main", {
+  mainWindow = createWindow("main", {
     width: 1024,
     height: 768,
     backgroundColor: "#1a1a1a",
@@ -133,6 +135,7 @@ const setupWindow = () => {
   ipcMain.once("window:close", (_event) => {
     mainWindow.emit("pre-destroy");
     mainWindow.destroy();
+    mainWindow = null;
   });
 };
 
