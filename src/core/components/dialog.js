@@ -3,11 +3,14 @@ import { customElement } from "lit/decorators.js";
 
 import { Dialog as SpectrumDialog } from "@spectrum-web-components/dialog/src/Dialog.js";
 
+import scrollbarStyles from "../styles/scrollbar";
+
 @customElement("eomap-dialog")
 export class Dialog extends SpectrumDialog {
   static get styles() {
     return [
       ...super.styles,
+      scrollbarStyles,
       css`
         :host {
           --spectrum-dialog-confirm-overlay-background-color: rgba(
@@ -51,7 +54,10 @@ export class Dialog extends SpectrumDialog {
           );
         }
         .content {
-          overflow: visible !important;
+          overflow: auto;
+          scrollbar-gutter: stable;
+          width: calc(100% + 33px);
+          padding-right: 16px;
         }
       `,
     ];

@@ -20,18 +20,20 @@ export class Dropdown extends SizedMixin(Focusable) {
         :host {
           display: inline-flex;
         }
+        #menu-holder {
+          position: fixed;
+          top: 0;
+          left: 0;
+          z-index: 1;
+        }
         #menu {
-          margin-top: 31px;
           background-color: var(--spectrum-global-color-gray-200);
           border: 1px solid var(--spectrum-global-color-gray-100);
-          position: absolute;
+          position: fixed;
           z-index: 1000;
         }
-        :host([quiet]) #menu {
-          margin-top: 32px;
-        }
         #menu[hidden] {
-          display: none;
+          visibility: hidden;
         }
         #button-content {
           display: flex;
@@ -44,6 +46,9 @@ export class Dropdown extends SizedMixin(Focusable) {
 
   @query("#button")
   button;
+
+  @query("#menu-holder")
+  menuHolder;
 
   @query("#menu")
   menu;
@@ -65,6 +70,11 @@ export class Dropdown extends SizedMixin(Focusable) {
 
   @property({ type: Boolean, reflect: true })
   quiet = false;
+
+  @property({ type: String, reflect: true })
+  direction = "down";
+
+  buttonRect = null;
 
   getButtonContent() {
     return html`
@@ -93,23 +103,85 @@ export class Dropdown extends SizedMixin(Focusable) {
       >
         <div id="button-content">${this.getButtonContent()}</div>
       </sp-action-button>
-      <eomap-menu
-        id="menu"
-        role="menu"
-        ?hidden=${!this.open}
-        @pointerdown=${(event) => event.stopPropagation()}
-      >
-        <slot></slot>
-      </eomap-menu>
+      <div id="menu-holder">
+        <eomap-menu
+          id="menu"
+          role="menu"
+          ?hidden=${!this.open}
+          @pointerdown=${(event) => event.stopPropagation()}
+        >
+          <slot></slot>
+        </eomap-menu>
+      </div>
     `;
   }
 
   update(changedProperties) {
-    super.update(changedProperties);
     if (changedProperties.has("open")) {
-      if (!this.open) {
-        this.menu.blur();
+      this.manageOpen();
+    }
+    super.update(changedProperties);
+  }
+
+  manageOpen() {
+    let menu = this.menu;
+
+    if (!menu) {
+      return;
+    }
+
+    if (this.open) {
+      this.button.scrollIntoView({ block: "nearest" });
+      this.buttonRect = this.button.getBoundingClientRect();
+
+      let menuHeight = menu.getBoundingClientRect().height;
+      this.updateDirection(
+        menuHeight,
+        this.buttonRect.top,
+        this.buttonRect.height + this.menuTopOffset
+      );
+
+      let menuHolderRect = this.menuHolder.getBoundingClientRect();
+      let top = -menuHolderRect.top;
+      let left = -menuHolderRect.left + this.buttonRect.left;
+
+      if (this.direction === "down") {
+        top += this.buttonRect.bottom + this.menuTopOffset;
+      } else {
+        top += this.buttonRect.top - menuHeight - this.menuTopOffset;
       }
+
+      menu.style.top = `${top}px`;
+      menu.style.left = `${left}px`;
+
+      requestAnimationFrame(() => this.checkButtonPosition());
+    } else {
+      menu.blur();
+    }
+  }
+
+  checkButtonPosition() {
+    let newButtonRect = this.button.getBoundingClientRect();
+    if (
+      newButtonRect.top !== this.buttonRect.top ||
+      newButtonRect.left !== this.buttonRect.left
+    ) {
+      this.open = false;
+    }
+
+    if (this.open) {
+      requestAnimationFrame(() => this.checkButtonPosition());
+    }
+  }
+
+  updateDirection(menuHeight, buttonTop, buttonHeight) {
+    if (
+      menuHeight > window.innerHeight - buttonTop + buttonHeight &&
+      menuHeight <= buttonTop
+    ) {
+      this.direction = "up";
+    } else {
+      this.direction = "down";
     }
   }
 
@@ -130,5 +202,9 @@ export class Dropdown extends SizedMixin(Focusable) {
       return this.menu;
     }
     return this.button;
+  }
+
+  get menuTopOffset() {
+    return 0;
   }
 }

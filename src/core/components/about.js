@@ -40,6 +40,7 @@ export class About extends LitElement {
             .button-container {
               display: flex;
               justify-content: center;
+              margin-bottom: var(--spectrum-global-dimension-size-50);
             }
             .icon-container svg {
               width: 100px;

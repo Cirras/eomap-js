@@ -34,7 +34,11 @@ export class Picker extends Dropdown {
             --spectrum-global-color-gray-100
           );
         }
-        :host([open]) #button {
+        :host([open][direction="up"]) #button {
+          border-top-left-radius: 0px;
+          border-top-right-radius: 0px;
+        }
+        :host([open][direction="down"]) #button {
           border-bottom-left-radius: 0px;
           border-bottom-right-radius: 0px;
         }
@@ -68,6 +72,10 @@ export class Picker extends Dropdown {
       }
     }
   });
+
+  onWindowScroll = (_event) => {
+    this.open = false;
+  };
 
   onWindowPointerDown = (event) => {
     if (event.target !== this) {
@@ -199,6 +207,12 @@ export class Picker extends Dropdown {
       if (this.open) {
         this.menu.focusMenuItem(this.selectedItem);
         this.focus();
+        window.addEventListener("scroll", this.onWindowScroll, {
+          capture: true,
+          passive: false,
+        });
+      } else {
+        window.removeEventListener("scroll", this.onWindowScroll);
       }
       this.focused = false;
     }
@@ -246,5 +260,9 @@ export class Picker extends Dropdown {
     window.removeEventListener("blur", this.onWindowBlur);
     window.removeEventListener("keyup", this.onWindowKeyUp);
     super.disconnectedCallback();
+  }
+
+  get menuTopOffset() {
+    return -1;
   }
 }
