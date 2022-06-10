@@ -59,14 +59,14 @@ export class EntityNPC extends LitElement {
               <sp-field-label for="npc-id">NPC ID</sp-field-label>
               <eomap-number-field
                 id="npc-id"
-                max="${SHORT_MAX}"
+                max="${SHORT_MAX - 1}"
               ></eomap-number-field>
             </div>
             <div>
               <sp-field-label for="amount">Amount</sp-field-label>
               <eomap-number-field
                 id="amount"
-                max="${CHAR_MAX}"
+                max="${CHAR_MAX - 1}"
               ></eomap-number-field>
             </div>
           </sp-field-group>
@@ -75,14 +75,14 @@ export class EntityNPC extends LitElement {
               <sp-field-label for="speed">Speed</sp-field-label>
               <eomap-number-field
                 id="speed"
-                max="${CHAR_MAX}"
+                max="${CHAR_MAX - 1}"
               ></eomap-number-field>
             </div>
             <div>
               <sp-field-label for="spawn-time"> Spawn Time </sp-field-label>
               <eomap-number-field
                 id="spawn-time"
-                max="${SHORT_MAX}"
+                max="${SHORT_MAX - 1}"
               ></eomap-number-field>
             </div>
           </sp-field-group>

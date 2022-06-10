@@ -84,13 +84,16 @@ export class Properties extends LitElement {
         </div>
         <div>
           <sp-field-label for="width">Width</sp-field-label>
-          <eomap-number-field id="width" max="${CHAR_MAX}"></eomap-number-field>
+          <eomap-number-field
+            id="width"
+            max="${CHAR_MAX - 1}"
+          ></eomap-number-field>
         </div>
         <div>
           <sp-field-label for="height">Height</sp-field-label>
           <eomap-number-field
             id="height"
-            max="${CHAR_MAX}"
+            max="${CHAR_MAX - 1}"
           ></eomap-number-field>
         </div>
       </sp-field-group>
@@ -156,13 +159,16 @@ export class Properties extends LitElement {
       <sp-field-group>
         <div>
           <sp-field-label for="music">Music</sp-field-label>
-          <eomap-number-field id="music" max="${CHAR_MAX}"></eomap-number-field>
+          <eomap-number-field
+            id="music"
+            max="${CHAR_MAX - 1}"
+          ></eomap-number-field>
         </div>
         <div>
           <sp-field-label for="ambient-sound">Ambient Sound</sp-field-label>
           <eomap-number-field
             id="ambient-sound"
-            max="${SHORT_MAX}"
+            max="${SHORT_MAX - 1}"
           ></eomap-number-field>
         </div>
         <div class="picker-container">
@@ -208,14 +214,14 @@ export class Properties extends LitElement {
           <sp-field-label for="respawn-x">X</sp-field-label>
           <eomap-number-field
             id="respawn-x"
-            max="${CHAR_MAX}"
+            max="${CHAR_MAX - 1}"
           ></eomap-number-field>
         </div>
         <div>
           <sp-field-label for="respawn-y">Y</sp-field-label>
           <eomap-number-field
             id="respawn-y"
-            max="${CHAR_MAX}"
+            max="${CHAR_MAX - 1}"
           ></eomap-number-field>
         </div>
       </sp-field-group>

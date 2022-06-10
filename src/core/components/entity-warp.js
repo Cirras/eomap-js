@@ -65,16 +65,22 @@ export class EntityWarp extends LitElement {
               <sp-field-label for="map">Map</sp-field-label>
               <eomap-number-field
                 id="map"
-                max="${SHORT_MAX}"
+                max="${SHORT_MAX - 1}"
               ></eomap-number-field>
             </div>
             <div>
               <sp-field-label for="x">X</sp-field-label>
-              <eomap-number-field id="x" max="${CHAR_MAX}"></eomap-number-field>
+              <eomap-number-field
+                id="x"
+                max="${CHAR_MAX - 1}"
+              ></eomap-number-field>
             </div>
             <div>
               <sp-field-label for="y">Y</sp-field-label>
-              <eomap-number-field id="y" max="${CHAR_MAX}"></eomap-number-field>
+              <eomap-number-field
+                id="y"
+                max="${CHAR_MAX - 1}"
+              ></eomap-number-field>
             </div>
           </sp-field-group>
           <sp-field-group>
@@ -82,7 +88,7 @@ export class EntityWarp extends LitElement {
               <sp-field-label for="level"> Level </sp-field-label>
               <eomap-number-field
                 id="level"
-                max="${CHAR_MAX}"
+                max="${CHAR_MAX - 1}"
               ></eomap-number-field>
             </div>
             <div>

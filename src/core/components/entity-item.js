@@ -61,14 +61,14 @@ export class EntityItem extends LitElement {
               <sp-field-label for="item-id">Item ID</sp-field-label>
               <eomap-number-field
                 id="item-id"
-                max="${SHORT_MAX}"
+                max="${SHORT_MAX - 1}"
               ></eomap-number-field>
             </div>
             <div>
               <sp-field-label for="amount">Amount</sp-field-label>
               <eomap-number-field
                 id="amount"
-                max="${THREE_MAX}"
+                max="${THREE_MAX - 1}"
               ></eomap-number-field>
             </div>
           </sp-field-group>
@@ -77,14 +77,14 @@ export class EntityItem extends LitElement {
               <sp-field-label for="spawn-time">Spawn Time</sp-field-label>
               <eomap-number-field
                 id="spawn-time"
-                max="${SHORT_MAX}"
+                max="${SHORT_MAX - 1}"
               ></eomap-number-field>
             </div>
             <div>
               <sp-field-label for="chest-slot">Chest Slot</sp-field-label>
               <eomap-number-field
                 id="chest-slot"
-                max="${CHAR_MAX}"
+                max="${CHAR_MAX - 1}"
               ></eomap-number-field>
             </div>
           </sp-field-group>
@@ -92,7 +92,7 @@ export class EntityItem extends LitElement {
             <sp-field-label for="key">Key</sp-field-label>
             <eomap-number-field
               id="key"
-              max="${SHORT_MAX}"
+              max="${SHORT_MAX - 1}"
             ></eomap-number-field>
           </div>
         </eomap-modal>
