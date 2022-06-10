@@ -99,22 +99,28 @@ export class Picker extends Dropdown {
   };
 
   onKeyDown = (event) => {
-    if (event.code === "Space") {
+    if (
+      event.code === "Space" ||
+      event.key === "Enter" ||
+      event.key === "ArrowDown"
+    ) {
       this.open = true;
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+
+    if (!this.open) {
+      return;
     }
 
     switch (event.key) {
       case "Enter":
       case "ArrowDown":
-        if (this.open) {
-          this.menu.focus();
-          this.menu.focusMenuItemByOffset(0);
-        } else {
-          this.open = true;
-        }
-        break;
       case "Tab":
       case "Home":
+        this.menu.focus();
+        this.menu.focusMenuItemByOffset(0);
         this.menu.focus();
         this.menu.focusMenuItemByOffset(0);
         break;
@@ -124,10 +130,8 @@ export class Picker extends Dropdown {
         this.menu.focusMenuItemByOffset(-1);
         break;
       case "Escape":
-        if (this.open) {
-          this.doEvilHackToPreventOverlaysFromClosingUnexpectedly();
-          this.open = false;
-        }
+        this.doEvilHackToPreventOverlaysFromClosingUnexpectedly();
+        this.open = false;
         break;
       default:
         return;
