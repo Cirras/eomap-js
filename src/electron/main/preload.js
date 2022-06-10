@@ -4,7 +4,6 @@ import os from "os";
 contextBridge.exposeInMainWorld("_isElectron", true);
 
 contextBridge.exposeInMainWorld("bridge", {
-  send: (channel, data) => ipcRenderer.send(channel, data),
   receive: (channel, func) =>
     ipcRenderer.on(channel, (_event, ...args) => func(args)),
   getPlatform: () => os.platform(),
@@ -38,6 +37,9 @@ contextBridge.exposeInMainWorld("bridge", {
   },
   requestClose: () => {
     ipcRenderer.send("window:close-request");
+  },
+  close: () => {
+    ipcRenderer.send("window:close");
   },
   isMaximized: () => {
     return ipcRenderer.sendSync("window:maximized-query");

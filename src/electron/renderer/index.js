@@ -49,7 +49,7 @@ function setupMenubarController() {
 bridge.receive("window:close-request", () => {
   let application = getApplication();
   let callback = () => {
-    bridge.send("window:close");
+    bridge.close();
   };
 
   if (application) {
