@@ -11,6 +11,7 @@ export class MenubarButton extends Dropdown {
       ...super.styles,
       css`
         #button {
+          cursor: unset;
           --spectrum-actionbutton-quiet-textonly-text-size: 13px;
           --spectrum-actionbutton-textonly-height: var(
             --eomap-menubar-button-height,

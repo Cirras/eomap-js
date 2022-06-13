@@ -10,6 +10,12 @@ export class MenuItem extends SpectrumMenuItem {
       super.styles,
       css`
         :host {
+          height: 26px;
+          min-height: 26px;
+          cursor: unset;
+          --spectrum-listitem-texticon-padding-y: 4px;
+          --spectrum-listitem-texticon-ui-icon-margin-top: 7px;
+          --spectrum-listitem-texticon-text-size: 13px;
           --spectrum-listitem-m-texticon-focus-indicator-color: transparent;
           --spectrum-listitem-m-texticon-text-color-key-focus: var(
             --spectrum-listitem-m-texticon-text-color,
@@ -36,6 +42,18 @@ export class MenuItem extends SpectrumMenuItem {
           color: var(--spectrum-global-color-gray-600);
           padding-left: 15px;
           pointer-events: none;
+        }
+        :host([disabled]) ::slotted([slot="value"]) {
+          color: var(
+            --spectrum-listitem-m-texticon-text-color-disabled,
+            var(--spectrum-alias-component-text-color-disabled)
+          );
+        }
+        :host([disabled]) .checkmark {
+          color: var(
+            --spectrum-listitem-m-texticon-text-color-disabled,
+            var(--spectrum-alias-component-text-color-disabled)
+          );
         }
         :host([role="menuitemcheckbox"]:not([selected]))
           ::slotted([slot="value"]) {

@@ -43,7 +43,7 @@ export class SubmenuItem extends MenuItem {
           );
           position: absolute;
           right: 11px;
-          top: 11px;
+          top: 8px;
         }
       `,
     ];
