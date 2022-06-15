@@ -13,8 +13,6 @@ const compilerMain = webpack(configMain);
 const compilerRenderer = webpack(configRenderer);
 const distPath = path.join(__dirname, "../dist/electron");
 
-let electronStarted = false;
-
 (async () => {
   await del([distPath], { force: true });
 

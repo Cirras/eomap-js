@@ -19,7 +19,6 @@ const compilerRenderer = webpack(configRenderer);
     console.log("> Building renderer");
     compilerRenderer.run(
       webpackCallback(() => {
-        console.log("\x1b[32;1m%s\x1b[0m", "\n✓  Success");
         process.exitCode = 0;
       })
     );
