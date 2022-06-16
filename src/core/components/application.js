@@ -806,9 +806,6 @@ export class Application extends LitElement {
   }
 
   showNewMap() {
-    if (!this.validGfx()) {
-      return;
-    }
     this.dirtyCheck(() => {
       this.newMap.open = true;
       this.updateHasOpenModal();
@@ -974,12 +971,13 @@ export class Application extends LitElement {
   }
 
   onNewMapConfirm(event) {
-    let emf = EMF.new(
+    const emf = EMF.new(
       event.detail.width,
       event.detail.height,
       event.detail.name
     );
-    this.mapState = MapState.fromEMF(emf);
+    const pending = !this.validGfx();
+    this.mapState = MapState.fromEMF(emf).withPending(pending);
   }
 
   onPropertiesSave(event) {

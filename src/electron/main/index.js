@@ -1,27 +1,43 @@
 import { app, BrowserWindow, ipcMain, Menu, session } from "electron";
 import path from "path";
-import { createWindow } from "./window/create";
+import { WindowState } from "./window/window-state";
+import { removeFirst } from "../../core/util/array-utils";
+import { MenuEvent } from "../../core/controllers/menubar-controller";
 
-let mainWindow = null;
+let windows = [];
 
-const createMenuItemClick = (state) => {
+if (!app.requestSingleInstanceLock()) {
+  app.quit();
+} else {
+  main();
+}
+
+function getLastActiveWindow() {
+  return windows[windows.length - 1] || null;
+}
+
+function createMenuItemClick(state) {
   let eventType = JSON.stringify(state.eventType);
   let eventDetail = JSON.stringify(state.eventDetail);
   return (_menuItem, _browserWindow, _event) => {
-    if (!mainWindow) {
-      setupWindow();
+    let window = getLastActiveWindow();
+    if (!window) {
+      window = newWindow();
+      if (state.eventType === MenuEvent.NewWindow) {
+        return;
+      }
     }
-    mainWindow.webContents.executeJavaScript(
+    window.webContents.executeJavaScript(
       `emitNativeMenuEvent(${eventType}, ${eventDetail});`,
       true
     );
-    if (mainWindow.isMinimized()) {
-      mainWindow.restore();
+    if (window.isMinimized()) {
+      window.restore();
     }
   };
-};
+}
 
-const createMenuItemConstructorOptions = (state) => {
+function createMenuItemConstructorOptions(state) {
   let result = {
     type: state.type,
     enabled: state.enabled,
@@ -51,13 +67,17 @@ const createMenuItemConstructorOptions = (state) => {
   }
 
   return result;
-};
+}
 
-const createMenubarTemplate = (state) => {
+function createMenubarTemplate(state) {
   return state.items.map(createMenuItemConstructorOptions);
-};
+}
 
-const setupCSP = () => {
+function getWindowStateFilePath() {
+  return path.join(app.getPath("userData"), "window-state.json");
+}
+
+function setupCSP() {
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
     callback({
       responseHeaders: {
@@ -66,10 +86,95 @@ const setupCSP = () => {
       },
     });
   });
-};
+}
 
-const setupWindow = () => {
-  mainWindow = createWindow("main", {
+function setupIPC() {
+  ipcMain.on("set-menubar-state", (event, state) => {
+    let window = BrowserWindow.fromWebContents(event.sender);
+    if (window.isFocused()) {
+      let template = createMenubarTemplate(state);
+      let menu = Menu.buildFromTemplate(template);
+      Menu.setApplicationMenu(menu);
+    }
+  });
+
+  ipcMain.on("toggle-developer-tools", (event) => {
+    event.sender.toggleDevTools();
+  });
+
+  ipcMain.on("window:set-title", (event, title) => {
+    let window = BrowserWindow.fromWebContents(event.sender);
+    window.setTitle(title);
+  });
+
+  ipcMain.on("window:set-document-edited", (event, documentEdited) => {
+    let window = BrowserWindow.fromWebContents(event.sender);
+    window.setDocumentEdited(documentEdited);
+  });
+
+  ipcMain.on("window:set-closable", (event, closable) => {
+    let window = BrowserWindow.fromWebContents(event.sender);
+    window?.setClosable(closable);
+  });
+
+  ipcMain.on("window:new", (_event) => {
+    newWindow();
+  });
+
+  ipcMain.on("window:minimize", (event) => {
+    let window = BrowserWindow.fromWebContents(event.sender);
+    window.minimize();
+  });
+
+  ipcMain.on("window:restore", (event) => {
+    let window = BrowserWindow.fromWebContents(event.sender);
+    if (window.isMinimized()) {
+      window.restore();
+    }
+  });
+
+  ipcMain.on("window:maximize", (event) => {
+    let window = BrowserWindow.fromWebContents(event.sender);
+    window.maximize();
+  });
+
+  ipcMain.on("window:unmaximize", (event) => {
+    let window = BrowserWindow.fromWebContents(event.sender);
+    window.unmaximize();
+  });
+
+  ipcMain.on("window:close-request", (event) => {
+    event.sender.send("window:close-request");
+  });
+
+  ipcMain.on("window:close", (event) => {
+    let window = BrowserWindow.fromWebContents(event.sender);
+    if (windows.length === 1) {
+      let state = WindowState.fromWindow(window);
+      state.write(getWindowStateFilePath());
+    }
+    window.destroy();
+    removeFirst(windows, window);
+  });
+
+  ipcMain.on("window:toggle-full-screen", (event) => {
+    let window = BrowserWindow.fromWebContents(event.sender);
+    window.setFullScreen(!window.isFullScreen());
+  });
+
+  ipcMain.on("window:maximized-query", (event) => {
+    let window = BrowserWindow.fromWebContents(event.sender);
+    event.returnValue = window.isMaximized();
+  });
+
+  ipcMain.on("window:full-screen-query", (event) => {
+    let window = BrowserWindow.fromWebContents(event.sender);
+    event.returnValue = window.isFullScreen();
+  });
+}
+
+function newWindow() {
+  const options = {
     width: 1024,
     height: 768,
     backgroundColor: "#1a1a1a",
@@ -80,140 +185,116 @@ const setupWindow = () => {
       v8CacheOptions: "bypassHeatCheck",
       preload: path.join(__dirname, "preload.js"),
     },
-  });
+  };
 
+  let state = null;
+  let maximize = false;
+
+  if (getLastActiveWindow()) {
+    state = WindowState.cascade(getLastActiveWindow());
+  } else {
+    state = WindowState.read(getWindowStateFilePath());
+  }
+
+  if (state && state.isVisibleOnAnyDisplay()) {
+    options.x = state.x;
+    options.y = state.y;
+    options.width = state.width;
+    options.height = state.height;
+    maximize = state.maximized;
+  }
+
+  const window = new BrowserWindow(options);
   const mode = process.env.NODE_ENV || "development";
 
   if (mode === "development") {
-    mainWindow.loadURL("http://localhost:9000");
+    window.loadURL("http://localhost:9000");
   } else if (app.isPackaged) {
-    mainWindow.loadFile("dist/electron/index.html");
+    window.loadFile("dist/electron/index.html");
   } else {
-    mainWindow.loadFile("index.html");
+    window.loadFile("index.html");
   }
 
-  mainWindow.once("ready-to-show", (_event) => {
-    mainWindow.show();
+  window.once("ready-to-show", (_event) => {
+    if (maximize) {
+      window.maximize();
+    }
+    window.show();
   });
 
-  mainWindow.on("minimize", (_event) => {
-    mainWindow.webContents.send("window:minimized");
+  window.on("minimize", (_event) => {
+    window.webContents.send("window:minimized");
   });
 
-  mainWindow.on("restore", (_event) => {
-    mainWindow.webContents.send("window:restored");
+  window.on("restore", (_event) => {
+    window.webContents.send("window:restored");
   });
 
-  mainWindow.on("maximize", (_event) => {
-    mainWindow.webContents.send("window:maximized");
+  window.on("maximize", (_event) => {
+    window.webContents.send("window:maximized");
   });
 
-  mainWindow.on("unmaximize", (_event) => {
-    mainWindow.webContents.send("window:unmaximized");
+  window.on("unmaximize", (_event) => {
+    window.webContents.send("window:unmaximized");
   });
 
-  mainWindow.on("enter-full-screen", (_event) => {
-    mainWindow.webContents.send("window:enter-full-screen");
+  window.on("enter-full-screen", (_event) => {
+    window.webContents.send("window:enter-full-screen");
   });
 
-  mainWindow.on("leave-full-screen", (_event) => {
-    mainWindow.webContents.send("window:leave-full-screen");
+  window.on("leave-full-screen", (_event) => {
+    window.webContents.send("window:leave-full-screen");
   });
 
-  mainWindow.on("close", (event) => {
+  window.on("close", (event) => {
     event.preventDefault();
-    mainWindow.webContents.send("window:close-request");
-  });
-};
-
-const setupIPC = () => {
-  ipcMain.on("set-menubar-state", (_event, state) => {
-    let template = createMenubarTemplate(state);
-    let menu = Menu.buildFromTemplate(template);
-    Menu.setApplicationMenu(menu);
+    window.webContents.send("window:close-request");
   });
 
-  ipcMain.on("toggle-developer-tools", (_event) => {
-    mainWindow.webContents.toggleDevTools();
+  window.on("focus", (_event) => {
+    removeFirst(windows, window);
+    windows.push(window);
+    window.webContents.send("window:focus");
   });
 
-  ipcMain.on("window:set-title", (_event, title) => {
-    mainWindow.setTitle(title);
+  windows.push(window);
+
+  return window;
+}
+
+function main() {
+  app.on("ready", () => {
+    setupCSP();
+    setupIPC();
+    newWindow();
   });
 
-  ipcMain.on("window:set-document-edited", (_event, documentEdited) => {
-    mainWindow.setDocumentEdited(documentEdited);
-  });
+  app.on(
+    "second-instance",
+    (_event, _commandLine, _workingDirectory, _additionalData) => {
+      newWindow();
+    }
+  );
 
-  ipcMain.on("window:set-closable", (_event, closable) => {
-    mainWindow?.setClosable(closable);
-  });
-
-  ipcMain.on("window:close-request", (_event) => {
-    mainWindow.webContents.send("window:close-request");
-  });
-
-  ipcMain.on("window:minimize", (_event) => {
-    mainWindow.minimize();
-  });
-
-  ipcMain.on("window:restore", (_event) => {
-    if (mainWindow.isMinimized()) {
-      mainWindow.restore();
+  // Quit when all windows are closed, except on macOS. There, it's common
+  // for applications and their menu bar to stay active until the user quits
+  // explicitly with Cmd + Q.
+  app.on("window-all-closed", (_event) => {
+    if (process.platform !== "darwin") {
+      app.quit();
     }
   });
 
-  ipcMain.on("window:maximize", (_event) => {
-    mainWindow.maximize();
+  app.on("activate", (_event) => {
+    // On OS X it's common to re-create a window in the app when the
+    // dock icon is clicked and there are no other windows open.
+    if (BrowserWindow.getAllWindows().length === 0) {
+      newWindow();
+    }
   });
 
-  ipcMain.on("window:unmaximize", (_event) => {
-    mainWindow.unmaximize();
-  });
+  // See: https://github.com/electron/electron/issues/28422
+  app.commandLine.appendSwitch("enable-experimental-web-platform-features");
 
-  ipcMain.on("window:toggle-full-screen", (_event) => {
-    mainWindow.setFullScreen(!mainWindow.isFullScreen());
-  });
-
-  ipcMain.on("window:maximized-query", (event) => {
-    event.returnValue = mainWindow.isMaximized();
-  });
-
-  ipcMain.on("window:full-screen-query", (event) => {
-    event.returnValue = mainWindow.isFullScreen();
-  });
-
-  ipcMain.on("window:close", (_event) => {
-    mainWindow.emit("pre-destroy");
-    mainWindow.destroy();
-    mainWindow = null;
-  });
-};
-
-app.on("ready", () => {
-  setupCSP();
-  setupWindow();
-  setupIPC();
-});
-
-// Quit when all windows are closed, except on macOS. There, it's common
-// for applications and their menu bar to stay active until the user quits
-// explicitly with Cmd + Q.
-app.on("window-all-closed", (_event) => {
-  if (process.platform !== "darwin") {
-    app.quit();
-  }
-});
-
-app.on("activate", (_event) => {
-  // On OS X it's common to re-create a window in the app when the
-  // dock icon is clicked and there are no other windows open.
-  if (BrowserWindow.getAllWindows().length === 0) {
-    setupWindow();
-  }
-});
-
-// See: https://github.com/electron/electron/issues/28422
-app.commandLine.appendSwitch("enable-experimental-web-platform-features");
-
-Menu.setApplicationMenu(null);
+  Menu.setApplicationMenu(null);
+}

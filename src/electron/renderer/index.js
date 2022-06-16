@@ -52,14 +52,18 @@ function setupMenubarController() {
   menubarController.addEventSource(nativeMenuEventSource);
   menubarController.on("menubar-state-updated", (state) => {
     titlebar.menubarState = state;
-    window.bridge.setMenubarState(state);
+    bridge.setMenubarState(state);
+  });
+
+  bridge.receive("window:focus", () => {
+    bridge.setMenubarState(menubarController.state);
   });
 }
 
 function setupKeyboardEvents() {
   window.addEventListener("keydown", (event) => {
     if (isFullScreenShortcut(event)) {
-      window.bridge.toggleFullScreen();
+      bridge.toggleFullScreen();
       event.stopPropagation();
       event.preventDefault();
     }

@@ -10,7 +10,8 @@ import {
 import { isElectron, isMac } from "../util/platform-utils";
 
 export const MenuEvent = {
-  New: "new",
+  NewFile: "new-file",
+  NewWindow: "new-window",
   Open: "open",
   OpenRecent: "open-recent",
   Save: "save",
@@ -18,6 +19,7 @@ export const MenuEvent = {
   MapProperties: "map-properties",
   Settings: "settings",
   ReloadGraphics: "reload-graphics",
+  CloseWindow: "close-window",
   Exit: "exit",
   Undo: "undo",
   Redo: "redo",
@@ -74,7 +76,7 @@ export class MenubarController extends EventEmitter {
   constructor(application) {
     super();
     this.application = application;
-    this.menubarState = new MenubarState();
+    this.state = new MenubarState();
     this.keybindingMap = new Map();
     this.eventSources = [];
 
@@ -91,11 +93,11 @@ export class MenubarController extends EventEmitter {
   }
 
   updateMenubarState() {
-    let newMenubarState = this.generateMenubarState();
-    if (JSON.stringify(this.menubarState) !== JSON.stringify(newMenubarState)) {
-      this.menubarState = newMenubarState;
+    let newState = this.generateMenubarState();
+    if (JSON.stringify(this.state) !== JSON.stringify(newState)) {
+      this.state = newState;
       this.collectKeybindings();
-      this.emit("menubar-state-updated", this.menubarState);
+      this.emit("menubar-state-updated", this.state);
     }
   }
 
@@ -168,12 +170,25 @@ export class MenubarController extends EventEmitter {
   generateFileMenu() {
     let items = [
       new MenuItemState()
-        .withLabel("New")
-        .withEventType(MenuEvent.New)
+        .withLabel("New File...")
+        .withEventType(MenuEvent.NewFile)
         .withKeybinding("CommandOrControl+Alt+N")
         .withEnabled(this.canOpenMaps),
+    ];
+
+    if (isElectron()) {
+      items.push(
+        new MenuItemState()
+          .withLabel("New Window")
+          .withEventType(MenuEvent.NewWindow)
+          .withKeybinding("CommandOrControl+Shift+N")
+      );
+    }
+
+    items.push(
+      new DividerMenuItemState(),
       new MenuItemState()
-        .withLabel("Open")
+        .withLabel("Open...")
         .withEventType(MenuEvent.Open)
         .withKeybinding("CommandOrControl+O")
         .withEnabled(this.canOpenMaps),
@@ -188,7 +203,7 @@ export class MenubarController extends EventEmitter {
         .withKeybinding("CommandOrControl+S")
         .withEnabled(this.canSaveMaps),
       new MenuItemState()
-        .withLabel("Save As")
+        .withLabel("Save As...")
         .withEventType(MenuEvent.SaveAs)
         .withKeybinding("CommandOrControl+Shift+S")
         .withEnabled(this.canSaveMaps),
@@ -196,25 +211,39 @@ export class MenubarController extends EventEmitter {
       new MenuItemState()
         .withLabel("Map Properties")
         .withEventType(MenuEvent.MapProperties)
-        .withEnabled(this.canAccessMapProperties),
-    ];
+        .withEnabled(this.canAccessMapProperties)
+    );
 
-    if (isElectron() && !isMac()) {
-      items.push(
-        new DividerMenuItemState(),
-        new MenuItemState()
-          .withLabel("Settings")
-          .withEventType(MenuEvent.Settings)
-          .withKeybinding("CommandOrControl+,")
-          .withEnabled(this.canAccessSettings),
-        new DividerMenuItemState(),
-        new MenuItemState()
-          .withLabel("Reload Graphics")
-          .withEventType(MenuEvent.ReloadGraphics)
-          .withEnabled(this.canReloadGraphics),
-        new DividerMenuItemState(),
-        new MenuItemState().withLabel("Exit").withEventType(MenuEvent.Exit)
-      );
+    if (isElectron()) {
+      if (isMac()) {
+        items.push(
+          new DividerMenuItemState(),
+          new MenuItemState()
+            .withLabel("Close Window")
+            .withEventType(MenuEvent.CloseWindow)
+            .withKeybinding("Command+W")
+            .withEnabled(this.canCloseWindow)
+        );
+      } else {
+        items.push(
+          new DividerMenuItemState(),
+          new MenuItemState()
+            .withLabel("Settings")
+            .withEventType(MenuEvent.Settings)
+            .withKeybinding("CommandOrControl+,")
+            .withEnabled(this.canAccessSettings),
+          new DividerMenuItemState(),
+          new MenuItemState()
+            .withLabel("Reload Graphics")
+            .withEventType(MenuEvent.ReloadGraphics)
+            .withEnabled(this.canReloadGraphics),
+          new DividerMenuItemState(),
+          new MenuItemState()
+            .withLabel("Exit")
+            .withEventType(MenuEvent.Exit)
+            .withEnabled(this.canCloseWindow)
+        );
+      }
     }
 
     return new MenuState(items).withWidth(250);
@@ -309,7 +338,7 @@ export class MenubarController extends EventEmitter {
 
   collectKeybindings() {
     this.keybindingMap.clear();
-    this.menubarState.items.forEach((item) =>
+    this.state.items.forEach((item) =>
       this.collectKeybindingsFromMenuItem(item)
     );
   }
@@ -344,8 +373,11 @@ export class MenubarController extends EventEmitter {
     }
 
     switch (event.type) {
-      case MenuEvent.New:
+      case MenuEvent.NewFile:
         this.application.showNewMap();
+        break;
+      case MenuEvent.NewWindow:
+        window.bridge.newWindow();
         break;
       case MenuEvent.Open:
         this.application.open();
@@ -368,6 +400,7 @@ export class MenubarController extends EventEmitter {
       case MenuEvent.ReloadGraphics:
         this.application.loadGFX();
         break;
+      case MenuEvent.CloseWindow:
       case MenuEvent.Exit:
         window.bridge.requestClose();
         break;
@@ -454,6 +487,10 @@ export class MenubarController extends EventEmitter {
     return !this.hasOpenOverlay;
   }
 
+  get canCloseWindow() {
+    return this.windowVisible && !this.application.hasOpenPrompt;
+  }
+
   get recentFiles() {
     return this.application.recentFiles;
   }
@@ -467,7 +504,10 @@ export class MenubarController extends EventEmitter {
   }
 
   get hasOpenOverlay() {
-    return this.application.hasOpenPrompt || this.application.hasOpenModal;
+    return (
+      !this._closed &&
+      (this.application.hasOpenPrompt || this.application.hasOpenModal)
+    );
   }
 
   set closed(value) {

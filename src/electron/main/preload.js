@@ -23,6 +23,9 @@ contextBridge.exposeInMainWorld("bridge", {
   setClosable: (closable) => {
     ipcRenderer.send("window:set-closable", closable);
   },
+  newWindow: () => {
+    ipcRenderer.send("window:new");
+  },
   minimize: () => {
     ipcRenderer.send("window:minimize");
   },
