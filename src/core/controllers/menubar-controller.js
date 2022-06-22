@@ -60,6 +60,9 @@ export class DOMMenuEventSource extends MenuEventSource {
 
 export class MenubarController extends EventEmitter {
   onWindowKeyDown = (event) => {
+    if (event.repeat) {
+      return;
+    }
     for (let keybinding of this.keybindingMap.keys()) {
       if (keybinding.triggeredBy(event)) {
         let item = this.keybindingMap.get(keybinding);
