@@ -50,14 +50,18 @@ function setupMenubarController() {
   menubarController = new MenubarController(application);
   menubarController.addEventSource(new DOMMenuEventSource(titlebar));
   menubarController.addEventSource(nativeMenuEventSource);
-  menubarController.on("menubar-state-updated", (state) => {
-    titlebar.menubarState = state;
-    bridge.setMenubarState(state);
-  });
-
-  bridge.receive("window:focus", () => {
-    bridge.setMenubarState(menubarController.state);
-  });
+  if (isMac()) {
+    menubarController.on("menubar-state-updated", (state) => {
+      bridge.setMenubarState(state);
+    });
+    bridge.receive("window:focus", () => {
+      bridge.setMenubarState(menubarController.state);
+    });
+  } else {
+    menubarController.on("menubar-state-updated", (state) => {
+      titlebar.menubarState = state;
+    });
+  }
 }
 
 function setupKeyboardEvents() {
