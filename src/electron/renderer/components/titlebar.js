@@ -35,7 +35,6 @@ export class Titlebar extends LitElement {
         box-sizing: border-box;
         justify-content: left;
         flex-shrink: 1;
-        flex-grow: 1;
         align-items: center;
         -webkit-user-select: none;
         display: flex;

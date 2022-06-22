@@ -122,8 +122,10 @@ bridge.receive("window:leave-full-screen", () => {
   getTitlebar().fullScreen = false;
 });
 
-window.addEventListener("DOMContentLoaded", (_event) => {
+window.addEventListener("DOMContentLoaded", async (_event) => {
   setupTitlebar();
+  // Defer to next tick
+  await new Promise((resolve) => setTimeout(resolve, 0));
   setupApplication();
   setupMenubarController();
   setupKeyboardEvents();
