@@ -3,6 +3,7 @@ import path from "path";
 import { WindowState } from "./window/window-state";
 import { removeFirst } from "../../core/util/array-utils";
 import { MenuEvent } from "../../core/controllers/menubar-controller";
+import { isMac } from "../../core/util/platform-utils";
 
 let windows = [];
 
@@ -179,7 +180,7 @@ function newWindow() {
     height: 768,
     backgroundColor: "#1a1a1a",
     show: false,
-    frame: process.platform === "darwin",
+    frame: isMac(),
     titleBarStyle: "hidden",
     webPreferences: {
       v8CacheOptions: "bypassHeatCheck",
@@ -280,7 +281,7 @@ function main() {
   // for applications and their menu bar to stay active until the user quits
   // explicitly with Cmd + Q.
   app.on("window-all-closed", (_event) => {
-    if (process.platform !== "darwin") {
+    if (!isMac()) {
       app.quit();
     }
   });
