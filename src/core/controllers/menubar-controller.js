@@ -117,13 +117,13 @@ export class MenubarController extends EventEmitter {
 
     items.push(
       new SubmenuMenuItemState()
-        .withLabel("File")
+        .withLabel("&File")
         .withMenu(this.generateFileMenu()),
       new SubmenuMenuItemState()
-        .withLabel("Edit")
+        .withLabel("&Edit")
         .withMenu(this.generateEditMenu()),
       new SubmenuMenuItemState()
-        .withLabel("View")
+        .withLabel("&View")
         .withMenu(this.generateViewMenu())
     );
 
@@ -133,7 +133,7 @@ export class MenubarController extends EventEmitter {
 
     items.push(
       new SubmenuMenuItemState()
-        .withLabel("Help")
+        .withLabel("&Help")
         .withMenu(this.generateHelpMenu())
     );
 
@@ -173,7 +173,7 @@ export class MenubarController extends EventEmitter {
   generateFileMenu() {
     let items = [
       new MenuItemState()
-        .withLabel("New File...")
+        .withLabel("&New File...")
         .withEventType(MenuEvent.NewFile)
         .withKeybinding("CommandOrControl+Alt+N")
         .withEnabled(this.canOpenMaps),
@@ -182,7 +182,7 @@ export class MenubarController extends EventEmitter {
     if (isElectron()) {
       items.push(
         new MenuItemState()
-          .withLabel("New Window")
+          .withLabel("New &Window")
           .withEventType(MenuEvent.NewWindow)
           .withKeybinding("CommandOrControl+Shift+N")
       );
@@ -191,28 +191,28 @@ export class MenubarController extends EventEmitter {
     items.push(
       new DividerMenuItemState(),
       new MenuItemState()
-        .withLabel("Open...")
+        .withLabel("&Open...")
         .withEventType(MenuEvent.Open)
         .withKeybinding("CommandOrControl+O")
         .withEnabled(this.canOpenMaps),
       new SubmenuMenuItemState()
-        .withLabel("Open Recent")
+        .withLabel("Open &Recent")
         .withMenu(this.generateRecentFilesMenu())
         .withEnabled(this.canOpenMaps),
       new DividerMenuItemState(),
       new MenuItemState()
-        .withLabel("Save")
+        .withLabel("&Save")
         .withEventType(MenuEvent.Save)
         .withKeybinding("CommandOrControl+S")
         .withEnabled(this.canSaveMaps),
       new MenuItemState()
-        .withLabel("Save As...")
+        .withLabel("Save &As...")
         .withEventType(MenuEvent.SaveAs)
         .withKeybinding("CommandOrControl+Shift+S")
         .withEnabled(this.canSaveMaps),
       new DividerMenuItemState(),
       new MenuItemState()
-        .withLabel("Map Properties")
+        .withLabel("Map &Properties")
         .withEventType(MenuEvent.MapProperties)
         .withEnabled(this.canAccessMapProperties)
     );
@@ -231,18 +231,18 @@ export class MenubarController extends EventEmitter {
         items.push(
           new DividerMenuItemState(),
           new MenuItemState()
-            .withLabel("Settings")
+            .withLabel("&Settings")
             .withEventType(MenuEvent.Settings)
             .withKeybinding("CommandOrControl+,")
             .withEnabled(this.canAccessSettings),
           new DividerMenuItemState(),
           new MenuItemState()
-            .withLabel("Reload Graphics")
+            .withLabel("Reload &Graphics")
             .withEventType(MenuEvent.ReloadGraphics)
             .withEnabled(this.canReloadGraphics),
           new DividerMenuItemState(),
           new MenuItemState()
-            .withLabel("Exit")
+            .withLabel("E&xit")
             .withEventType(MenuEvent.Exit)
             .withEnabled(this.canCloseWindow)
         );
@@ -256,7 +256,7 @@ export class MenubarController extends EventEmitter {
     return new MenuState(
       this.recentFiles.map((handle, index) =>
         new MenuItemState()
-          .withLabel(handle.name)
+          .withLabel(escapeMnemonics(handle.name))
           .withEventType(MenuEvent.OpenRecent)
           .withEventDetail(index)
           .withEnabled(this.canOpenMaps)
@@ -267,12 +267,12 @@ export class MenubarController extends EventEmitter {
   generateEditMenu() {
     return new MenuState([
       new MenuItemState()
-        .withLabel("Undo")
+        .withLabel("&Undo")
         .withEventType(MenuEvent.Undo)
         .withKeybinding("CommandOrControl+Z")
         .withEnabled(this.canUndo),
       new MenuItemState()
-        .withLabel("Redo")
+        .withLabel("&Redo")
         .withEventType(MenuEvent.Redo)
         .withKeybinding(...this.getRedoAccelerators())
         .withEnabled(this.canRedo),
@@ -290,17 +290,17 @@ export class MenubarController extends EventEmitter {
   generateViewMenu() {
     // prettier-ignore
     const MENU_ITEM_DATA = [
-      { label: "Ground",     kbd: "Alt+1" },
-      { label: "Objects",    kbd: "Alt+2" },
-      { label: "Overlay",    kbd: "Alt+3" },
-      { label: "Down Wall",  kbd: "Alt+4" },
-      { label: "Right Wall", kbd: "Alt+5" },
-      { label: "Roof",       kbd: "Alt+6" },
-      { label: "Top",        kbd: "Alt+7" },
-      { label: "Shadow",     kbd: "Alt+8" },
-      { label: "Overlay 2",  kbd: "Alt+9" },
-      { label: "Special",    kbd: "Alt+0" },
-      { label: "Entities",   kbd: "Alt+E" },
+      { label: "&Ground",     kbd: "Alt+1" },
+      { label: "&Objects",    kbd: "Alt+2" },
+      { label: "O&verlay",    kbd: "Alt+3" },
+      { label: "&Down Wall",  kbd: "Alt+4" },
+      { label: "&Right Wall", kbd: "Alt+5" },
+      { label: "Roo&f",       kbd: "Alt+6" },
+      { label: "&Top",        kbd: "Alt+7" },
+      { label: "&Shadow",     kbd: "Alt+8" },
+      { label: "Overlay &2",  kbd: "Alt+9" },
+      { label: "S&pecial",    kbd: "Alt+0" },
+      { label: "&Entities",   kbd: "Alt+E" },
     ];
 
     return new MenuState(
@@ -331,7 +331,7 @@ export class MenubarController extends EventEmitter {
     if (!(isElectron() && isMac())) {
       items.push(
         new MenuItemState()
-          .withLabel("About")
+          .withLabel("&About")
           .withEventType(MenuEvent.About)
           .withEnabled(this.canShowAbout)
       );
@@ -522,4 +522,8 @@ export class MenubarController extends EventEmitter {
     this._minimized = value;
     this.updateMenubarState();
   }
+}
+
+function escapeMnemonics(string) {
+  return string.replace("&", "&&");
 }

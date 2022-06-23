@@ -237,15 +237,12 @@ export class Picker extends Dropdown {
     `;
   }
 
-  getLabel() {
-    if (this.value) {
-      if (this.selectedItem) {
-        return this.selectedItem.itemChildren.content;
-      } else {
-        return "Unknown (" + this.value + ")";
-      }
-    }
-    return super.getLabel();
+  renderLabel() {
+    return this.displayLabel;
+  }
+
+  getAriaLabel() {
+    return this.displayLabel;
   }
 
   connectedCallback() {
@@ -260,6 +257,17 @@ export class Picker extends Dropdown {
     window.removeEventListener("blur", this.onWindowBlur);
     window.removeEventListener("keyup", this.onWindowKeyUp);
     super.disconnectedCallback();
+  }
+
+  get displayLabel() {
+    if (this.value) {
+      if (this.selectedItem) {
+        return this.selectedItem.displayLabel;
+      } else {
+        return "Unknown (" + this.value + ")";
+      }
+    }
+    return "";
   }
 
   get menuTopOffset() {

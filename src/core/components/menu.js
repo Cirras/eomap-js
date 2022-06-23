@@ -1,9 +1,13 @@
 import { css, html, SpectrumElement } from "@spectrum-web-components/base";
-import { customElement, query } from "lit/decorators.js";
+import {
+  customElement,
+  property,
+  query,
+} from "@spectrum-web-components/base/src/decorators";
 
 import menuStyles from "@spectrum-web-components/menu/src/menu.css.js";
-import { MenuItem } from "@spectrum-web-components/menu/src/MenuItem.js";
 
+import { MenuItem } from "./menu-item";
 import { SubmenuItem } from "./submenu-item";
 
 @customElement("eomap-menu")
@@ -26,6 +30,9 @@ export class Menu extends SpectrumElement {
 
   @query("slot:not([name])")
   menuSlot;
+
+  @property({ type: Boolean })
+  showMnemonics = false;
 
   focusedItemIndex = 0;
   menuItems = [];
@@ -73,6 +80,19 @@ export class Menu extends SpectrumElement {
     const focusedMenuItem = this.menuItems[this.focusedItemIndex];
     if (event.target === focusedMenuItem) {
       this.pressFocusedMenuItem(true);
+    }
+  };
+
+  handleWindowKeyDown = (event) => {
+    if (!this.showMnemonics || event.repeat) {
+      return;
+    }
+
+    for (const menuItem of this.menuItems) {
+      if (menuItem.hasMnemonic(event.key)) {
+        this.focusMenuItem(menuItem);
+        this.pressFocusedMenuItem(false);
+      }
     }
   };
 
@@ -377,6 +397,15 @@ export class Menu extends SpectrumElement {
     this.collectMenuItems();
   }
 
+  updated(changes) {
+    super.updated(changes);
+    if (changes.has("showMnemonics")) {
+      for (let menuItem of this.menuItems) {
+        menuItem.showMnemonics = this.showMnemonics;
+      }
+    }
+  }
+
   render() {
     return html` <slot @slotchange=${this.collectMenuItems}> </slot> `;
   }
@@ -415,11 +444,13 @@ export class Menu extends SpectrumElement {
 
   connectedCallback() {
     super.connectedCallback();
+    window.addEventListener("keydown", this.handleWindowKeyDown);
     window.addEventListener("pointerdown", this.handleWindowPointerDown);
     window.addEventListener("blur", this.handleWindowBlur);
   }
 
   disconnectedCallback() {
+    window.removeEventListener("keydown", this.handleWindowKeyDown);
     window.removeEventListener("pointerdown", this.handleWindowPointerDown);
     window.removeEventListener("blur", this.handleWindowBlur);
     super.disconnectedCallback();

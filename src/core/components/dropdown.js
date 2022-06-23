@@ -79,13 +79,17 @@ export class Dropdown extends SizedMixin(Focusable) {
   getButtonContent() {
     return html`
       <span id="label">
-        <slot name="label">${this.getLabel()}</slot>
+        <slot name="label">${this.renderLabel()}</slot>
       </span>
     `;
   }
 
-  getLabel() {
-    return this.label;
+  renderLabel() {
+    throw new Error("Dropdown.renderLabel() must be implemented");
+  }
+
+  getAriaLabel() {
+    throw new Error("Dropdown.getAriaLabel() must be implemented");
   }
 
   render() {
@@ -98,7 +102,7 @@ export class Dropdown extends SizedMixin(Focusable) {
         aria-haspopup="true"
         aria-controls="menu"
         aria-expanded=${this.open ? "true" : "false"}
-        aria-label=${this.label}
+        aria-label=${this.getAriaLabel()}
         ?disabled=${this.disabled}
       >
         <div id="button-content">${this.getButtonContent()}</div>

@@ -1,13 +1,25 @@
-import { css } from "@spectrum-web-components/base";
-import { customElement } from "lit/decorators.js";
+import { css, html } from "@spectrum-web-components/base";
+import {
+  customElement,
+  property,
+} from "@spectrum-web-components/base/src/decorators.js";
 
-import { MenuItem as SpectrumMenuItem } from "@spectrum-web-components/menu/src/MenuItem.js";
+import "@spectrum-web-components/icons-ui/icons/sp-icon-checkmark100.js";
+import { Focusable } from "@spectrum-web-components/shared/src/focusable.js";
+
+import menuItemStyles from "@spectrum-web-components/menu/src/menu-item.css.js";
+import checkmarkStyles from "@spectrum-web-components/icon/src/spectrum-icon-checkmark.css.js";
+
+import "./mnemonic-label";
+
+import { MnemonicData } from "../util/mnemonic-data";
 
 @customElement("eomap-menu-item")
-export class MenuItem extends SpectrumMenuItem {
+export class MenuItem extends Focusable {
   static get styles() {
     return [
-      super.styles,
+      menuItemStyles,
+      checkmarkStyles,
       css`
         :host {
           height: 26px;
@@ -64,5 +76,137 @@ export class MenuItem extends SpectrumMenuItem {
         }
       `,
     ];
+  }
+
+  @property({ type: Boolean, reflect: true })
+  active = false;
+
+  @property({ type: Boolean, reflect: true })
+  focused = false;
+
+  @property({ type: Boolean, reflect: true })
+  selected = false;
+
+  @property({ type: Boolean })
+  showMnemonics = false;
+
+  @property({ type: String })
+  get value() {
+    return this._value || this.displayLabel;
+  }
+
+  set value(value) {
+    if (value === this._value) {
+      return;
+    }
+    this._value = value || "";
+    if (this._value) {
+      this.setAttribute("value", this._value);
+    } else {
+      this.removeAttribute("value");
+    }
+    this.requestUpdate();
+  }
+
+  _value = "";
+
+  @property({ type: String })
+  get label() {
+    return this._label;
+  }
+
+  set label(label) {
+    if (label === this._label) {
+      return;
+    }
+    this._label = label || "";
+    this._mnemonicData = new MnemonicData(this._label);
+    if (this.displayLabel) {
+      this.setAttribute("aria-label", this.displayLabel);
+    } else {
+      this.removeAttribute("aria-label");
+    }
+    this.requestUpdate();
+  }
+
+  _label = "";
+  _mnemonicData = new MnemonicData("");
+
+  click() {
+    if (this.disabled) {
+      return;
+    }
+    super.click();
+  }
+
+  handleRemoveActive() {
+    this.active = false;
+  }
+
+  handlePointerdown() {
+    this.active = true;
+  }
+
+  firstUpdated(changes) {
+    super.firstUpdated(changes);
+    this.setAttribute("tabindex", "-1");
+    this.addEventListener("pointerdown", this.handlePointerdown);
+  }
+
+  manageActive() {
+    if (this.active) {
+      this.addEventListener("pointerup", this.handleRemoveActive);
+      this.addEventListener("pointerleave", this.handleRemoveActive);
+    } else {
+      this.removeEventListener("pointerup", this.handleRemoveActive);
+      this.removeEventListener("pointerleave", this.handleRemoveActive);
+    }
+  }
+
+  updated(changes) {
+    super.updated(changes);
+    if (changes.has("active")) {
+      this.manageActive();
+    }
+  }
+
+  renderCheckmark() {
+    if (this.selected) {
+      return html`
+        <sp-icon-checkmark100
+          id="selected"
+          class="spectrum-UIIcon-Checkmark100 icon checkmark"
+        ></sp-icon-checkmark100>
+      `;
+    }
+  }
+
+  render() {
+    return html`
+      <slot name="icon"></slot>
+      <div id="label">
+        <eomap-mnemonic-label
+          .data=${this._mnemonicData}
+          .showMnemonics=${this.showMnemonics}
+        ></eomap-mnemonic-label>
+      </div>
+      <slot name="value"></slot>
+      ${this.renderCheckmark()}
+    `;
+  }
+
+  get focusElement() {
+    return this;
+  }
+
+  get displayLabel() {
+    return this._mnemonicData.string;
+  }
+
+  hasMnemonic(key) {
+    if (this._mnemonicData.mnemonic === null) {
+      return false;
+    }
+    return this._mnemonicData.mnemonic.toUpperCase() === key.toUpperCase();
   }
 }

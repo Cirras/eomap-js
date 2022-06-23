@@ -70,10 +70,16 @@ export class SubmenuItem extends MenuItem {
     this.setAttribute("aria-controls", "menu");
   }
 
-  updated(changedProperties) {
-    super.updated(changedProperties);
-    if (changedProperties.has("open")) {
+  updated(changed) {
+    super.updated(changed);
+    if (changed.has("open")) {
       this.setAttribute("aria-expanded", this.open);
+    }
+    if (changed.has("showMnemonics") || changed.has("open")) {
+      let menu = this.menu;
+      if (menu) {
+        menu.showMnemonics = this.showMnemonics && this.open;
+      }
     }
   }
 
@@ -105,6 +111,6 @@ export class SubmenuItem extends MenuItem {
   }
 
   get menu() {
-    return this.assignedNodes && this.assignedNodes[0];
+    return this.assignedNodes[0] ?? null;
   }
 }

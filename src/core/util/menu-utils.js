@@ -21,13 +21,13 @@ export function renderMenuItem(item) {
 function renderNormal(item) {
   return html`
     <eomap-menu-item
+      .label=${item.label}
       role="${getRole(item)}"
-      aria-label="${item.label}"
       aria-keyshortcuts="${getKeyshortcuts(item)}"
       ?disabled=${!item.enabled}
       @menu-item-press=${getOnMenuItemPress(item)}
     >
-      ${item.label} ${renderKeybinding(item)}
+      ${renderKeybinding(item)}
     </eomap-menu-item>
   `;
 }
@@ -35,15 +35,15 @@ function renderNormal(item) {
 function renderCheckbox(item) {
   return html`
     <eomap-menu-item
+      .label=${item.label}
       role="${getRole(item)}"
-      aria-label="${item.label}"
       aria-checked="${item.checked}"
       aria-keyshortcuts="${getKeyshortcuts(item)}"
       ?disabled=${!item.enabled}
       .selected=${item.checked}
       @menu-item-press=${getOnMenuItemPress(item)}
     >
-      ${item.label} ${renderKeybinding(item)}
+      ${renderKeybinding(item)}
     </eomap-menu-item>
   `;
 }
@@ -82,11 +82,10 @@ function renderSubmenu(item) {
   }
   return html`
     <eomap-submenu-item
+      .label=${item.label}
       role="${getRole(item)}"
-      aria-label="${item.label}"
       ?disabled=${!item.enabled || item.menu.items.length === 0}
     >
-      ${item.label}
       <eomap-menu style="${menuStyle}" slot="menu">
         ${item.menu.items.map(renderMenuItem)}
       </eomap-menu>

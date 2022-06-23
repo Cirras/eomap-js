@@ -167,7 +167,15 @@ export class Titlebar extends LitElement {
   updated(changedProperties) {
     super.updated(changedProperties);
     if (changedProperties.has("fullScreen")) {
-      this.style.display = this.fullScreen ? "none" : "flex";
+      this.manageDisplay();
+    }
+  }
+
+  manageDisplay() {
+    if (this.fullScreen && !this.menubar?.showMnemonics) {
+      this.style.display = "none";
+    } else {
+      this.style.display = "flex";
     }
   }
 
@@ -184,13 +192,14 @@ export class Titlebar extends LitElement {
           class="menubar"
           .state=${this.menubarState}
           .inactive=${this.inactive}
+          @show-mnemonics-changed=${this.manageDisplay}
         ></eomap-menubar>
       `;
     }
   }
 
   renderWindowControls() {
-    if (!isMac()) {
+    if (!isMac() && !this.fullScreen) {
       return html`
         <div
           class="window-icon window-minimize"

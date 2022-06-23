@@ -101,39 +101,42 @@ export class Properties extends LitElement {
         <div class="picker-container">
           <sp-field-label for="type">Type</sp-field-label>
           <eomap-picker id="type">
-            <eomap-menu-item value="${MapType.Normal}">
-              Normal
+            <eomap-menu-item label="Normal" value="${MapType.Normal}">
             </eomap-menu-item>
             <eomap-menu-divider></eomap-menu-divider>
-            <eomap-menu-item value="${MapType.PK}">
-              Hostile (PK)
+            <eomap-menu-item label="Hostile (PK)" value="${MapType.PK}">
             </eomap-menu-item>
           </eomap-picker>
         </div>
         <div class="picker-container">
           <sp-field-label for="effect">Effect</sp-field-label>
           <eomap-picker id="effect">
-            <eomap-menu-item value="${MapEffect.None}"> None </eomap-menu-item>
+            <eomap-menu-item
+              label="None"
+              value="${MapEffect.None}"
+            ></eomap-menu-item>
             <eomap-menu-divider></eomap-menu-divider>
-            <eomap-menu-item value="${MapEffect.HPDrain}">
-              Poison (HP Drain)
-            </eomap-menu-item>
-            <eomap-menu-item value="${MapEffect.TPDrain}">
-              Vortex (TP Drain)
-            </eomap-menu-item>
+            <eomap-menu-item
+              label="Poison (HP Drain)"
+              value="${MapEffect.HPDrain}"
+            ></eomap-menu-item>
+            <eomap-menu-item
+              label="Vortex (TP Drain)"
+              value="${MapEffect.TPDrain}"
+            ></eomap-menu-item>
             <eomap-menu-divider></eomap-menu-divider>
-            <eomap-menu-item value="${MapEffect.Quake1}">
-              Quake 1 (Weakest)
+            <eomap-menu-item
+              label="Quake 1 (Weakest)"
+              value="${MapEffect.Quake1}"
+            ></eomap-menu-item>
+            <eomap-menu-item label="Quake 2" value="${MapEffect.Quake2}">
             </eomap-menu-item>
-            <eomap-menu-item value="${MapEffect.Quake2}">
-              Quake 2
+            <eomap-menu-item label="Quake 3" value="${MapEffect.Quake3}">
             </eomap-menu-item>
-            <eomap-menu-item value="${MapEffect.Quake3}">
-              Quake 3
-            </eomap-menu-item>
-            <eomap-menu-item value="${MapEffect.Quake4}">
-              Quake 4 (Strongest)
-            </eomap-menu-item>
+            <eomap-menu-item
+              label="Quake 4 (Strongest)"
+              value="${MapEffect.Quake4}"
+            ></eomap-menu-item>
           </eomap-picker>
         </div>
       </sp-field-group>
@@ -175,32 +178,35 @@ export class Properties extends LitElement {
           <sp-field-label for="music-control">Music Control</sp-field-label>
           <eomap-picker id="music-control">
             <eomap-menu-item
+              label="Stop different - Play once"
               value="${MusicControl.InterruptIfDifferentPlayOnce}"
-            >
-              Stop different - Play once
-            </eomap-menu-item>
-            <eomap-menu-item value="${MusicControl.InterruptPlayOnce}">
-              Stop any - Play once
-            </eomap-menu-item>
-            <eomap-menu-item value="${MusicControl.FinishPlayOnce}">
-              Wait - Play once
-            </eomap-menu-item>
+            ></eomap-menu-item>
+            <eomap-menu-item
+              label="Stop any - Play once"
+              value="${MusicControl.InterruptPlayOnce}"
+            ></eomap-menu-item>
+            <eomap-menu-item
+              label="Wait - Play once"
+              value="${MusicControl.FinishPlayOnce}"
+            ></eomap-menu-item>
             <eomap-menu-divider></eomap-menu-divider>
             <eomap-menu-item
+              label="Stop different - Play repeat"
               value="${MusicControl.InterruptIfDifferentPlayRepeat}"
-            >
-              Stop different - Play repeat
-            </eomap-menu-item>
-            <eomap-menu-item value="${MusicControl.InterruptPlayRepeat}">
-              Stop any - Play repeat
-            </eomap-menu-item>
-            <eomap-menu-item value="${MusicControl.FinishPlayRepeat}">
-              Wait - Play repeat
-            </eomap-menu-item>
+            ></eomap-menu-item>
+            <eomap-menu-item
+              label="Stop any - Play repeat"
+              value="${MusicControl.InterruptPlayRepeat}"
+            ></eomap-menu-item>
+            <eomap-menu-item
+              label="Wait - Play repeat"
+              value="${MusicControl.FinishPlayRepeat}"
+            ></eomap-menu-item>
             <eomap-menu-divider></eomap-menu-divider>
-            <eomap-menu-item value="${MusicControl.InterruptPlayNothing}">
-              Stop any - Play nothing
-            </eomap-menu-item>
+            <eomap-menu-item
+              label="Stop any - Play nothing"
+              value="${MusicControl.InterruptPlayNothing}"
+            ></eomap-menu-item>
           </eomap-picker>
         </div>
       </sp-field-group>

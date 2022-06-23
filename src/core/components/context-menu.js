@@ -56,7 +56,7 @@ export class ContextMenu extends SpectrumElement {
   @state({ type: Object })
   menuStyle = null;
 
-  onKeyDown = (event) => {
+  onWindowKeyDown = (event) => {
     if (!this.open) {
       return;
     }
@@ -73,6 +73,7 @@ export class ContextMenu extends SpectrumElement {
         this.menu.focus();
         this.menu.focusMenuItemByOffset(-1);
         break;
+      case "Alt":
       case "Escape":
         this.open = false;
         break;
@@ -82,6 +83,7 @@ export class ContextMenu extends SpectrumElement {
 
     event.preventDefault();
     event.stopPropagation();
+    event.stopImmediatePropagation();
   };
 
   onWindowPointerDown = (_event) => {
@@ -106,8 +108,7 @@ export class ContextMenu extends SpectrumElement {
     return this.state.items.map((item) => {
       if (item instanceof ContextMenuActionItem) {
         return html`
-          <eomap-menu-item @menu-item-press=${item.action}>
-            ${item.label}
+          <eomap-menu-item .label=${item.label} @menu-item-press=${item.action}>
           </eomap-menu-item>
         `;
       } else if (item instanceof ContextMenuDividerItem) {
@@ -204,7 +205,7 @@ export class ContextMenu extends SpectrumElement {
 
   connectedCallback() {
     super.connectedCallback();
-    window.addEventListener("keydown", this.onKeyDown);
+    window.addEventListener("keydown", this.onWindowKeyDown);
     window.addEventListener("pointerdown", this.onWindowPointerDown);
     window.addEventListener("blur", this.onWindowBlur);
     window.addEventListener("resize", this.onResize);
@@ -212,7 +213,7 @@ export class ContextMenu extends SpectrumElement {
 
   disconnectedCallback() {
     this.open = false;
-    window.removeEventListener("keydown", this.onKeyDown);
+    window.removeEventListener("keydown", this.onWindowKeyDown);
     window.removeEventListener("pointerdown", this.onWindowPointerDown);
     window.removeEventListener("blur", this.onWindowBlur);
     window.removeEventListener("resize", this.onResize);

@@ -4,6 +4,7 @@ import { WindowState } from "./window/window-state";
 import { removeFirst } from "../../core/util/array-utils";
 import { MenuEvent } from "../../core/controllers/menubar-controller";
 import { isMac } from "../../core/util/platform-utils";
+import { MnemonicData } from "../../core/util/mnemonic-data";
 
 let windows = [];
 
@@ -48,7 +49,7 @@ function createMenuItemConstructorOptions(state) {
   };
 
   if (result.type === "normal" || result.type === "checkbox") {
-    result.label = state.label;
+    result.label = new MnemonicData(state.label).string;
     result.role = state.role;
     if (state.keybinding) {
       result.accelerator = state.keybinding.electronLabel.string;
@@ -63,8 +64,8 @@ function createMenuItemConstructorOptions(state) {
   }
 
   if (result.type === "submenu") {
+    result.label = new MnemonicData(state.label).string;
     result.role = state.role;
-    result.label = state.label;
     if (state.menu) {
       result.submenu = state.menu.items.map(createMenuItemConstructorOptions);
     }
