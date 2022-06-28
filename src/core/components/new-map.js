@@ -64,6 +64,9 @@ export class NewMap extends LitElement {
             eomap-textfield {
               --spectrum-textfield-texticon-min-width: 208px;
             }
+            #name {
+              padding-bottom: 1px;
+            }
           </style>
           <sp-field-group>
             <div>
