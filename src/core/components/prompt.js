@@ -16,7 +16,7 @@ import "./modal";
 import { PromptState, PromptType } from "../state/prompt-state";
 
 @customElement("eomap-prompt")
-export class About extends LitElement {
+export class Prompt extends LitElement {
   @property({ type: Boolean, reflect: true })
   open = false;
 
@@ -78,7 +78,8 @@ export class About extends LitElement {
             }
             .button-group {
               justify-content: flex-end;
-              padding-top: var(--spectrum-global-dimension-size-500);
+              padding-top: var(--spectrum-global-dimension-size-450);
+              padding-bottom: var(--spectrum-global-dimension-size-65);
             }
           </style>
           ${this.renderContent()}
