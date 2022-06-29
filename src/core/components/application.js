@@ -613,11 +613,10 @@ export class Application extends LitElement {
 
   onWheel(event) {
     if (event.ctrlKey) {
-      event.preventDefault();
-    }
-    if (event.altKey && this.mapState.zoom !== null) {
-      let zoomStep = this.mapState.zoom / (event.deltaY > 0 ? -11 : 10);
-      this.editor.updateZoom(this.mapState.zoom + zoomStep);
+      if (this.mapState.zoom !== null) {
+        let zoomStep = this.mapState.zoom / (event.deltaY > 0 ? -11 : 10);
+        this.editor.updateZoom(this.mapState.zoom + zoomStep);
+      }
       event.preventDefault();
     }
   }

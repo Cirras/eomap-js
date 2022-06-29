@@ -290,17 +290,17 @@ export class MenubarController extends EventEmitter {
   generateViewMenu() {
     // prettier-ignore
     const MENU_ITEM_DATA = [
-      { label: "&Ground",     kbd: "Alt+1" },
-      { label: "&Objects",    kbd: "Alt+2" },
-      { label: "O&verlay",    kbd: "Alt+3" },
-      { label: "&Down Wall",  kbd: "Alt+4" },
-      { label: "&Right Wall", kbd: "Alt+5" },
-      { label: "Roo&f",       kbd: "Alt+6" },
-      { label: "&Top",        kbd: "Alt+7" },
-      { label: "&Shadow",     kbd: "Alt+8" },
-      { label: "Overlay &2",  kbd: "Alt+9" },
-      { label: "S&pecial",    kbd: "Alt+0" },
-      { label: "&Entities",   kbd: "Alt+E" },
+      { label: "&Ground",     kbd: "CommandOrControl+1" },
+      { label: "&Objects",    kbd: "CommandOrControl+2" },
+      { label: "O&verlay",    kbd: "CommandOrControl+3" },
+      { label: "&Down Wall",  kbd: "CommandOrControl+4" },
+      { label: "&Right Wall", kbd: "CommandOrControl+5" },
+      { label: "Roo&f",       kbd: "CommandOrControl+6" },
+      { label: "&Top",        kbd: "CommandOrControl+7" },
+      { label: "&Shadow",     kbd: "CommandOrControl+8" },
+      { label: "Overlay &2",  kbd: "CommandOrControl+9" },
+      { label: "S&pecial",    kbd: "CommandOrControl+0" },
+      { label: "&Entities",   kbd: "CommandOrControl+E" },
     ];
 
     return new MenuState(
