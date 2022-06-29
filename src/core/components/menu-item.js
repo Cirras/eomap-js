@@ -79,9 +79,6 @@ export class MenuItem extends Focusable {
   }
 
   @property({ type: Boolean, reflect: true })
-  active = false;
-
-  @property({ type: Boolean, reflect: true })
   focused = false;
 
   @property({ type: Boolean, reflect: true })
@@ -139,35 +136,9 @@ export class MenuItem extends Focusable {
     super.click();
   }
 
-  handleRemoveActive() {
-    this.active = false;
-  }
-
-  handlePointerdown() {
-    this.active = true;
-  }
-
   firstUpdated(changes) {
     super.firstUpdated(changes);
     this.setAttribute("tabindex", "-1");
-    this.addEventListener("pointerdown", this.handlePointerdown);
-  }
-
-  manageActive() {
-    if (this.active) {
-      this.addEventListener("pointerup", this.handleRemoveActive);
-      this.addEventListener("pointerleave", this.handleRemoveActive);
-    } else {
-      this.removeEventListener("pointerup", this.handleRemoveActive);
-      this.removeEventListener("pointerleave", this.handleRemoveActive);
-    }
-  }
-
-  updated(changes) {
-    super.updated(changes);
-    if (changes.has("active")) {
-      this.manageActive();
-    }
   }
 
   renderCheckmark() {
