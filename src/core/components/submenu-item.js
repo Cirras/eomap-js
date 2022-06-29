@@ -19,18 +19,19 @@ export class SubmenuItem extends MenuItem {
           border: 1px solid var(--spectrum-global-color-gray-100);
           position: absolute;
           top: -5px;
-          animation: fadeIn 0.083s linear;
           z-index: 1000;
         }
-        slot[hidden]::slotted(eomap-menu) {
-          display: none;
-          opacity: 0;
+        :host([:not([open])]) #menu-container {
+          visibility: hidden;
+        }
+        :host([open]) #menu-container {
+          animation: fadeIn 0.083s linear;
         }
         @keyframes fadeIn {
-          0% {
+          from {
             opacity: 0;
           }
-          100% {
+          to {
             opacity: 1;
           }
         }
@@ -87,14 +88,16 @@ export class SubmenuItem extends MenuItem {
     return html`
       ${super.render()}
       <sp-icon-chevron100 class="arrow"></sp-icon-chevron100>
-      <slot
-        id="menu"
-        name="menu"
-        role="menu"
-        ?hidden=${!this.open}
-        @pointerdown=${(event) => event.stopPropagation()}
-      >
-      </slot>
+      <div id="menu-container">
+        <slot
+          id="menu"
+          name="menu"
+          role="menu"
+          ?hidden=${!this.open}
+          @pointerdown=${(event) => event.stopPropagation()}
+        >
+        </slot>
+      </div>
     `;
   }
 
