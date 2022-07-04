@@ -1,7 +1,6 @@
 import { html, LitElement } from "lit";
 import { customElement, property, state, query } from "lit/decorators.js";
 
-import "@spectrum-web-components/overlay/overlay-trigger.js";
 import "@spectrum-web-components/field-group/sp-field-group.js";
 import "@spectrum-web-components/field-label/sp-field-label.js";
 import "@spectrum-web-components/checkbox/sp-checkbox.js";
@@ -39,87 +38,78 @@ export class EntityWarp extends LitElement {
 
   render() {
     return html`
-      <overlay-trigger
-        type="modal"
-        placement="none"
-        .open=${this.open ? "click" : "none"}
-        @sp-closed=${this.closed}
+      <eomap-modal
+        confirm-label="Save"
+        cancel-label="Cancel"
+        .headline=${this.headline}
+        .open=${this.open}
+        @confirm=${this.confirm}
+        @cancel=${this.cancel}
+        @close=${this.close}
       >
-        <eomap-modal
-          slot="click-content"
-          underlay
-          confirm-label="Save"
-          cancel-label="Cancel"
-          .headline=${this.headline}
-          .open=${this.open}
-          @confirm=${this.confirm}
-          @cancel=${this.cancel}
-        >
-          <style>
-            sp-field-group {
-              justify-content: center;
-            }
-          </style>
-          <sp-field-group>
-            <div>
-              <sp-field-label for="map">Map</sp-field-label>
-              <eomap-number-field
-                id="map"
-                max="${SHORT_MAX - 1}"
-              ></eomap-number-field>
-            </div>
-            <div>
-              <sp-field-label for="x">X</sp-field-label>
-              <eomap-number-field
-                id="x"
-                max="${CHAR_MAX - 1}"
-              ></eomap-number-field>
-            </div>
-            <div>
-              <sp-field-label for="y">Y</sp-field-label>
-              <eomap-number-field
-                id="y"
-                max="${CHAR_MAX - 1}"
-              ></eomap-number-field>
-            </div>
-          </sp-field-group>
-          <sp-field-group>
-            <div>
-              <sp-field-label for="level"> Level </sp-field-label>
-              <eomap-number-field
-                id="level"
-                max="${CHAR_MAX - 1}"
-              ></eomap-number-field>
-            </div>
-            <div>
-              <sp-field-label for="key">Key</sp-field-label>
-              <eomap-number-field
-                id="key"
-                max="${SHORT_MAX - 1}"
-                .disabled=${!this.isDoor}
-              ></eomap-number-field>
-            </div>
-            <div>
-              <sp-field-label for="door">Door</sp-field-label>
-              <sp-checkbox
-                id="door"
-                style="width: var(--spectrum-global-dimension-size-1200);"
-                emphasized
-                .checked=${this.isDoor}
-                @click=${(_event) => {
-                  if (isNaN(this.key.value)) {
-                    this.key.value = 0;
-                    this.key.invalid = false;
-                  }
-                  this.isDoor = !this.isDoor;
-                }}
-              >
-              </sp-checkbox>
-            </div>
-          </sp-field-group>
-        </eomap-modal>
-        <div slot="trigger"></div>
-      </overlay-trigger>
+        <style>
+          sp-field-group {
+            justify-content: center;
+          }
+        </style>
+        <sp-field-group>
+          <div>
+            <sp-field-label for="map">Map</sp-field-label>
+            <eomap-number-field
+              id="map"
+              max="${SHORT_MAX - 1}"
+            ></eomap-number-field>
+          </div>
+          <div>
+            <sp-field-label for="x">X</sp-field-label>
+            <eomap-number-field
+              id="x"
+              max="${CHAR_MAX - 1}"
+            ></eomap-number-field>
+          </div>
+          <div>
+            <sp-field-label for="y">Y</sp-field-label>
+            <eomap-number-field
+              id="y"
+              max="${CHAR_MAX - 1}"
+            ></eomap-number-field>
+          </div>
+        </sp-field-group>
+        <sp-field-group>
+          <div>
+            <sp-field-label for="level"> Level </sp-field-label>
+            <eomap-number-field
+              id="level"
+              max="${CHAR_MAX - 1}"
+            ></eomap-number-field>
+          </div>
+          <div>
+            <sp-field-label for="key">Key</sp-field-label>
+            <eomap-number-field
+              id="key"
+              max="${SHORT_MAX - 1}"
+              .disabled=${!this.isDoor}
+            ></eomap-number-field>
+          </div>
+          <div>
+            <sp-field-label for="door">Door</sp-field-label>
+            <sp-checkbox
+              id="door"
+              style="width: var(--spectrum-global-dimension-size-1200);"
+              emphasized
+              .checked=${this.isDoor}
+              @click=${(_event) => {
+                if (isNaN(this.key.value)) {
+                  this.key.value = 0;
+                  this.key.invalid = false;
+                }
+                this.isDoor = !this.isDoor;
+              }}
+            >
+            </sp-checkbox>
+          </div>
+        </sp-field-group>
+      </eomap-modal>
     `;
   }
 
@@ -192,8 +182,7 @@ export class EntityWarp extends LitElement {
     this.open = false;
   }
 
-  closed(event) {
-    event.stopPropagation();
+  close(_event) {
     this.open = false;
     this.dispatchEvent(new CustomEvent("close"));
   }

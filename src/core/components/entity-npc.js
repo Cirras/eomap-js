@@ -1,7 +1,6 @@
 import { html, LitElement } from "lit";
 import { customElement, property, query } from "lit/decorators.js";
 
-import "@spectrum-web-components/overlay/overlay-trigger.js";
 import "@spectrum-web-components/field-group/sp-field-group.js";
 import "@spectrum-web-components/field-label/sp-field-label.js";
 import "@spectrum-web-components/textfield/sp-textfield.js";
@@ -33,62 +32,53 @@ export class EntityNPC extends LitElement {
 
   render() {
     return html`
-      <overlay-trigger
-        type="modal"
-        placement="none"
-        .open=${this.open ? "click" : "none"}
-        @sp-closed=${this.closed}
+      <eomap-modal
+        confirm-label="Save"
+        cancel-label="Cancel"
+        .headline=${this.headline}
+        .open=${this.open}
+        @confirm=${this.confirm}
+        @cancel=${this.cancel}
+        @close=${this.close}
       >
-        <eomap-modal
-          slot="click-content"
-          underlay
-          confirm-label="Save"
-          cancel-label="Cancel"
-          .headline=${this.headline}
-          .open=${this.open}
-          @confirm=${this.confirm}
-          @cancel=${this.cancel}
-        >
-          <style>
-            sp-field-group {
-              justify-content: center;
-            }
-          </style>
-          <sp-field-group>
-            <div>
-              <sp-field-label for="npc-id">NPC ID</sp-field-label>
-              <eomap-number-field
-                id="npc-id"
-                max="${SHORT_MAX - 1}"
-              ></eomap-number-field>
-            </div>
-            <div>
-              <sp-field-label for="amount">Amount</sp-field-label>
-              <eomap-number-field
-                id="amount"
-                max="${CHAR_MAX - 1}"
-              ></eomap-number-field>
-            </div>
-          </sp-field-group>
-          <sp-field-group>
-            <div>
-              <sp-field-label for="speed">Speed</sp-field-label>
-              <eomap-number-field
-                id="speed"
-                max="${CHAR_MAX - 1}"
-              ></eomap-number-field>
-            </div>
-            <div>
-              <sp-field-label for="spawn-time"> Spawn Time </sp-field-label>
-              <eomap-number-field
-                id="spawn-time"
-                max="${SHORT_MAX - 1}"
-              ></eomap-number-field>
-            </div>
-          </sp-field-group>
-        </eomap-modal>
-        <div slot="trigger"></div>
-      </overlay-trigger>
+        <style>
+          sp-field-group {
+            justify-content: center;
+          }
+        </style>
+        <sp-field-group>
+          <div>
+            <sp-field-label for="npc-id">NPC ID</sp-field-label>
+            <eomap-number-field
+              id="npc-id"
+              max="${SHORT_MAX - 1}"
+            ></eomap-number-field>
+          </div>
+          <div>
+            <sp-field-label for="amount">Amount</sp-field-label>
+            <eomap-number-field
+              id="amount"
+              max="${CHAR_MAX - 1}"
+            ></eomap-number-field>
+          </div>
+        </sp-field-group>
+        <sp-field-group>
+          <div>
+            <sp-field-label for="speed">Speed</sp-field-label>
+            <eomap-number-field
+              id="speed"
+              max="${CHAR_MAX - 1}"
+            ></eomap-number-field>
+          </div>
+          <div>
+            <sp-field-label for="spawn-time"> Spawn Time </sp-field-label>
+            <eomap-number-field
+              id="spawn-time"
+              max="${SHORT_MAX - 1}"
+            ></eomap-number-field>
+          </div>
+        </sp-field-group>
+      </eomap-modal>
     `;
   }
 
@@ -149,8 +139,7 @@ export class EntityNPC extends LitElement {
     this.open = false;
   }
 
-  closed(event) {
-    event.stopPropagation();
+  close(_event) {
     this.open = false;
     this.dispatchEvent(new CustomEvent("close"));
   }

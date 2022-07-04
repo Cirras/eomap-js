@@ -6,9 +6,7 @@ import {
   CloseIcon,
 } from "@spectrum-web-components/icons-workflow";
 
-import "@spectrum-web-components/overlay/overlay-trigger.js";
 import "@spectrum-web-components/accordion/sp-accordion-item.js";
-
 import "@spectrum-css/table/dist/index-vars.css";
 
 import "./accordion";
@@ -440,41 +438,32 @@ export class EntityEditor extends LitElement {
 
   render() {
     return html`
-      <overlay-trigger
-        type="modal"
-        placement="none"
-        .open=${this.open ? "click" : "none"}
-        @sp-closed=${this.closed}
+      <eomap-modal
+        headline="Entities"
+        confirm-label="Save"
+        cancel-label="Cancel"
+        .open=${this.open}
+        .width=${535}
+        @confirm=${this.confirm}
+        @cancel=${this.cancel}
+        @close=${this.close}
       >
-        <eomap-modal
-          style="--eomap-modal-width: 535px"
-          slot="click-content"
-          underlay
-          headline="Entities"
-          confirm-label="Save"
-          cancel-label="Cancel"
-          .open=${this.open}
-          @confirm=${this.confirm}
-          @cancel=${this.cancel}
-        >
-          ${this.renderDialogStyles()}
-          <eomap-accordion>
-            <sp-accordion-item label="Warp">
-              ${this.renderWarp()}
-            </sp-accordion-item>
-            <sp-accordion-item label="Sign">
-              ${this.renderSign()}
-            </sp-accordion-item>
-            <sp-accordion-item label="NPC Spawns">
-              ${this.renderNPCs()}
-            </sp-accordion-item>
-            <sp-accordion-item label="Item Spawns">
-              ${this.renderItems()}
-            </sp-accordion-item>
-          </eomap-accordion>
-        </eomap-modal>
-        <div slot="trigger"></div>
-      </overlay-trigger>
+        ${this.renderDialogStyles()}
+        <eomap-accordion>
+          <sp-accordion-item label="Warp">
+            ${this.renderWarp()}
+          </sp-accordion-item>
+          <sp-accordion-item label="Sign">
+            ${this.renderSign()}
+          </sp-accordion-item>
+          <sp-accordion-item label="NPC Spawns">
+            ${this.renderNPCs()}
+          </sp-accordion-item>
+          <sp-accordion-item label="Item Spawns">
+            ${this.renderItems()}
+          </sp-accordion-item>
+        </eomap-accordion>
+      </eomap-modal>
       <eomap-entity-warp
         @close=${this.restoreFocus}
         @save=${this.onWarpSave}
@@ -503,8 +492,7 @@ export class EntityEditor extends LitElement {
     this.open = false;
   }
 
-  closed(event) {
-    event.stopPropagation();
+  close(_event) {
     this.open = false;
     this.dispatchEvent(new CustomEvent("close"));
   }

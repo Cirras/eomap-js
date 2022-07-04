@@ -1,7 +1,6 @@
 import { html, LitElement } from "lit";
 import { customElement, property, query } from "lit/decorators.js";
 
-import "@spectrum-web-components/overlay/overlay-trigger.js";
 import "@spectrum-web-components/field-group/sp-field-group.js";
 import "@spectrum-web-components/field-label/sp-field-label.js";
 
@@ -24,35 +23,26 @@ export class EntitySign extends LitElement {
 
   render() {
     return html`
-      <overlay-trigger
-        type="modal"
-        placement="none"
-        .open=${this.open ? "click" : "none"}
-        @sp-closed=${this.closed}
+      <eomap-modal
+        confirm-label="Save"
+        cancel-label="Cancel"
+        .headline=${this.headline}
+        .open=${this.open}
+        @confirm=${this.confirm}
+        @cancel=${this.cancel}
+        @close=${this.close}
       >
-        <eomap-modal
-          slot="click-content"
-          underlay
-          confirm-label="Save"
-          cancel-label="Cancel"
-          .headline=${this.headline}
-          .open=${this.open}
-          @confirm=${this.confirm}
-          @cancel=${this.cancel}
-        >
-          <style>
-            eomap-textfield {
-              --spectrum-alias-single-line-width: 208px;
-              margin-bottom: 15px;
-            }
-          </style>
-          <sp-field-label for="title">Title</sp-field-label>
-          <eomap-textfield id="title" grows multiline></eomap-textfield>
-          <sp-field-label for="message">Message</sp-field-label>
-          <eomap-textfield id="message" grows multiline></eomap-textfield>
-        </eomap-modal>
-        <div slot="trigger"></div>
-      </overlay-trigger>
+        <style>
+          eomap-textfield {
+            --spectrum-alias-single-line-width: 208px;
+            margin-bottom: 15px;
+          }
+        </style>
+        <sp-field-label for="title">Title</sp-field-label>
+        <eomap-textfield id="title" grows multiline></eomap-textfield>
+        <sp-field-label for="message">Message</sp-field-label>
+        <eomap-textfield id="message" grows multiline></eomap-textfield>
+      </eomap-modal>
     `;
   }
 
@@ -82,8 +72,7 @@ export class EntitySign extends LitElement {
     this.open = false;
   }
 
-  closed(event) {
-    event.stopPropagation();
+  close(_event) {
     this.open = false;
     this.dispatchEvent(new CustomEvent("close"));
   }

@@ -1,7 +1,6 @@
 import { html, LitElement } from "lit";
 import { customElement, property, query } from "lit/decorators.js";
 
-import "@spectrum-web-components/overlay/overlay-trigger.js";
 import "@spectrum-web-components/field-group/sp-field-group.js";
 import "@spectrum-web-components/field-label/sp-field-label.js";
 import "@spectrum-web-components/switch/sp-switch.js";
@@ -236,57 +235,47 @@ export class Properties extends LitElement {
 
   render() {
     return html`
-      <overlay-trigger
-        type="modal"
-        placement="none"
-        .open=${this.open ? "click" : "none"}
-        @sp-closed=${this.closed}
+      <eomap-modal
+        confirm-label="Save"
+        cancel-label="Cancel"
+        headline="Map Properties"
+        .open=${this.open}
+        .width=${544}
+        @confirm=${this.confirm}
+        @cancel=${this.cancel}
+        @close=${this.close}
       >
-        <eomap-modal
-          slot="click-content"
-          style="--eomap-modal-width: 544px"
-          underlay
-          confirm-label="Save"
-          cancel-label="Cancel"
-          headline="Map Properties"
-          .open=${this.open}
-          @confirm=${this.confirm}
-          @cancel=${this.cancel}
-          @sp-closed=${(e) => e.stopPropagation()}
-        >
-          <style>
-            eomap-textfield {
-              --spectrum-textfield-texticon-min-width: 208px;
-              padding-bottom: var(--spectrum-global-dimension-size-200);
-            }
-            eomap-number-field {
-              padding-bottom: var(--spectrum-global-dimension-size-200);
-            }
-            eomap-picker {
-              --spectrum-picker-min-width: 208px;
-            }
-            .switch-container {
-              width: 208px;
-              padding-bottom: var(--spectrum-global-dimension-size-200);
-            }
-            .picker-container {
-              padding-bottom: var(--spectrum-global-dimension-size-200);
-            }
-          </style>
-          <eomap-accordion>
-            <sp-accordion-item label="General">
-              ${this.renderGeneral()}
-            </sp-accordion-item>
-            <sp-accordion-item label="Audio">
-              ${this.renderAudio()}
-            </sp-accordion-item>
-            <sp-accordion-item label="Respawn">
-              ${this.renderRespawn()}
-            </sp-accordion-item>
-          </eomap-accordion>
-        </eomap-modal>
-        <div slot="trigger"></div>
-      </overlay-trigger>
+        <style>
+          eomap-textfield {
+            --spectrum-textfield-texticon-min-width: 208px;
+            padding-bottom: var(--spectrum-global-dimension-size-200);
+          }
+          eomap-number-field {
+            padding-bottom: var(--spectrum-global-dimension-size-200);
+          }
+          eomap-picker {
+            --spectrum-picker-min-width: 208px;
+          }
+          .switch-container {
+            width: 208px;
+            padding-bottom: var(--spectrum-global-dimension-size-200);
+          }
+          .picker-container {
+            padding-bottom: var(--spectrum-global-dimension-size-200);
+          }
+        </style>
+        <eomap-accordion>
+          <sp-accordion-item label="General">
+            ${this.renderGeneral()}
+          </sp-accordion-item>
+          <sp-accordion-item label="Audio">
+            ${this.renderAudio()}
+          </sp-accordion-item>
+          <sp-accordion-item label="Respawn">
+            ${this.renderRespawn()}
+          </sp-accordion-item>
+        </eomap-accordion>
+      </eomap-modal>
     `;
   }
 
@@ -362,8 +351,7 @@ export class Properties extends LitElement {
     this.open = false;
   }
 
-  closed(event) {
-    event.stopPropagation();
+  close(_event) {
     this.open = false;
     this.dispatchEvent(new CustomEvent("close"));
   }

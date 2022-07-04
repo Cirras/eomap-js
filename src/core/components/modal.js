@@ -1,41 +1,34 @@
-import { css, html } from "lit";
-import { customElement, property, query } from "lit/decorators.js";
+import {
+  css,
+  html,
+  render,
+  SpectrumElement,
+} from "@spectrum-web-components/base";
+import {
+  customElement,
+  property,
+  query,
+} from "@spectrum-web-components/base/src/decorators.js";
+import { reparentChildren } from "@spectrum-web-components/shared/src/reparent-children.js";
 
-import { SpectrumElement } from "@spectrum-web-components/base";
-import { ifDefined } from "@spectrum-web-components/base/src/directives.js";
+import "./dialog-wrapper";
 
-import "@spectrum-web-components/theme/theme-dark.js";
-import "@spectrum-web-components/theme/sp-theme.js";
-import "@spectrum-web-components/underlay/sp-underlay.js";
-import "@spectrum-web-components/button/sp-button.js";
-
-import "./dialog";
-
-import modalWrapperStyles from "@spectrum-web-components/modal/src/modal-wrapper.css.js";
-import modalStyles from "@spectrum-web-components/modal/src/modal.css.js";
-import { FocusVisiblePolyfillMixin } from "@spectrum-web-components/shared";
-import { Overlay } from "@spectrum-web-components/overlay/src/overlay.js";
+import { Overlay } from "@spectrum-web-components/overlay";
 
 @customElement("eomap-modal")
-export class Modal extends FocusVisiblePolyfillMixin(SpectrumElement) {
+export class Modal extends SpectrumElement {
   static get styles() {
-    return [
-      modalWrapperStyles,
-      modalStyles,
-      css`
-        :host {
-          height: 100vh;
-        }
-        .modal {
-          border: 1px solid var(--spectrum-global-color-gray-50);
-          overflow: visible;
-        }
-        sp-underlay {
-          z-index: unset;
-        }
-      `,
-    ];
+    return css`
+      :host {
+        display: none;
+      }
+    `;
   }
+  @query("slot")
+  dialogContent;
+
+  @property({ type: Boolean, reflect: true })
+  open = false;
 
   @property({ type: Boolean, reflect: true })
   error = false;
@@ -46,115 +39,173 @@ export class Modal extends FocusVisiblePolyfillMixin(SpectrumElement) {
   @property({ attribute: "confirm-label" })
   confirmLabel = "";
 
-  @property({ type: Boolean, reflect: true })
-  open = false;
-
   @property({ type: Boolean, reflect: true, attribute: "no-divider" })
   noDivider = false;
 
-  @property({ type: String, reflect: true })
-  size;
-
-  @property()
+  @property({ type: String })
   headline = "";
 
-  @query("eomap-dialog")
-  dialog;
+  @property({ type: Number })
+  width = null;
 
-  focus() {
-    if (this.shadowRoot) {
-      const firstFocusable = this.shadowRoot.querySelector(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"]), [focusable]'
-      );
-      if (firstFocusable) {
-        if (firstFocusable.updateComplete) {
-          firstFocusable.updateComplete.then(() => firstFocusable.focus());
-        } else {
-          firstFocusable.focus();
-        }
-        this.removeAttribute("tabindex");
-      } else {
-        this.dialog.focus();
+  dialogWrapperFragment = null;
+  dialogWrapper = null;
+  restoreChildren = null;
+  openStatePromise = Promise.resolve();
+  openStateResolver = null;
+  closeOverlayCallback = null;
+
+  constructor() {
+    super();
+    this.addEventListener("sp-closed", async (event) => {
+      event.stopPropagation();
+      if (this.restoreChildren) {
+        this.restoreChildren();
+        this.restoreChildren = null;
       }
-    } else {
-      super.focus();
+      this.closeOverlayCallback = null;
+      this.open = false;
+      this.dispatchEvent(new Event("close"));
+    });
+  }
+
+  close(immediate) {
+    this.open = false;
+    if (this.dialogWrapper) {
+      this.dialogWrapper.open = false;
+    }
+    if (immediate) {
+      this.closeOverlay();
     }
   }
 
-  clickConfirm() {
-    this.dispatchEvent(
-      new Event("confirm", {
-        bubbles: true,
-      })
+  closeOverlay() {
+    if (this.closeOverlayCallback) {
+      this.closeOverlayCallback();
+      this.closeOverlayCallback = null;
+    }
+  }
+
+  async openOverlay() {
+    if (this.closeOverlayCallback) {
+      return;
+    }
+
+    this.generateDialogWrapper();
+
+    let content = this.dialogContent?.assignedElements({ flatten: true }) ?? [];
+    if (content.length === 0) {
+      this.close(true);
+      return;
+    }
+
+    this.restoreChildren = reparentChildren(
+      content,
+      this.dialogWrapper,
+      (_element) => {
+        return (element) => {
+          if (typeof element.focused !== "undefined") {
+            element.focused = false;
+          }
+        };
+      }
+    );
+
+    this.openStatePromise = new Promise(
+      (res) => (this.openStateResolver = res)
+    );
+    this.addEventListener(
+      "sp-opened",
+      () => {
+        this.openStateResolver();
+      },
+      { once: true }
+    );
+
+    this.closeOverlayCallback = await Overlay.open(
+      this,
+      "modal",
+      this.dialogWrapper,
+      this.overlayOptions
     );
   }
 
-  clickCancel() {
-    this.dispatchEvent(
-      new Event("cancel", {
-        bubbles: true,
-      })
-    );
-  }
-
-  renderHeadline() {
-    if (this.headline) {
-      return html` <h2 slot="heading">${this.headline}</h2>`;
+  generateDialogWrapper() {
+    if (!this.dialogWrapperFragment) {
+      this.dialogWrapperFragment = document.createDocumentFragment();
     }
+    render(this.renderDialogWrapper(), this.dialogWrapperFragment, {
+      host: this,
+    });
+    this.dialogWrapper = this.dialogWrapperFragment.children[0];
   }
 
-  renderCancel() {
-    if (this.cancelLabel) {
-      return html`
-        <sp-button variant="secondary" slot="button" @click=${this.clickCancel}>
-          ${this.cancelLabel}
-        </sp-button>
-      `;
-    }
+  get overlayOptions() {
+    return {
+      offset: 6,
+      placement: "none",
+      receivesFocus: "auto",
+      notImmediatelyClosable: true,
+    };
   }
 
-  renderConfirm() {
-    if (this.confirmLabel) {
-      return html`
-        <sp-button variant="cta" slot="button" @click=${this.clickConfirm}>
-          ${this.confirmLabel}
-        </sp-button>
-      `;
-    }
+  confirm(event) {
+    event.stopPropagation();
+    this.dispatchEvent(new Event("confirm"));
   }
 
-  render() {
+  cancel(event) {
+    event.stopPropagation();
+    this.dispatchEvent(new Event("cancel"));
+  }
+
+  renderDialogWrapper() {
     return html`
-      <sp-underlay ?open=${this.open}> </sp-underlay>
-      <sp-theme color="dark" scale="medium">
-        <div class="modal">
-          <eomap-dialog
-            ?error=${this.error}
-            .noDivider=${this.noDivider}
-            size=${ifDefined(this.size ? this.size : undefined)}
-            style="width: var(--eomap-modal-width, 100%); --spectrum-dialog-confirm-title-text-font-weight: light;"
-          >
-            ${this.renderHeadline()}
-            <slot></slot>
-            ${this.renderCancel()} ${this.renderConfirm()}
-          </eomap-dialog>
-        </div>
-      </sp-theme>
+      <eomap-dialog-wrapper
+        ?error=${this.error}
+        .cancelLabel=${this.cancelLabel}
+        .confirmLabel=${this.confirmLabel}
+        .noDivider=${this.noDivider}
+        .headline=${this.headline}
+        @confirm=${this.confirm}
+        @cancel=${this.cancel}
+        @close=${this.closeOverlay}
+        style="--eomap-dialog-wrapper-width: ${this.dialogWrapperWidth}"
+      >
+      </eomap-dialog-wrapper>
     `;
   }
 
-  updated(changes) {
-    if (changes.has("open") && this.open) {
-      Overlay.overlayStack._doesNotCloseOnFirstClick = true;
-      this.dialog.updateComplete.then(() => {
-        this.dialog.shouldManageTabOrderForScrolling();
-      });
+  render() {
+    return html`<slot></slot>`;
+  }
+
+  async updated(changes) {
+    super.updated(changes);
+    if (changes.has("open")) {
+      if (this.open) {
+        this.openOverlay();
+      } else {
+        this.close();
+      }
     }
   }
 
-  overlayOpenCallback(_args) {
-    // HACK: Prevents a problem where a well-timed click event can close the
-    //       overlay in the same tick that it opens, even though it's a modal.
-    Overlay.overlayStack._doesNotCloseOnFirstClick = true;
+  async getUpdateComplete() {
+    const complete = await super.getUpdateComplete();
+    await this.openStatePromise;
+    return complete;
+  }
+
+  disconnectedCallback() {
+    this.close(true);
+    super.disconnectedCallback();
+  }
+
+  get dialogWrapperWidth() {
+    if (this.width === null) {
+      return "100%";
+    }
+    return `${this.width}px`;
   }
 }

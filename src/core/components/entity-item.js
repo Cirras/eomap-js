@@ -1,7 +1,6 @@
 import { html, LitElement } from "lit";
 import { customElement, property, query } from "lit/decorators.js";
 
-import "@spectrum-web-components/overlay/overlay-trigger.js";
 import "@spectrum-web-components/field-group/sp-field-group.js";
 import "@spectrum-web-components/field-label/sp-field-label.js";
 
@@ -35,69 +34,60 @@ export class EntityItem extends LitElement {
 
   render() {
     return html`
-      <overlay-trigger
-        type="modal"
-        placement="none"
-        .open=${this.open ? "click" : "none"}
-        @sp-closed=${this.closed}
+      <eomap-modal
+        confirm-label="Save"
+        cancel-label="Cancel"
+        .headline=${this.headline}
+        .open=${this.open}
+        @confirm=${this.confirm}
+        @cancel=${this.cancel}
+        @close=${this.close}
       >
-        <eomap-modal
-          slot="click-content"
-          underlay
-          confirm-label="Save"
-          cancel-label="Cancel"
-          .headline=${this.headline}
-          .open=${this.open}
-          @confirm=${this.confirm}
-          @cancel=${this.cancel}
-        >
-          <style>
-            sp-field-group {
-              justify-content: center;
-            }
-          </style>
-          <sp-field-group>
-            <div>
-              <sp-field-label for="item-id">Item ID</sp-field-label>
-              <eomap-number-field
-                id="item-id"
-                max="${SHORT_MAX - 1}"
-              ></eomap-number-field>
-            </div>
-            <div>
-              <sp-field-label for="amount">Amount</sp-field-label>
-              <eomap-number-field
-                id="amount"
-                max="${THREE_MAX - 1}"
-              ></eomap-number-field>
-            </div>
-          </sp-field-group>
-          <sp-field-group>
-            <div>
-              <sp-field-label for="spawn-time">Spawn Time</sp-field-label>
-              <eomap-number-field
-                id="spawn-time"
-                max="${SHORT_MAX - 1}"
-              ></eomap-number-field>
-            </div>
-            <div>
-              <sp-field-label for="chest-slot">Chest Slot</sp-field-label>
-              <eomap-number-field
-                id="chest-slot"
-                max="${CHAR_MAX - 1}"
-              ></eomap-number-field>
-            </div>
-          </sp-field-group>
+        <style>
+          sp-field-group {
+            justify-content: center;
+          }
+        </style>
+        <sp-field-group>
           <div>
-            <sp-field-label for="key">Key</sp-field-label>
+            <sp-field-label for="item-id">Item ID</sp-field-label>
             <eomap-number-field
-              id="key"
+              id="item-id"
               max="${SHORT_MAX - 1}"
             ></eomap-number-field>
           </div>
-        </eomap-modal>
-        <div slot="trigger"></div>
-      </overlay-trigger>
+          <div>
+            <sp-field-label for="amount">Amount</sp-field-label>
+            <eomap-number-field
+              id="amount"
+              max="${THREE_MAX - 1}"
+            ></eomap-number-field>
+          </div>
+        </sp-field-group>
+        <sp-field-group>
+          <div>
+            <sp-field-label for="spawn-time">Spawn Time</sp-field-label>
+            <eomap-number-field
+              id="spawn-time"
+              max="${SHORT_MAX - 1}"
+            ></eomap-number-field>
+          </div>
+          <div>
+            <sp-field-label for="chest-slot">Chest Slot</sp-field-label>
+            <eomap-number-field
+              id="chest-slot"
+              max="${CHAR_MAX - 1}"
+            ></eomap-number-field>
+          </div>
+        </sp-field-group>
+        <div>
+          <sp-field-label for="key">Key</sp-field-label>
+          <eomap-number-field
+            id="key"
+            max="${SHORT_MAX - 1}"
+          ></eomap-number-field>
+        </div>
+      </eomap-modal>
     `;
   }
 
@@ -164,8 +154,7 @@ export class EntityItem extends LitElement {
     this.open = false;
   }
 
-  closed(event) {
-    event.stopPropagation();
+  close(_event) {
     this.open = false;
     this.dispatchEvent(new CustomEvent("close"));
   }

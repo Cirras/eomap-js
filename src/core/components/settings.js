@@ -3,7 +3,6 @@ import { customElement, property, state, query } from "lit/decorators.js";
 
 import "@spectrum-web-components/field-label/sp-field-label.js";
 import "@spectrum-web-components/field-group/sp-field-group.js";
-import "@spectrum-web-components/overlay/overlay-trigger.js";
 import "@spectrum-web-components/accordion/sp-accordion-item.js";
 
 import "./accordion";
@@ -103,47 +102,38 @@ export class Settings extends LitElement {
 
   render() {
     return html`
-      <overlay-trigger
-        type="modal"
-        placement="none"
-        .open=${this.open ? "click" : "none"}
-        @sp-closed=${this.closed}
+      <eomap-modal
+        headline="Settings"
+        confirm-label="Save"
+        cancel-label="Cancel"
+        .open=${this.open}
+        .width=${532}
+        @confirm=${this.confirm}
+        @cancel=${this.cancel}
+        @close=${this.close}
       >
-        <eomap-modal
-          style="--eomap-modal-width: 532px"
-          slot="click-content"
-          underlay
-          headline="Settings"
-          confirm-label="Save"
-          cancel-label="Cancel"
-          .open=${this.open}
-          @confirm=${this.confirm}
-          @cancel=${this.cancel}
-        >
-          <style>
-            eomap-folderfield {
-              --spectrum-folderfield-min-width: 388px;
-              margin-bottom: 10px;
-            }
-            eomap-textfield {
-              --spectrum-textfield-texticon-min-width: 388px;
-              margin-bottom: 10px;
-            }
-          </style>
-          <eomap-accordion>
-            <sp-accordion-item
-              label="Graphics"
-              style="${!!FORCE_CONNECTED_MODE_URL ? "display: none;" : ""}"
-            >
-              ${this.renderGraphics()}
-            </sp-accordion-item>
-            <sp-accordion-item label="Connected Mode">
-              ${this.renderConnectedMode()}
-            </sp-accordion-item>
-          </eomap-accordion>
-        </eomap-modal>
-        <div slot="trigger"></div>
-      </overlay-trigger>
+        <style>
+          eomap-folderfield {
+            --spectrum-folderfield-min-width: 388px;
+            margin-bottom: 10px;
+          }
+          eomap-textfield {
+            --spectrum-textfield-texticon-min-width: 388px;
+            margin-bottom: 10px;
+          }
+        </style>
+        <eomap-accordion>
+          <sp-accordion-item
+            label="Graphics"
+            style="${!!FORCE_CONNECTED_MODE_URL ? "display: none;" : ""}"
+          >
+            ${this.renderGraphics()}
+          </sp-accordion-item>
+          <sp-accordion-item label="Connected Mode">
+            ${this.renderConnectedMode()}
+          </sp-accordion-item>
+        </eomap-accordion>
+      </eomap-modal>
     `;
   }
 
@@ -197,8 +187,7 @@ export class Settings extends LitElement {
     this.open = false;
   }
 
-  closed(event) {
-    event.stopPropagation();
+  close(_event) {
     this.open = false;
     this.dispatchEvent(new CustomEvent("close"));
   }

@@ -7,7 +7,6 @@ import {
   CloseCircleIcon,
 } from "@spectrum-web-components/icons-workflow";
 
-import "@spectrum-web-components/overlay/overlay-trigger.js";
 import "@spectrum-web-components/icon/sp-icon.js";
 import "@spectrum-web-components/button-group/sp-button-group.js";
 import "@spectrum-web-components/button/sp-button.js";
@@ -25,67 +24,57 @@ export class Prompt extends LitElement {
 
   render() {
     return html`
-      <overlay-trigger
-        type="modal"
-        placement="none"
-        .open=${this.open ? "click" : "none"}
-        @sp-closed=${this.closed}
+      <eomap-modal
+        .noDivider=${true}
+        .open=${this.open}
+        .width=${500}
+        @close=${this.close}
       >
-        <eomap-modal
-          slot="click-content"
-          style="--eomap-modal-width: 500px;"
-          underlay
-          no-divider="true"
-          .open=${this.open}
-          @sp-closed=${(e) => e.stopPropagation()}
-        >
-          <style>
-            .message-row {
-              display: flex;
-              flex-grow: 1;
-              align-items: center;
-            }
-            .icon {
-              flex: 0 0 var(--spectrum-global-dimension-size-600);
-              height: var(--spectrum-global-dimension-size-600);
-              align-self: baseline;
-            }
-            .message-container {
-              display: flex;
-              flex-direction: column;
-              overflow: hidden;
-              text-overflow: ellipsis;
-              padding-left: var(--spectrum-global-dimension-size-300);
-              user-select: text;
-              -webkit-user-select: text;
-              word-wrap: break-word;
-              white-space: normal;
-            }
-            .message {
-              color: var(--spectrum-alias-component-icon-color-default);
-              line-height: var(--spectrum-global-dimension-size-275);
-              font-size: var(--spectrum-global-dimension-font-size-300);
-              min-height: var(--spectrum-global-dimension-size-600);
-              margin-bottom: var(--spectrum-global-dimension-size-100);
-              display: flex;
-              align-items: center;
-            }
-            .detail {
-              color: var(--spectrum-alias-component-icon-color-default);
-              margin-top: 0;
-              font-size: var(--spectrum-global-dimension-font-size-75);
-              font-weight: lighter;
-            }
-            .button-group {
-              justify-content: flex-end;
-              padding-top: var(--spectrum-global-dimension-size-450);
-              padding-bottom: var(--spectrum-global-dimension-size-65);
-            }
-          </style>
-          ${this.renderContent()}
-        </eomap-modal>
-        <div slot="trigger"></div>
-      </overlay-trigger>
+        <style>
+          .message-row {
+            display: flex;
+            flex-grow: 1;
+            align-items: center;
+          }
+          .icon {
+            flex: 0 0 var(--spectrum-global-dimension-size-600);
+            height: var(--spectrum-global-dimension-size-600);
+            align-self: baseline;
+          }
+          .message-container {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding-left: var(--spectrum-global-dimension-size-300);
+            user-select: text;
+            -webkit-user-select: text;
+            word-wrap: break-word;
+            white-space: normal;
+          }
+          .message {
+            color: var(--spectrum-alias-component-icon-color-default);
+            line-height: var(--spectrum-global-dimension-size-275);
+            font-size: var(--spectrum-global-dimension-font-size-300);
+            min-height: var(--spectrum-global-dimension-size-600);
+            margin-bottom: var(--spectrum-global-dimension-size-100);
+            display: flex;
+            align-items: center;
+          }
+          .detail {
+            color: var(--spectrum-alias-component-icon-color-default);
+            margin-top: 0;
+            font-size: var(--spectrum-global-dimension-font-size-75);
+            font-weight: lighter;
+          }
+          .button-group {
+            justify-content: flex-end;
+            padding-top: var(--spectrum-global-dimension-size-450);
+            padding-bottom: var(--spectrum-global-dimension-size-65);
+          }
+        </style>
+        ${this.renderContent()}
+      </eomap-modal>
     `;
   }
 
@@ -155,8 +144,7 @@ export class Prompt extends LitElement {
     this.dispatchEvent(new CustomEvent("close"));
   }
 
-  closed(event) {
-    event.stopPropagation();
+  close(_event) {
     this.open = false;
     this.dispatchEvent(new CustomEvent("close"));
   }
