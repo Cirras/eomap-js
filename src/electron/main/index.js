@@ -262,6 +262,10 @@ function newWindow() {
     window.webContents.send("window:focus");
   });
 
+  window.on("blur", (_event) => {
+    window.webContents.send("window:blur");
+  });
+
   windows.push(window);
 
   return window;

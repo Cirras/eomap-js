@@ -122,6 +122,14 @@ bridge.receive("window:leave-full-screen", () => {
   getTitlebar().fullScreen = false;
 });
 
+bridge.receive("window:focus", () => {
+  getTitlebar().inactive = false;
+});
+
+bridge.receive("window:blur", () => {
+  getTitlebar().inactive = true;
+});
+
 window.addEventListener("DOMContentLoaded", async (_event) => {
   setupTitlebar();
   // Defer to next tick

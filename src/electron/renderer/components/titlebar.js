@@ -146,14 +146,6 @@ export class Titlebar extends LitElement {
   @state({ type: Object })
   titleStyle = {};
 
-  onWindowBlur = (_event) => {
-    this.inactive = true;
-  };
-
-  onWindowFocus = (_event) => {
-    this.inactive = false;
-  };
-
   resizeObserver = new ResizeObserver((_entries) => {
     this.adjustTitlePosition();
   });
@@ -267,17 +259,5 @@ export class Titlebar extends LitElement {
       transform: "translate(-50%, 0)",
       maxWidth: `calc(100vw - ${2 * (this.windowControls.clientWidth + 10)}px)`,
     };
-  }
-
-  connectedCallback() {
-    super.connectedCallback();
-    window.addEventListener("blur", this.onWindowBlur);
-    window.addEventListener("focus", this.onWindowFocus);
-  }
-
-  disconnectedCallback() {
-    window.removeEventListener("blur", this.onWindowBlur);
-    window.removeEventListener("focus", this.onWindowFocus);
-    super.disconnectedCallback();
   }
 }
