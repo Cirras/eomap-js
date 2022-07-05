@@ -172,7 +172,7 @@ export class Titlebar extends LitElement {
   }
 
   renderAppIcon() {
-    if (!isMac()) {
+    if (!isMac() && !this.fullScreen) {
       return html` <div class="app-icon">${unsafeHTML(AppIcon)}</div> `;
     }
   }
