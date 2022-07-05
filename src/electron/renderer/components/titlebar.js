@@ -159,6 +159,10 @@ export class Titlebar extends LitElement {
   updated(changedProperties) {
     super.updated(changedProperties);
     if (changedProperties.has("fullScreen")) {
+      if (this.menubar) {
+        this.menubar.showMnemonics = false;
+        this.menubar.unselectMenu();
+      }
       this.manageDisplay();
     }
   }
