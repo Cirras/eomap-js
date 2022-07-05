@@ -70,6 +70,7 @@ export class MenubarController extends EventEmitter {
           this.handleMenuEvent(
             new CustomEvent(item.eventType, { detail: item.eventDetail })
           );
+          this.emit("keybinding-handled");
         }
         break;
       }

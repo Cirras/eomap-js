@@ -11,7 +11,7 @@ import CloseIcon from "@vscode/codicons/src/icons/chrome-close.svg";
 
 import "./menubar";
 
-import { MenubarState } from "../../../core/state/menubar-state";
+import { MenubarController } from "../../../core/controllers/menubar-controller";
 import { isMac } from "../../../core/util/platform-utils";
 
 const titlebarHeight = (() => {
@@ -128,8 +128,8 @@ export class Titlebar extends LitElement {
   @query(".window-controls-container")
   windowControls;
 
-  @property({ type: MenubarState })
-  menubarState = new MenubarState();
+  @property({ type: MenubarController })
+  menubarController = null;
 
   @property({ type: Boolean, reflect: true })
   inactive = false;
@@ -186,7 +186,7 @@ export class Titlebar extends LitElement {
       return html`
         <eomap-menubar
           class="menubar"
-          .state=${this.menubarState}
+          .controller=${this.menubarController}
           .inactive=${this.inactive}
           @show-mnemonics-changed=${this.manageDisplay}
         ></eomap-menubar>

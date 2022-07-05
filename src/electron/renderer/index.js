@@ -57,11 +57,9 @@ function setupMenubarController() {
     bridge.receive("window:focus", () => {
       bridge.setMenubarState(menubarController.state);
     });
-  } else {
-    menubarController.on("menubar-state-updated", (state) => {
-      titlebar.menubarState = state;
-    });
   }
+
+  titlebar.menubarController = menubarController;
 }
 
 function setupKeyboardEvents() {

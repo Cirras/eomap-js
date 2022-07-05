@@ -5,6 +5,7 @@ import { unsafeHTML } from "lit/directives/unsafe-html.js";
 import EllipsisIcon from "@vscode/codicons/src/icons/ellipsis.svg";
 
 import { MenubarButton } from "./menubar-button";
+import { MenubarController } from "../../../core/controllers/menubar-controller";
 import {
   MenubarState,
   SubmenuMenuItemState,
@@ -42,11 +43,14 @@ export class Menubar extends LitElement {
     `;
   }
 
-  @property({ type: MenubarState })
-  state = new MenubarState();
+  @property({ type: MenubarController })
+  controller = null;
 
   @property({ type: Boolean, reflect: true })
   inactive = false;
+
+  @state({ type: MenubarState })
+  state = new MenubarState();
 
   @state({ type: Boolean })
   showMnemonics = false;
@@ -245,14 +249,31 @@ export class Menubar extends LitElement {
     this.showMnemonics = false;
   };
 
-  updated(changedProperties) {
-    super.updated(changedProperties);
-    if (changedProperties.has("state")) {
+  onMenubarStateUpdated = (menubarState) => {
+    this.state = menubarState;
+  };
+
+  onKeybindingHandled = () => {
+    this.showMnemonics = false;
+    this.unselectMenu();
+  };
+
+  updated(changed) {
+    super.updated(changed);
+    if (changed.has("controller")) {
+      const oldController = changed.get("controller");
+      oldController?.off("menubar-state-updated", this.onMenubarStateUpdated);
+      oldController?.off("keybinding-handled", this.onKeybindingHandled);
+      this.controller?.on("menubar-state-updated", this.onMenubarStateUpdated);
+      this.controller?.on("keybinding-handled", this.onKeybindingHandled);
+      this.state = this.controller?.state ?? new MenubarState();
+    }
+    if (changed.has("state")) {
       // We might need to re-render on the next tick if the width of the menu
       // buttons has changed.
       this.requestUpdate();
     }
-    if (changedProperties.has("showMnemonics")) {
+    if (changed.has("showMnemonics")) {
       this.dispatchEvent(new CustomEvent("show-mnemonics-changed"));
     }
   }
