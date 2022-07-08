@@ -182,7 +182,7 @@ export class Palette extends PhaserInstance {
             --spectrum-alias-component-border-color-selected-key-focus
           );
           --spectrum-actionbutton-m-textonly-border-color-down: var(
-            --spectrum-alias-component-border-coloR-selected-key-focus
+            --spectrum-alias-component-border-color-selected-key-focus
           );
           --spectrum-actionbutton-m-textonly-border-color-selected-down: var(
             --spectrum-alias-component-border-color-selected-key-focus
