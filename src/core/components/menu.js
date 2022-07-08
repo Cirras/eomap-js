@@ -74,6 +74,10 @@ export class Menu extends SpectrumElement {
     ) {
       this.scheduleOpenSubmenu();
     }
+
+    if (menuItem === event.target) {
+      this.focus();
+    }
   };
 
   handleMenuItemPointerUp = (event) => {
@@ -135,6 +139,14 @@ export class Menu extends SpectrumElement {
     if (this.isDescendant(event.relatedTarget)) {
       return;
     }
+
+    if (
+      event.relatedTarget instanceof Menu &&
+      event.relatedTarget.isDescendant(this)
+    ) {
+      return;
+    }
+
     this.stopListeningToKeyboard();
     this.closeSubmenu(true);
     this.blurFocusedMenuItem();
@@ -143,12 +155,22 @@ export class Menu extends SpectrumElement {
   }
 
   handlePointerEnter(event) {
-    if (this.pointerInSubmenu && event.target === this) {
-      this.pointerInSubmenu = false;
-    }
-    if (!this.menuItems.some((item) => item.focused)) {
+    let rect = this.getBoundingClientRect();
+
+    this.pointerInSubmenu = !(
+      event.x >= rect.x &&
+      event.x <= rect.x + rect.width &&
+      event.y >= rect.y &&
+      event.y <= rect.y + rect.height
+    );
+
+    if (!this.pointerInSubmenu) {
+      let hasFocusedMenuItem = this.menuItems.some((item) => item.focused);
       this.focus();
-      this.blurFocusedMenuItem();
+
+      if (!hasFocusedMenuItem) {
+        this.blurFocusedMenuItem();
+      }
     }
   }
 
@@ -157,6 +179,7 @@ export class Menu extends SpectrumElement {
       return;
     }
     this.stopListeningToKeyboard();
+    this.cancelOpenSubmenu(true);
     this.scheduleCloseSubmenu(true);
     this.blurFocusedMenuItem();
     this.focusedItemIndex = 0;
@@ -181,8 +204,8 @@ export class Menu extends SpectrumElement {
             return true;
           case "Escape":
           case "ArrowLeft":
-            this.focus();
             this.closeSubmenu(true);
+            this.focus();
             return true;
         }
       }
@@ -349,15 +372,14 @@ export class Menu extends SpectrumElement {
       this.submenu = focusedItem;
       this.submenu.open = true;
 
-      let menu = this.submenu.menu;
-      menu.focusMenuItemByIndex(0);
-      menu.blurFocusedMenuItem();
-
-      if (focus) {
-        setTimeout(() => {
-          menu.focus();
-        }, 1);
-      }
+      requestAnimationFrame(() => {
+        let menu = this.submenu.menu;
+        menu.focus();
+        menu.focusMenuItemByIndex(0);
+        if (!focus) {
+          menu.blurFocusedMenuItem();
+        }
+      });
     }
   }
 

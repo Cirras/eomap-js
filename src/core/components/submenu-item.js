@@ -75,6 +75,9 @@ export class SubmenuItem extends MenuItem {
     super.updated(changed);
     if (changed.has("open")) {
       this.setAttribute("aria-expanded", this.open);
+      if (!this.open) {
+        this.menu?.closeSubmenu(true);
+      }
     }
     if (changed.has("showMnemonics") || changed.has("open")) {
       let menu = this.menu;
