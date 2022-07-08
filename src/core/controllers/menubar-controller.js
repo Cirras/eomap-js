@@ -67,6 +67,8 @@ export class MenubarController extends EventEmitter {
       if (keybinding.triggeredBy(event)) {
         let item = this.keybindingMap.get(keybinding);
         if (item.enabled) {
+          event.preventDefault();
+          event.stopPropagation();
           this.handleMenuEvent(
             new CustomEvent(item.eventType, { detail: item.eventDetail })
           );

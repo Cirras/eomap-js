@@ -23,6 +23,8 @@ import { GFXLoader } from "../gfx/load/gfx-loader";
 import { LocalLoadingStrategy } from "../gfx/load/strategy/local-loading-strategy";
 import { RemoteLoadingStrategy } from "../gfx/load/strategy/remote-loading-strategy";
 
+import { MenubarController } from "../controllers/menubar-controller";
+
 import { TilePosState } from "../state/tilepos-state";
 import { Eyedrop } from "../tools/eyedrop";
 import { LayerVisibilityState } from "../state/layer-visibility-state";
@@ -35,10 +37,10 @@ import { PromptState, PromptType } from "../state/prompt-state";
 import { EMF } from "../data/emf";
 import { EOReader } from "../data/eo-reader";
 import { EOBuilder } from "../data/eo-builder";
+import { CHAR_MAX } from "../data/eo-numeric-limits";
 
 import { asyncFilter } from "../util/array-utils";
 import { PendingPromise } from "../util/pending-promise";
-import { CHAR_MAX } from "../data/eo-numeric-limits";
 
 @customElement("eomap-application")
 export class Application extends LitElement {
@@ -150,6 +152,9 @@ export class Application extends LitElement {
 
   @state({ type: MapState })
   mapState = new MapState();
+
+  @property({ type: MenubarController })
+  menubarController = null;
 
   @state({ type: Boolean })
   dirty = false;
@@ -525,6 +530,7 @@ export class Application extends LitElement {
   render() {
     return html`
       <eomap-sidebar
+        .menubarController=${this.menubarController}
         .selectedTool=${this.selectedTool}
         .canUndo=${this.canUndo()}
         .canRedo=${this.canRedo()}

@@ -14,7 +14,10 @@ import {
 } from "@spectrum-web-components/icons-workflow";
 
 import "./action-group";
+import "./sidebar-menubar";
 import "./sidebar-button";
+
+import { MenubarController } from "../controllers/menubar-controller";
 
 @customElement("eomap-sidebar")
 export class Sidebar extends LitElement {
@@ -38,6 +41,9 @@ export class Sidebar extends LitElement {
     `;
   }
 
+  @property({ type: MenubarController })
+  menubarController;
+
   @property({ type: String })
   selectedTool;
 
@@ -47,9 +53,19 @@ export class Sidebar extends LitElement {
   @property({ type: Boolean })
   canRedo;
 
+  renderMenubar() {
+    if (this.menubarController) {
+      return html`
+        <eomap-sidebar-menubar .controller=${this.menubarController}>
+        </eomap-sidebar-menubar>
+      `;
+    }
+  }
+
   render() {
     return html`
       <eomap-action-group vertical>
+        ${this.renderMenubar()}
         <eomap-sidebar-button
           value="draw"
           label="Draw"
