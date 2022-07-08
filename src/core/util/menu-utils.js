@@ -77,8 +77,8 @@ function renderKeybinding(item) {
 
 function renderSubmenu(item) {
   let menuStyle = "";
-  if (item.width !== null) {
-    menuStyle = `width: ${item.width}px`;
+  if (item.menu.width !== null) {
+    menuStyle = `width: ${item.menu.width}px`;
   }
   return html`
     <eomap-submenu-item
