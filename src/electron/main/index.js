@@ -1,9 +1,10 @@
-import { app, BrowserWindow, ipcMain, Menu, session } from "electron";
+import { app, BrowserWindow, dialog, ipcMain, Menu, session } from "electron";
+import fs from "node:fs/promises";
 import path from "path";
 import { WindowState } from "./window/window-state";
-import { removeFirst } from "../../core/util/array-utils";
+import { asyncMap, removeFirst } from "../../core/util/array-utils";
 import { MenuEvent } from "../../core/controllers/menubar-controller";
-import { isMac } from "../../core/util/platform-utils";
+import { isMac, isWindows } from "../../core/util/platform-utils";
 import { MnemonicData } from "../../core/util/mnemonic-data";
 
 let windows = [];
@@ -103,6 +104,18 @@ function setupIPC() {
     }
   });
 
+  ipcMain.on("set-recent-documents", (_event, recentDocuments) => {
+    if (isWindows() || isMac()) {
+      app.clearRecentDocuments();
+      if (isMac()) {
+        recentDocuments.reverse();
+      }
+      for (let document of recentDocuments) {
+        app.addRecentDocument(document);
+      }
+    }
+  });
+
   ipcMain.on("toggle-developer-tools", (event) => {
     event.sender.toggleDevTools();
   });
@@ -176,6 +189,194 @@ function setupIPC() {
     let window = BrowserWindow.fromWebContents(event.sender);
     event.returnValue = window.isFullScreen();
   });
+
+  ipcMain.handle("fs:showOpenDialog", async (event, options) => {
+    let window = BrowserWindow.fromWebContents(event.sender);
+
+    let dialogResult = await dialog.showOpenDialog(window, options);
+    let error = null;
+    let returnValue = null;
+
+    if (dialogResult.canceled) {
+      error = "EABORTED";
+    } else {
+      try {
+        returnValue = await asyncMap(dialogResult.filePaths, async (fsPath) =>
+          pathToHandleData(fsPath)
+        );
+      } catch (e) {
+        error = e.code;
+      }
+    }
+
+    return {
+      error,
+      returnValue,
+    };
+  });
+
+  ipcMain.handle("fs:showSaveDialog", async (event, options) => {
+    let window = BrowserWindow.fromWebContents(event.sender);
+
+    let dialogResult = await dialog.showSaveDialog(window, options);
+    let error = null;
+    let returnValue = null;
+
+    if (dialogResult.canceled) {
+      error = "EABORTED";
+    } else {
+      const fsPath = normalizePath(dialogResult.filePath);
+      returnValue = {
+        name: path.basename(fsPath),
+        path: fsPath,
+        kind: "file",
+      };
+    }
+
+    return {
+      error,
+      returnValue,
+    };
+  });
+
+  ipcMain.handle("fs:getHandleData", async (_event, fsPath) => {
+    return getHandleData(fsPath);
+  });
+
+  ipcMain.handle("fs:getFileHandleData", async (_event, fsPath, create) => {
+    let { error, returnValue } = await getHandleData(fsPath);
+
+    if (create && error === "ENOENT") {
+      await (await fs.open(fsPath, "w")).close();
+      fsPath = normalizePath(fsPath);
+      error = null;
+      returnValue = {
+        name: path.basename(fsPath),
+        path: fsPath,
+        kind: "file",
+      };
+    }
+
+    if (returnValue?.kind !== "file") {
+      error = "EMISMATCH";
+      returnValue = null;
+    }
+
+    return { error, returnValue };
+  });
+
+  ipcMain.handle(
+    "fs:getDirectoryHandleData",
+    async (_event, fsPath, create) => {
+      let { error, returnValue } = await getHandleData(fsPath);
+
+      if (create && error === "ENOENT") {
+        await fs.mkdir(fsPath);
+        fsPath = normalizePath(fsPath);
+        error = null;
+        returnValue = {
+          name: path.basename(fsPath),
+          path: fsPath,
+          kind: "file",
+        };
+      }
+
+      if (returnValue?.kind !== "directory") {
+        error = "EMISMATCH";
+        returnValue = null;
+      }
+
+      return { error, returnValue };
+    }
+  );
+
+  ipcMain.handle("fs:readFile", async (_event, fsPath) => {
+    let error = null;
+    let returnValue = null;
+    try {
+      const stat = await fs.stat(fsPath);
+      if (getHandleKind(stat) !== "file") {
+        throwMismatch(stat);
+      }
+      returnValue = await fs.readFile(fsPath);
+    } catch (e) {
+      error = e.code;
+    }
+    return { error, returnValue };
+  });
+
+  ipcMain.handle("fs:writeFile", async (_event, fsPath, data) => {
+    let error = null;
+    let returnValue = null;
+    try {
+      const handle = await fs.open(fsPath, "w");
+      await handle.writeFile(data);
+      await handle.close();
+    } catch (e) {
+      error = e.code;
+    }
+    return { error, returnValue };
+  });
+}
+
+async function getHandleData(fsPath) {
+  let error = null;
+  let returnValue = null;
+  try {
+    returnValue = await pathToHandleData(fsPath);
+  } catch (e) {
+    error = e.code;
+  }
+  return { error, returnValue };
+}
+
+async function pathToHandleData(fsPath) {
+  const stat = await fs.stat(fsPath);
+  fsPath = normalizePath(fsPath);
+  return {
+    name: path.basename(fsPath),
+    path: fsPath,
+    kind: getHandleKind(stat),
+  };
+}
+
+function normalizePath(fsPath) {
+  let result = path.normalize(fsPath);
+  if (isWindows()) {
+    result = removeTrailingPathSeparator(result);
+    if (result.endsWith(":")) {
+      result += path.sep;
+    }
+  } else {
+    result = removeTrailingPathSeparator(result);
+    if (result.length === 0) {
+      result += path.sep;
+    }
+  }
+  return result;
+}
+
+function removeTrailingPathSeparator(fsPath) {
+  if (fsPath.endsWith(path.sep)) {
+    return fsPath.slice(0, -1);
+  }
+  return fsPath;
+}
+
+function getHandleKind(stat) {
+  if (stat.isFile()) {
+    return "file";
+  } else if (stat.isDirectory()) {
+    return "directory";
+  } else {
+    throwMismatch(stat);
+  }
+}
+
+function throwMismatch(stat) {
+  const error = new Error(`Unexpected handle kind for stat: ${stat}`);
+  error.code = "EMISMATCH";
+  throw error;
 }
 
 function newWindow() {
@@ -301,9 +502,6 @@ function main() {
       newWindow();
     }
   });
-
-  // See: https://github.com/electron/electron/issues/28422
-  app.commandLine.appendSwitch("enable-experimental-web-platform-features");
 
   Menu.setApplicationMenu(null);
 }

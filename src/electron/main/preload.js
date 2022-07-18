@@ -11,6 +11,9 @@ contextBridge.exposeInMainWorld("bridge", {
   setMenubarState(state) {
     ipcRenderer.send("set-menubar-state", state);
   },
+  setRecentDocuments: (recentDocuments) => {
+    ipcRenderer.send("set-recent-documents", recentDocuments);
+  },
   toggleDevTools: () => {
     ipcRenderer.send("toggle-developer-tools");
   },
@@ -52,5 +55,28 @@ contextBridge.exposeInMainWorld("bridge", {
   },
   isFullScreen: () => {
     return ipcRenderer.sendSync("window:full-screen-query");
+  },
+  fs: {
+    showOpenDialog: (options) => {
+      return ipcRenderer.invoke(`fs:showOpenDialog`, options);
+    },
+    showSaveDialog: (options) => {
+      return ipcRenderer.invoke(`fs:showSaveDialog`, options);
+    },
+    getHandleData: (path) => {
+      return ipcRenderer.invoke(`fs:getHandleData`, path);
+    },
+    getFileHandleData: (path, create) => {
+      return ipcRenderer.invoke(`fs:getFileHandleData`, path, create);
+    },
+    getDirectoryHandleData: (path, create) => {
+      return ipcRenderer.invoke(`fs:getDirectoryHandleData`, path, create);
+    },
+    readFile: (path) => {
+      return ipcRenderer.invoke(`fs:readFile`, path);
+    },
+    writeFile: (path, data) => {
+      return ipcRenderer.invoke(`fs:writeFile`, path, data);
+    },
   },
 });

@@ -1,21 +1,30 @@
 import { installApplication, getApplication } from "../core/index";
+import { WebFileSystemProvider } from "./filesystem/file-system-provider";
+import { SettingsController } from "../core/controllers/settings-controller";
+import { RecentFilesController } from "../core/controllers/recent-files-controller";
 import {
   DOMMenuEventSource,
   MenubarController,
 } from "../core/controllers/menubar-controller";
 
-let menubarController = null;
+function setupApplication() {
+  const application = installApplication();
+  application.fileSystemProvider = new WebFileSystemProvider();
+}
 
-function setupMenubarController() {
+function setupControllers() {
   let application = getApplication();
 
-  menubarController = new MenubarController(application);
-  menubarController.addEventSource(new DOMMenuEventSource(application));
+  application.settingsController = new SettingsController(application);
+  application.recentFilesController = new RecentFilesController(application);
+  application.menubarController = new MenubarController(application);
 
-  application.menubarController = menubarController;
+  application.menubarController.addEventSource(
+    new DOMMenuEventSource(application)
+  );
 }
 
 window.addEventListener("DOMContentLoaded", (_event) => {
-  installApplication();
-  setupMenubarController();
+  setupApplication();
+  setupControllers();
 });

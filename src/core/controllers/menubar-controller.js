@@ -259,7 +259,7 @@ export class MenubarController extends EventEmitter {
     return new MenuState(
       this.recentFiles.map((handle, index) =>
         new MenuItemState()
-          .withLabel(escapeMnemonics(handle.name))
+          .withLabel(escapeMnemonics(handle.path))
           .withEventType(MenuEvent.OpenRecent)
           .withEventDetail(index)
           .withEnabled(this.canOpenMaps)

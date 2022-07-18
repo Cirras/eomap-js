@@ -11,6 +11,7 @@ import "./folderfield";
 import "./textfield";
 
 import { SettingsState } from "../state/settings-state";
+import { FileSystemProvider } from "../filesystem/file-system-provider";
 
 @customElement("eomap-settings")
 export class Settings extends LitElement {
@@ -31,6 +32,9 @@ export class Settings extends LitElement {
 
   @property({ type: Boolean, reflect: true })
   open = false;
+
+  @property({ type: FileSystemProvider })
+  fileSystemProvider = null;
 
   @state({ type: Boolean })
   connectedModeEnabledState = false;
@@ -53,11 +57,16 @@ export class Settings extends LitElement {
   renderGraphics() {
     return html`
       <sp-field-group vertical>
-        <eomap-folderfield id="gfx" label="Path to GFX"></eomap-folderfield>
+        <eomap-folderfield
+          id="gfx"
+          label="Path to GFX"
+          .fileSystemProvider=${this.fileSystemProvider}
+        ></eomap-folderfield>
         <eomap-folderfield
           id="assets"
           label="Path to Mapper Assets"
           placeholder="<Use default>"
+          .fileSystemProvider=${this.fileSystemProvider}
         ></eomap-folderfield>
       </sp-field-group>
     `;
