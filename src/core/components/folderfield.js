@@ -1,5 +1,4 @@
 import { css, html, LitElement } from "@spectrum-web-components/base";
-
 import {
   customElement,
   property,
@@ -13,8 +12,10 @@ import {
   CloseIcon,
   FolderOpenIcon,
 } from "@spectrum-web-components/icons-workflow";
-
 import { Textfield } from "@spectrum-web-components/textfield";
+
+import { FileSystemProvider } from "../filesystem/file-system-provider";
+import { FileSystemHandle } from "../filesystem/file-system-handle";
 
 @customElement("eomap-folder-textfield")
 export class FolderTextfield extends Textfield {
@@ -144,7 +145,10 @@ export class Folderfield extends LitElement {
   @property({ type: Boolean })
   invalid = false;
 
-  @property()
+  @property({ type: FileSystemProvider })
+  fileSystemProvider = null;
+
+  @property({ type: FileSystemHandle })
   selected = null;
 
   render() {
@@ -175,7 +179,7 @@ export class Folderfield extends LitElement {
   updated(changed) {
     if (changed.has("selected")) {
       if (this.selected) {
-        this.textfield.value = `/${this.selected.name}`;
+        this.textfield.value = `${this.selected.path}`;
       } else {
         this.textfield.value = "";
       }
@@ -188,10 +192,12 @@ export class Folderfield extends LitElement {
 
   async select(_event) {
     try {
-      this.selected = await showDirectoryPicker();
+      this.selected = await this.fileSystemProvider.showDirectoryPicker();
       this.invalid = false;
-    } catch {
-      // do nothing
+    } catch (e) {
+      if (e.name !== "AbortError") {
+        throw e;
+      }
     }
     document.activeElement.blur();
   }

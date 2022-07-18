@@ -2,8 +2,6 @@ import { css, html, LitElement } from "lit";
 
 import { customElement, property, query, state } from "lit/decorators.js";
 
-import { get, set } from "idb-keyval";
-
 import "@spectrum-web-components/dropzone/sp-dropzone.js";
 
 import "./sidebar";
@@ -23,6 +21,8 @@ import { GFXLoader } from "../gfx/load/gfx-loader";
 import { LocalLoadingStrategy } from "../gfx/load/strategy/local-loading-strategy";
 import { RemoteLoadingStrategy } from "../gfx/load/strategy/remote-loading-strategy";
 
+import { SettingsController } from "../controllers/settings-controller";
+import { RecentFilesController } from "../controllers/recent-files-controller";
 import { MenubarController } from "../controllers/menubar-controller";
 
 import { TilePosState } from "../state/tilepos-state";
@@ -39,8 +39,7 @@ import { EOReader } from "../data/eo-reader";
 import { EOBuilder } from "../data/eo-builder";
 import { CHAR_MAX } from "../data/eo-numeric-limits";
 
-import { asyncFilter } from "../util/array-utils";
-import { PendingPromise } from "../util/pending-promise";
+import { FileSystemProvider } from "../filesystem/file-system-provider";
 
 @customElement("eomap-application")
 export class Application extends LitElement {
@@ -153,8 +152,17 @@ export class Application extends LitElement {
   @state({ type: MapState })
   mapState = new MapState();
 
+  @property({ type: RecentFilesController })
+  recentFilesController = null;
+
+  @property({ type: SettingsController })
+  settingsController = null;
+
   @property({ type: MenubarController })
   menubarController = null;
+
+  @property({ type: FileSystemProvider })
+  fileSystemProvider = null;
 
   @state({ type: Boolean })
   dirty = false;
@@ -216,7 +224,6 @@ export class Application extends LitElement {
   @state({ type: Boolean })
   hasOpenContextMenu = false;
 
-  recentFilesLoaded = null;
   pendingGFXLoader = null;
 
   onResize = (_event) => {
@@ -241,8 +248,6 @@ export class Application extends LitElement {
 
   constructor() {
     super();
-    this.loadSettings();
-    this.loadRecentFiles();
     this.addEventListener("keydown", this.onKeyDown);
     this.addEventListener("wheel", this.onWheel);
     this.addEventListener("dragover", this.onDragOver);
@@ -250,57 +255,6 @@ export class Application extends LitElement {
     this.addEventListener("drop", this.onDrop);
     this.addEventListener("context-menu-open", this.onContextMenuOpen);
     this.addEventListener("context-menu-close", this.onContextMenuClose);
-  }
-
-  async loadSettings() {
-    try {
-      let settings = await get("settings");
-      this.settingsState = SettingsState.fromIDB(settings);
-    } catch (e) {
-      console.error("Failed to load settings", e);
-    }
-  }
-
-  async loadRecentFiles() {
-    let pendingPromise = new PendingPromise();
-    this.recentFilesLoaded = pendingPromise.promise;
-    try {
-      this.recentFiles = (await get("recentFiles")) || [];
-      pendingPromise.resolve();
-    } catch (e) {
-      console.error("Failed to load recent files", e);
-      pendingPromise.reject(e);
-    } finally {
-      this.recentFilesLoaded = null;
-    }
-  }
-
-  async saveRecentFiles() {
-    await this.recentFilesLoaded;
-    try {
-      await set("recentFiles", this.recentFiles);
-    } catch (e) {
-      console.error("Failed to save recent files", e);
-    }
-  }
-
-  async addRecentFile(handle) {
-    await this.recentFilesLoaded;
-    await this.removeRecentFile(handle);
-    this.recentFiles.unshift(handle);
-    while (this.recentFiles.length > 10) {
-      this.recentFiles.pop();
-    }
-    this.saveRecentFiles();
-  }
-
-  async removeRecentFile(handle) {
-    await this.recentFilesLoaded;
-    this.recentFiles = await asyncFilter(
-      this.recentFiles,
-      async (recent) => !(await recent.isSameEntry(handle))
-    );
-    this.saveRecentFiles();
   }
 
   undo() {
@@ -403,7 +357,7 @@ export class Application extends LitElement {
   }
 
   async manageSettings(previous) {
-    if (!this.fileSystemAccessSupported()) {
+    if (!this.fileSystemProvider.supported) {
       return;
     }
 
@@ -477,10 +431,6 @@ export class Application extends LitElement {
       return true;
     }
     return !(await a.isSameEntry(b));
-  }
-
-  fileSystemAccessSupported() {
-    return self && "showOpenFilePicker" in self;
   }
 
   calculateMaxPaletteWidth() {
@@ -577,6 +527,7 @@ export class Application extends LitElement {
       <eomap-settings
         @close=${this.onModalClose}
         @save=${this.onSettingsSave}
+        .fileSystemProvider=${this.fileSystemProvider}
       ></eomap-settings>
       <eomap-about @close=${this.onModalClose}></eomap-about>
       <eomap-prompt @close=${this.onPromptClose}></eomap-prompt>
@@ -697,16 +648,19 @@ export class Application extends LitElement {
   async open() {
     let fileHandle;
     try {
-      [fileHandle] = await showOpenFilePicker(this.emfPickerOptions());
-    } catch {
-      return;
+      [fileHandle] = await this.fileSystemProvider.showOpenFilePicker(
+        this.emfPickerOptions()
+      );
+    } catch (e) {
+      if (e.name === "AbortError") {
+        return;
+      }
+      throw e;
     }
     this.dirtyCheck(() => this.openFile(fileHandle));
   }
 
   async openRecent(index) {
-    await this.recentFilesLoaded;
-
     let fileHandle = this.recentFiles[index];
     if (!fileHandle) {
       throw new Error(`Invalid recent file index: ${index}`);
@@ -720,7 +674,7 @@ export class Application extends LitElement {
     this.dirtyCheck(async () => {
       await this.openFile(fileHandle);
       if (this.mapState.error) {
-        this.removeRecentFile(fileHandle);
+        this.recentFilesController.removeRecentFile(fileHandle);
       }
     });
   }
@@ -739,7 +693,7 @@ export class Application extends LitElement {
       let file = await fileHandle.getFile();
       let buffer = await file.arrayBuffer();
       this.readMap(buffer);
-      this.addRecentFile(fileHandle);
+      this.recentFilesController.addRecentFile(fileHandle);
     } catch (e) {
       let error = e;
       if (e instanceof DOMException && e.name === "NotFoundError") {
@@ -762,9 +716,7 @@ export class Application extends LitElement {
       this.mapState.emf.write(builder);
       let data = builder.build();
       try {
-        const writable = await this.mapState.fileHandle.createWritable();
-        await writable.write(data);
-        await writable.close();
+        await this.mapState.fileHandle.write(data);
         this.mapState.saved();
         this.onMapStateChange();
       } catch (e) {
@@ -800,12 +752,16 @@ export class Application extends LitElement {
     }
 
     try {
-      this.mapState.fileHandle = await showSaveFilePicker(
-        this.emfPickerOptions()
-      );
+      this.mapState.fileHandle =
+        await this.fileSystemProvider.showSaveFilePicker(
+          this.emfPickerOptions()
+        );
       this.onMapStateChange();
     } catch (e) {
-      return;
+      if (e.name === "AbortError") {
+        return;
+      }
+      throw e;
     }
     this.save();
   }
@@ -864,7 +820,9 @@ export class Application extends LitElement {
     this.isDragged = false;
     let dataTransfer = event.detail.dataTransfer;
     if (this.isValidDataTransfer(dataTransfer)) {
-      let fileHandle = await dataTransfer.items[0].getAsFileSystemHandle();
+      let fileHandle = await this.fileSystemProvider.dataTransferItemToHandle(
+        dataTransfer.items[0]
+      );
       if (fileHandle.kind === "file") {
         await this.openFile(fileHandle);
       }
@@ -990,12 +948,7 @@ export class Application extends LitElement {
   }
 
   async onSettingsSave(event) {
-    try {
-      await set("settings", event.detail);
-      this.settingsState = event.detail;
-    } catch (e) {
-      console.error("Failed to save settings", e);
-    }
+    this.settingsController.updateSettings(event.detail);
   }
 
   pointerEnabled() {
@@ -1052,7 +1005,7 @@ export class Application extends LitElement {
   }
 
   async getStartupStatus() {
-    if (!this.fileSystemAccessSupported()) {
+    if (!this.fileSystemProvider.supported) {
       return Startup.Status.UNSUPPORTED;
     }
 

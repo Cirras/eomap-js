@@ -2,6 +2,9 @@ import { getApplication, getTheme, installApplication } from "../../core";
 
 import "./components/titlebar";
 
+import { ElectronFileSystemProvider } from "./filesystem/file-system-provider";
+import { SettingsController } from "../../core/controllers/settings-controller";
+import { RecentFilesController } from "../../core/controllers/recent-files-controller";
 import {
   DOMMenuEventSource,
   MenubarController,
@@ -26,7 +29,8 @@ function setupTitlebar() {
 }
 
 function setupApplication() {
-  let application = installApplication();
+  const application = installApplication();
+  application.fileSystemProvider = new ElectronFileSystemProvider();
   application.addEventListener("map-state-changed", (event) => {
     let mapState = event.detail;
     let title = titleFromMapState(mapState);
@@ -43,9 +47,12 @@ function setupApplication() {
   });
 }
 
-function setupMenubarController() {
+function setupControllers() {
   let application = getApplication();
   let titlebar = getTitlebar();
+
+  application.settingsController = new SettingsController(application);
+  application.recentFilesController = new RecentFilesController(application);
 
   menubarController = new MenubarController(application);
   menubarController.addEventSource(new DOMMenuEventSource(titlebar));
@@ -133,7 +140,7 @@ window.addEventListener("DOMContentLoaded", async (_event) => {
   // Defer to next tick
   await new Promise((resolve) => setTimeout(resolve, 0));
   setupApplication();
-  setupMenubarController();
+  setupControllers();
   setupKeyboardEvents();
 });
 

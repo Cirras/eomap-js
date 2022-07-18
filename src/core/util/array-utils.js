@@ -88,3 +88,7 @@ export async function asyncFilter(array, predicate) {
   const results = await Promise.all(array.map(predicate));
   return array.filter((_, i) => results[i]);
 }
+
+export async function asyncMap(array, mapFunction) {
+  return Promise.all(array.map(mapFunction));
+}

@@ -1,8 +1,10 @@
 export class SettingsState {
-  gfxDirectory = null;
-  customAssetsDirectory = null;
-  connectedModeEnabled = false;
-  connectedModeURL = "";
+  constructor() {
+    this.gfxDirectory = null;
+    this.customAssetsDirectory = null;
+    this.connectedModeEnabled = false;
+    this.connectedModeURL = "";
+  }
 
   static fromValues(
     gfxDirectory,
@@ -23,14 +25,11 @@ export class SettingsState {
       settings = {};
     }
 
-    let result = new SettingsState();
-
-    for (let property in result) {
-      if (property in settings) {
-        result[property] = settings[property];
-      }
-    }
-
-    return result;
+    return SettingsState.fromValues(
+      settings.gfxDirectory ?? null,
+      settings.customAssetsDirectory ?? null,
+      settings.connectedModeEnabled ?? false,
+      settings.connectedModeURL ?? ""
+    );
   }
 }
