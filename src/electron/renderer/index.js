@@ -37,6 +37,7 @@ function setupApplication() {
     getTitlebar().title = title;
     bridge.setTitle(title);
     bridge.setDocumentEdited(mapState.dirty);
+    bridge.setRepresentedFilename(mapState.fileHandle?.path ?? "");
   });
   application.addEventListener("has-open-prompt-changed", (event) => {
     let hasOpenPrompt = event.detail;
