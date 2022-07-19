@@ -127,6 +127,11 @@ function setupIPC() {
     window.setDocumentEdited(documentEdited);
   });
 
+  ipcMain.on("window:set-represented-filename", (event, filename) => {
+    let window = BrowserWindow.fromWebContents(event.sender);
+    window.setRepresentedFilename(filename);
+  });
+
   ipcMain.on("window:set-closable", (event, closable) => {
     let window = BrowserWindow.fromWebContents(event.sender);
     window?.setClosable(closable);

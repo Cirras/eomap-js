@@ -23,6 +23,9 @@ contextBridge.exposeInMainWorld("bridge", {
   setDocumentEdited: (documentEdited) => {
     ipcRenderer.send("window:set-document-edited", documentEdited);
   },
+  setRepresentedFilename: (filename) => {
+    ipcRenderer.send("window:set-represented-filename", filename);
+  },
   setClosable: (closable) => {
     ipcRenderer.send("window:set-closable", closable);
   },
