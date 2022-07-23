@@ -1,6 +1,8 @@
 import { app, BrowserWindow, dialog, ipcMain, Menu, session } from "electron";
 import fs from "node:fs/promises";
 import path from "path";
+import yargs from "yargs";
+import { hideBin } from "yargs/helpers";
 import { WindowState } from "./window/window-state";
 import { asyncMap, removeFirst } from "../../core/util/array-utils";
 import { MenuEvent } from "../../core/controllers/menubar-controller";
@@ -9,7 +11,7 @@ import { MnemonicData } from "../../core/util/mnemonic-data";
 
 let windows = [];
 
-if (!app.requestSingleInstanceLock()) {
+if (!app.requestSingleInstanceLock({ argv: process.argv })) {
   app.quit();
 } else {
   main();
@@ -474,17 +476,42 @@ function newWindow() {
   return window;
 }
 
+function openFilesFromCommandLine(commandLine) {
+  const argv = yargs(hideBin(commandLine)).argv;
+  if (argv._.length === 0) {
+    return false;
+  }
+
+  for (const filename of argv._) {
+    const window = newWindow();
+    const fsPath = normalizePath(filename);
+    window.once("ready-to-show", () => {
+      window.webContents.send("open-file", {
+        name: path.basename(fsPath),
+        path: fsPath,
+        kind: "file",
+      });
+    });
+  }
+
+  return true;
+}
+
 function main() {
   app.on("ready", () => {
     setupCSP();
     setupIPC();
-    newWindow();
+    if (!openFilesFromCommandLine(process.argv)) {
+      newWindow();
+    }
   });
 
   app.on(
     "second-instance",
-    (_event, _commandLine, _workingDirectory, _additionalData) => {
-      newWindow();
+    (_event, _commandLine, _workingDirectory, additionalData) => {
+      if (!openFilesFromCommandLine(additionalData.argv)) {
+        newWindow();
+      }
     }
   );
 
