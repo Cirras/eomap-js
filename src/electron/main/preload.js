@@ -5,7 +5,7 @@ contextBridge.exposeInMainWorld("_isElectron", true);
 
 contextBridge.exposeInMainWorld("bridge", {
   receive: (channel, func) =>
-    ipcRenderer.on(channel, (_event, ...args) => func(args)),
+    ipcRenderer.on(channel, (_event, ...args) => func(...args)),
   getPlatform: () => os.platform(),
   getRelease: () => os.release(),
   setMenubarState(state) {
