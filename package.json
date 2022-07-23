@@ -81,6 +81,7 @@
     "eventemitter3": "^4.0.7",
     "idb-keyval": "^6.1.0",
     "phaser": "^3.55.2",
-    "windows-1252": "^3.0.4"
+    "windows-1252": "^3.0.4",
+    "yargs": "^17.5.1"
   }
 }

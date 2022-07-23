@@ -14,6 +14,7 @@ import { titleFromMapState } from "../../core/util/title-utils";
 import { isMac } from "../../core/util/platform-utils";
 
 let menubarController = null;
+let fileSystemProvider = new ElectronFileSystemProvider();
 let nativeMenuEventSource = new MenuEventSource();
 
 function getTitlebar() {
@@ -30,7 +31,7 @@ function setupTitlebar() {
 
 function setupApplication() {
   const application = installApplication();
-  application.fileSystemProvider = new ElectronFileSystemProvider();
+  application.fileSystemProvider = fileSystemProvider;
   application.addEventListener("map-state-changed", (event) => {
     let mapState = event.detail;
     let title = titleFromMapState(mapState);
@@ -134,6 +135,11 @@ bridge.receive("window:focus", () => {
 
 bridge.receive("window:blur", () => {
   getTitlebar().inactive = true;
+});
+
+bridge.receive("open-file", (serializedFileHandle) => {
+  const handle = fileSystemProvider.deserializeHandle(serializedFileHandle);
+  getApplication().openFile(handle);
 });
 
 window.addEventListener("DOMContentLoaded", async (_event) => {
