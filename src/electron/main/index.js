@@ -15,6 +15,12 @@ import { MnemonicData } from "../../core/util/mnemonic-data";
 let windows = [];
 let pendingWindows = new Map();
 
+let pendingMacOpenFiles = [];
+let openPendingMacOpenFilesTimeout = null;
+let macOpenFileHandler = (fsPath) => {
+  pendingMacOpenFiles.push(fsPath);
+};
+
 if (!app.requestSingleInstanceLock({ argv: process.argv })) {
   app.quit();
 } else {
@@ -337,6 +343,21 @@ function setupIPC() {
   });
 }
 
+function setupMacOpenFileHandler() {
+  macOpenFileHandler = (fsPath) => {
+    pendingMacOpenFiles.push(fsPath);
+
+    if (openPendingMacOpenFilesTimeout !== null) {
+      clearTimeout(openPendingMacOpenFilesTimeout);
+    }
+
+    openPendingMacOpenFilesTimeout = setTimeout(() => {
+      openPendingMacOpenFiles();
+      openPendingMacOpenFilesTimeout = null;
+    }, 100);
+  };
+}
+
 async function getHandleData(fsPath) {
   let error = null;
   let returnValue = null;
@@ -514,11 +535,24 @@ function showPendingWindows() {
 
 function openFilesFromCommandLine(commandLine) {
   const argv = yargs(hideBin(commandLine)).argv;
-  if (argv._.length === 0) {
-    return false;
+  if (argv._.length > 0) {
+    openFiles(argv._);
+    return true;
   }
+  return false;
+}
 
-  for (const filename of argv._) {
+function openPendingMacOpenFiles() {
+  if (pendingMacOpenFiles.length > 0) {
+    openFiles(pendingMacOpenFiles);
+    pendingMacOpenFiles.length = 0;
+    return true;
+  }
+  return false;
+}
+
+function openFiles(filenames) {
+  for (const filename of filenames) {
     const window = newWindow();
     const fsPath = normalizePath(filename);
     window.once("ready-to-show", () => {
@@ -529,15 +563,18 @@ function openFilesFromCommandLine(commandLine) {
       });
     });
   }
-
-  return true;
 }
-
 function main() {
+  app.on("open-file", (event, fsPath) => {
+    event.preventDefault();
+    macOpenFileHandler(fsPath);
+  });
+
   app.on("ready", () => {
     setupCSP();
     setupIPC();
-    if (!openFilesFromCommandLine(process.argv)) {
+    setupMacOpenFileHandler();
+    if (!openFilesFromCommandLine(process.argv) && !openPendingMacOpenFiles()) {
       newWindow();
     }
     autoUpdater.checkForUpdates();
