@@ -93,6 +93,8 @@
     "@spectrum-web-components/bundle": "^0.24.10",
     "@vscode/codicons": "^0.0.29",
     "crc-32": "^1.2.1",
+    "electron-log": "^4.4.8",
+    "electron-updater": "^5.0.5",
     "eventemitter3": "^4.0.7",
     "idb-keyval": "^6.1.0",
     "phaser": "^3.55.2",

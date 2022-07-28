@@ -1,4 +1,6 @@
 import { app, BrowserWindow, dialog, ipcMain, Menu, session } from "electron";
+import { autoUpdater } from "electron-updater";
+import log from "electron-log";
 import fs from "node:fs/promises";
 import path from "path";
 import yargs from "yargs";
@@ -528,6 +530,7 @@ function main() {
     if (!openFilesFromCommandLine(process.argv)) {
       newWindow();
     }
+    autoUpdater.checkForUpdates();
   });
 
   app.on(
@@ -555,6 +558,9 @@ function main() {
       newWindow();
     }
   });
+
+  autoUpdater.logger = log;
+  autoUpdater.logger.transports.file.level = "info";
 
   Menu.setApplicationMenu(null);
 }
