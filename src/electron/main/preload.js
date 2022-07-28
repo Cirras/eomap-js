@@ -1,13 +1,10 @@
 import { ipcRenderer, contextBridge } from "electron";
-import os from "os";
 
 contextBridge.exposeInMainWorld("_isElectron", true);
 
 contextBridge.exposeInMainWorld("bridge", {
   receive: (channel, func) =>
     ipcRenderer.on(channel, (_event, ...args) => func(...args)),
-  getPlatform: () => os.platform(),
-  getRelease: () => os.release(),
   setMenubarState(state) {
     ipcRenderer.send("set-menubar-state", state);
   },
@@ -80,6 +77,14 @@ contextBridge.exposeInMainWorld("bridge", {
     },
     writeFile: (path, data) => {
       return ipcRenderer.invoke(`fs:write-file`, path, data);
+    },
+  },
+  os: {
+    platform: () => {
+      return ipcRenderer.sendSync("os:platform");
+    },
+    release: () => {
+      return ipcRenderer.sendSync("os:release");
     },
   },
 });

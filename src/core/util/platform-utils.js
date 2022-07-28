@@ -10,8 +10,8 @@ if (typeof process !== "undefined") {
 } else if (window._isElectron) {
   // Electron renderer process
   _isElectron = true;
-  _isMacintosh = window.bridge.getPlatform() === "darwin";
-  _isWindows = window.bridge.getPlatform() === "win32";
+  _isMacintosh = window.bridge.os.platform() === "darwin";
+  _isWindows = window.bridge.os.platform() === "win32";
 } else {
   // Web
   _isElectron = false;

@@ -16,7 +16,7 @@ import { isMac } from "../../../core/util/platform-utils";
 
 const titlebarHeight = (() => {
   if (isMac()) {
-    let release = parseFloat(window.bridge.getRelease());
+    let release = parseFloat(window.bridge.os.release());
     if (release >= 20) {
       return 28;
     }

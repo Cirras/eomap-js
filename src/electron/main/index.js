@@ -2,6 +2,7 @@ import { app, BrowserWindow, dialog, ipcMain, Menu, session } from "electron";
 import { autoUpdater } from "electron-updater";
 import log from "electron-log";
 import fs from "node:fs/promises";
+import os from "node:os";
 import path from "path";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
@@ -326,6 +327,14 @@ function setupIPC() {
     }
     return { error, returnValue };
   });
+
+  ipcMain.on("os:platform", (event) => {
+    event.returnValue = os.platform();
+  });
+
+  ipcMain.on("os:release", (event) => {
+    event.returnValue = os.release();
+  });
 }
 
 async function getHandleData(fsPath) {
@@ -397,6 +406,7 @@ function newWindow() {
     frame: isMac(),
     titleBarStyle: "hidden",
     webPreferences: {
+      sandbox: true,
       v8CacheOptions: "bypassHeatCheck",
       preload: path.join(__dirname, "preload.js"),
     },
