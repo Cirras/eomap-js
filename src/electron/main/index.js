@@ -10,6 +10,7 @@ import { isMac, isWindows } from "../../core/util/platform-utils";
 import { MnemonicData } from "../../core/util/mnemonic-data";
 
 let windows = [];
+let pendingWindows = new Map();
 
 if (!app.requestSingleInstanceLock({ argv: process.argv })) {
   app.quit();
@@ -177,6 +178,8 @@ function setupIPC() {
     }
     window.destroy();
     removeFirst(windows, window);
+    pendingWindows.delete(window);
+    showPendingWindows();
   });
 
   ipcMain.on("window:toggle-full-screen", (event) => {
@@ -425,11 +428,21 @@ function newWindow() {
     window.loadFile("index.html");
   }
 
+  const pendingWindowData = {
+    callback: (pendingWindow) => {
+      if (maximize) {
+        pendingWindow.maximize();
+      }
+      pendingWindow.show();
+    },
+    readyToShow: false,
+  };
+
+  pendingWindows.set(window, pendingWindowData);
+
   window.once("ready-to-show", (_event) => {
-    if (maximize) {
-      window.maximize();
-    }
-    window.show();
+    pendingWindowData.readyToShow = true;
+    showPendingWindows();
   });
 
   window.on("minimize", (_event) => {
@@ -474,6 +487,17 @@ function newWindow() {
   windows.push(window);
 
   return window;
+}
+
+function showPendingWindows() {
+  for (const [pendingWindow, data] of pendingWindows.entries()) {
+    if (data.readyToShow) {
+      data.callback(pendingWindow);
+      pendingWindows.delete(pendingWindow);
+    } else {
+      break;
+    }
+  }
 }
 
 function openFilesFromCommandLine(commandLine) {
