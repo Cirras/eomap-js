@@ -8,24 +8,28 @@ An Endless Map File (EMF) editor written in JavaScript.
 
 ## Available Commands
 
-| Command         | Description                                                                     |
-| --------------- | ------------------------------------------------------------------------------- |
-| `npm install`   | Install project dependencies                                                    |
-| `npm start`     | Build project and open web server running project                               |
-| `npm run build` | Builds code bundle with production settings (minification, uglification, etc..) |
-| `npm format`    | Format changed files using Prettier                                             |
+| Command                  | Description                                     |
+| ------------------------ | ----------------------------------------------- |
+| `npm install`            | Install project dependencies                    |
+| `npm start`              | Build electron and open application             |
+| `npm run start:web`      | Build web and open web server running project   |
+| `npm run start:electron` | Build electron and open application             |
+| `npm run dist`           | Build web and electron with production settings |
+| `npm run dist:web`       | Build web with production settings              |
+| `npm run dist:electron`  | Build electron with production settings         |
+| `npm run format`         | Format changed files using Prettier             |
 
 ## Writing Code
 
-After cloning the repo, run `npm install` from your project directory. Then, you can start the local development server by running `npm start`.
+After cloning the repo, run `npm install` from your project directory. Then, you can start the application by running `npm start`.
 
-After starting the development server with `npm start`, you can edit any files in the `src` folder and webpack will automatically recompile and reload your server (available at `http://localhost:8080` by default).
+After starting the application with `npm start`, webpack will automatically recompile and reload the application when source files change.
 
-## Deploying Code
+## Deploying to Web
 
-After you run the `npm run build` command, the project will be built into a single bundle located at `dist/bundle.min.js` along with assets that the application depends on.
+After you run the `npm run dist:web` command, the project will be built into `dist/web`.
 
-If you put the contents of the `dist` folder in a publicly-accessible location (say something like `https://example.com`), you should be able to open `https://example.com/index.html` and use the application.
+If you put the contents of the `dist/web` folder in a publicly-accessible location (say something like `https://example.com`), you should be able to open `https://example.com/index.html` and use the application.
 
 Configure your web server to use [ETags](https://en.wikipedia.org/wiki/HTTP_ETag) for cache validation.
 
@@ -51,6 +55,10 @@ Currently, the steps for creating your own Mapper Service are:
 ### Forced Connected Mode
 
 If you're hosting an instance of eomap-js and want to lock it to a particular remote Mapper Service, then you can use the `FORCE_CONNECTED_MODE_URL` environment variable.
+
 When `FORCE_CONNECTED_MODE_URL` is defined, Connected Mode will be forcibly enabled and the `Mapper Service URL` will be locked to the specified URL.
 
-Example: `npm run build -- --env FORCE_CONNECTED_MODE_URL="https://example.com"`
+Usage examples:
+
+- `npm run start:web -- --env FORCE_CONNECTED_MODE_URL="https://example.com"`
+- `npm run dist:web -- --env FORCE_CONNECTED_MODE_URL="https://example.com"`
