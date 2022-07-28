@@ -1,0 +1,24 @@
+name: Format
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+
+jobs:
+  check-format:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+
+      - name: Check format with Prettier
+        uses: creyD/prettier_action@v4.2
+        with:
+          dry: true
+          only_changed: ${{github.event_name == 'pull_request'}}
