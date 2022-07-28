@@ -101,7 +101,7 @@ function setupCSP() {
 }
 
 function setupIPC() {
-  ipcMain.on("set-menubar-state", (event, state) => {
+  ipcMain.on("menu:set-menubar-state", (event, state) => {
     let window = BrowserWindow.fromWebContents(event.sender);
     if (window.isFocused()) {
       let template = createMenubarTemplate(state);
@@ -110,7 +110,7 @@ function setupIPC() {
     }
   });
 
-  ipcMain.on("set-recent-documents", (_event, recentDocuments) => {
+  ipcMain.on("app:set-recent-documents", (_event, recentDocuments) => {
     if (isWindows() || isMac()) {
       app.clearRecentDocuments();
       for (const document of recentDocuments.reverse()) {
@@ -119,7 +119,7 @@ function setupIPC() {
     }
   });
 
-  ipcMain.on("toggle-developer-tools", (event) => {
+  ipcMain.on("window:toggle-dev-tools", (event) => {
     event.sender.toggleDevTools();
   });
 

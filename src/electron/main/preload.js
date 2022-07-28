@@ -6,13 +6,13 @@ contextBridge.exposeInMainWorld("bridge", {
   receive: (channel, func) =>
     ipcRenderer.on(channel, (_event, ...args) => func(...args)),
   setMenubarState(state) {
-    ipcRenderer.send("set-menubar-state", state);
+    ipcRenderer.send("menu:set-menubar-state", state);
   },
   setRecentDocuments: (recentDocuments) => {
-    ipcRenderer.send("set-recent-documents", recentDocuments);
+    ipcRenderer.send("app:set-recent-documents", recentDocuments);
   },
   toggleDevTools: () => {
-    ipcRenderer.send("toggle-developer-tools");
+    ipcRenderer.send("window:toggle-dev-tools");
   },
   setTitle: (title) => {
     ipcRenderer.send("window:set-title", title);
