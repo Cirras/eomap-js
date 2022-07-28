@@ -35,6 +35,13 @@
     "files": [
       "dist/electron/**/*"
     ],
+    "fileAssociations": [
+      {
+        "ext": "emf",
+        "name": "Endless Map File",
+        "description": "Endless Map File"
+      }
+    ],
     "publish": [
       {
         "provider": "github",
