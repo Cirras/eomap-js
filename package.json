@@ -1,6 +1,7 @@
 {
   "name": "eomap-js",
   "version": "1.0.0",
+  "productName": "Endless Map Editor",
   "description": "Endless Online Mapper",
   "main": "dist/electron/main.js",
   "scripts": {
@@ -27,7 +28,6 @@
   },
   "homepage": "https://github.com/Cirras/eomap-js#readme",
   "build": {
-    "productName": "eomap-js",
     "appId": "dev.eomap.app",
     "directories": {
       "output": "dist/electron"
@@ -49,9 +49,17 @@
         "repo": "eomap-js"
       }
     ],
+    "win": {
+      "executableName": "eomap-js"
+    },
     "mac": {
       "category": "public.app-category.developer-tools",
       "hardenedRuntime": true
+    },
+    "nsis": {
+      "oneClick": false,
+      "shortcutName": "Endless Map Editor",
+      "uninstallDisplayName": "Endless Map Editor"
     }
   },
   "devDependencies": {
