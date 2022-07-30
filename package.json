@@ -14,7 +14,8 @@
     "build": "cross-env NODE_ENV=production node scripts/build.js",
     "format": "pretty-quick",
     "prepare": "husky install",
-    "pre-commit": "pretty-quick --staged"
+    "pre-commit": "pretty-quick --staged",
+    "version": "node scripts/bump-changelog-version.js && git add CHANGELOG.md"
   },
   "repository": {
     "type": "git",
@@ -79,6 +80,7 @@
     "html-loader": "^3.1.0",
     "html-webpack-plugin": "^5.5.0",
     "husky": "^7.0.4",
+    "keep-a-changelog": "^2.1.0",
     "mini-css-extract-plugin": "^2.6.0",
     "prettier": "^2.6.1",
     "pretty-quick": "^3.1.3",
