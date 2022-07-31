@@ -1,0 +1,124 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - v*
+
+concurrency:
+  group: release
+
+jobs:
+  draft-release:
+    runs-on: ubuntu-latest
+
+    outputs:
+      release_id: ${{ steps.create-release-draft.outputs.id }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Get version from tag
+        id: get-version
+        run: echo ::set-output name=version::${GITHUB_REF#refs/tags/v}
+        shell: bash
+
+      - name: Parse Changelog
+        id: changelog
+        uses: coditory/changelog-parser@v1
+        with:
+          version: ${{ steps.get-version.outputs.version }}
+
+      - name: Delete drafts
+        uses: hugo19941994/delete-draft-releases@v1.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.github_token }}
+
+      - name: Create Release Draft
+        id: create-release-draft
+        uses: softprops/action-gh-release@v1
+        with:
+          draft: true
+          name: eomap-js v${{steps.changelog.outputs.version}}
+          body: ${{ steps.changelog.outputs.description }}
+
+  electron:
+    needs: draft-release
+
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-latest, windows-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: npm
+
+      - name: Install Snapcraft
+        if: startsWith(matrix.os, 'ubuntu')
+        run: sudo snap install snapcraft --classic
+
+      - name: Build
+        run: |
+          npm ci
+          npm run build
+
+      - name: Prepare code signing for macOS
+        uses: allenevans/set-env@v2.0.0
+        if: startsWith(matrix.os, 'macos')
+        with:
+          CSC_LINK: ${{ secrets.mac_certs }}
+          CSC_KEY_PASSWORD: ${{ secrets.mac_certs_password }}
+
+      - name: Release
+        run: npx --no-install electron-builder --publish always
+        env:
+          GH_TOKEN: ${{ secrets.github_token }}
+          APPLE_ID: ${{ secrets.apple_id }}
+          APPLE_ID_PASSWORD: ${{ secrets.apple_id_password }}
+          APPLE_TEAM_ID: ${{ secrets.apple_team_id }}
+          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.snapcraft_token }}
+
+  web:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: npm
+
+      - name: Build
+        run: |
+          npm ci
+          npm run dist:web
+
+      - name: Release
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: dist/web
+
+  publish-release:
+    needs: [draft-release, electron]
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Publish Release
+        uses: eregon/publish-release@v1
+        with:
+          release_id: ${{ needs.draft-release.outputs.release_id }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
