@@ -62,7 +62,7 @@ function createMenuItemConstructorOptions(state) {
   };
 
   if (result.type === "normal" || result.type === "checkbox") {
-    result.label = new MnemonicData(state.label).string;
+    createMenuItemLabel(result, state);
     result.role = state.role;
     if (state.keybinding) {
       result.accelerator = state.keybinding.electronLabel.string;
@@ -77,7 +77,7 @@ function createMenuItemConstructorOptions(state) {
   }
 
   if (result.type === "submenu") {
-    result.label = new MnemonicData(state.label).string;
+    createMenuItemLabel(result, state);
     result.role = state.role;
     if (state.menu) {
       result.submenu = state.menu.items.map(createMenuItemConstructorOptions);
@@ -85,6 +85,12 @@ function createMenuItemConstructorOptions(state) {
   }
 
   return result;
+}
+
+function createMenuItemLabel(menuItemConstructorOptions, state) {
+  if (state.label !== null) {
+    menuItemConstructorOptions.label = new MnemonicData(state.label).string;
+  }
 }
 
 function createMenubarTemplate(state) {
