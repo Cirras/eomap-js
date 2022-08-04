@@ -76,6 +76,7 @@ export class Titlebar extends LitElement {
       .window-title {
         flex: 0 2 auto;
         font-size: 12px;
+        line-height: 22px;
         overflow: hidden;
         white-space: nowrap;
         text-overflow: ellipsis;
@@ -226,7 +227,12 @@ export class Titlebar extends LitElement {
     return html`
       <div class="drag-region"></div>
       ${this.renderAppIcon()} ${this.renderMenubar()}
-      <div class="window-title" style=${styleMap(this.titleStyle)}>
+      <div
+        class="window-title"
+        style=${styleMap(this.titleStyle)}
+        @contextmenu=${this.onTitleContextMenu}
+        @pointerdown=${this.onTitlePointerDown}
+      >
         ${this.title}
       </div>
       <div class="window-controls-container">
@@ -263,5 +269,21 @@ export class Titlebar extends LitElement {
       transform: "translate(-50%, 0)",
       maxWidth: `calc(100vw - ${2 * (this.windowControls.clientWidth + 10)}px)`,
     };
+  }
+
+  onTitleContextMenu(event) {
+    if (isMac()) {
+      event.stopPropagation();
+      window.bridge.showTitleContextMenu(
+        Math.round(event.pageX),
+        Math.round(event.pageY)
+      );
+    }
+  }
+
+  onTitlePointerDown(event) {
+    if (event.metaKey) {
+      this.onTitleContextMenu(event);
+    }
   }
 }

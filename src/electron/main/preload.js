@@ -26,6 +26,9 @@ contextBridge.exposeInMainWorld("bridge", {
   setClosable: (closable) => {
     ipcRenderer.send("window:set-closable", closable);
   },
+  showTitleContextMenu: (x, y) => {
+    ipcRenderer.send("window:show-title-context-menu", x, y);
+  },
   newWindow: () => {
     ipcRenderer.send("window:new");
   },

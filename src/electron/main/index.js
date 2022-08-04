@@ -1,4 +1,12 @@
-import { app, BrowserWindow, dialog, ipcMain, Menu, session } from "electron";
+import {
+  app,
+  BrowserWindow,
+  dialog,
+  ipcMain,
+  Menu,
+  session,
+  shell,
+} from "electron";
 import { autoUpdater } from "electron-updater";
 import log from "electron-log";
 import fs from "node:fs/promises";
@@ -153,6 +161,32 @@ function setupIPC() {
   ipcMain.on("window:set-closable", (event, closable) => {
     let window = BrowserWindow.fromWebContents(event.sender);
     window?.setClosable(closable);
+  });
+
+  ipcMain.on("window:show-title-context-menu", (event, x, y) => {
+    let window = BrowserWindow.fromWebContents(event.sender);
+
+    let representedFileName = window.getRepresentedFilename();
+    if (!representedFileName) {
+      return;
+    }
+
+    const menuItems = [];
+    const segments = representedFileName.split(path.sep);
+
+    for (let i = segments.length - 1; i >= 0; i--) {
+      const fsPath = segments.slice(0, i + 2).join(path.sep);
+      menuItems.push({
+        type: "normal",
+        label: (segments[i] || path.sep).replace("&", "&&"),
+        click: (_menuItem, _browserWindow, _event) => {
+          shell.showItemInFolder(fsPath);
+        },
+      });
+    }
+
+    const menu = Menu.buildFromTemplate(menuItems);
+    menu.popup({ window, x, y });
   });
 
   ipcMain.on("window:new", (_event) => {
