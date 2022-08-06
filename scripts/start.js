@@ -6,7 +6,7 @@ const configMain = require("../webpack/electron/main");
 const configRenderer = require("../webpack/electron/renderer")();
 const { spawn } = require("cross-spawn");
 const path = require("path");
-const del = require("del");
+const fs = require("fs/promises");
 
 const compilerPreload = webpack(configPreload);
 const compilerMain = webpack(configMain);
@@ -14,7 +14,7 @@ const compilerRenderer = webpack(configRenderer);
 const distPath = path.join(__dirname, "../dist/electron");
 
 (async () => {
-  await del([distPath], { force: true });
+  await fs.rm(distPath, { recursive: true });
 
   const devServerOpts = {
     hot: true,

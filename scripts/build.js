@@ -4,14 +4,14 @@ const configPreload = require("../webpack/electron/preload");
 const configMain = require("../webpack/electron/main");
 const configRenderer = require("../webpack/electron/renderer")();
 const path = require("path");
-const del = require("del");
+const fs = require("fs/promises");
 
 const compilerPreload = webpack(configPreload);
 const compilerMain = webpack(configMain);
 const compilerRenderer = webpack(configRenderer);
 
 (async () => {
-  await del([path.join(__dirname, "../dist/electron")], { force: true });
+  await fs.rm(path.join(__dirname, "../dist/electron"), { recursive: true });
 
   process.exitCode = 1;
 
