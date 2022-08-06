@@ -11,7 +11,10 @@ const compilerMain = webpack(configMain);
 const compilerRenderer = webpack(configRenderer);
 
 (async () => {
-  await fs.rm(path.join(__dirname, "../dist/electron"), { recursive: true });
+  await fs.rm(path.join(__dirname, "../dist/electron"), {
+    recursive: true,
+    force: true,
+  });
 
   process.exitCode = 1;
 

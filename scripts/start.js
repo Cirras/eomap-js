@@ -14,7 +14,7 @@ const compilerRenderer = webpack(configRenderer);
 const distPath = path.join(__dirname, "../dist/electron");
 
 (async () => {
-  await fs.rm(distPath, { recursive: true });
+  await fs.rm(distPath, { recursive: true, force: true });
 
   const devServerOpts = {
     hot: true,
