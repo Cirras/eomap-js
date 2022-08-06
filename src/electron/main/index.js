@@ -383,6 +383,29 @@ function setupIPC() {
   });
 }
 
+function setupWindowsJumpList() {
+  if (isWindows()) {
+    app.setJumpList([
+      {
+        type: "tasks",
+        items: [
+          {
+            type: "task",
+            title: "New Window",
+            description: "Opens a new window",
+            program: process.execPath,
+            iconPath: process.execPath,
+            iconIndex: 0,
+          },
+        ],
+      },
+      {
+        type: "recent",
+      },
+    ]);
+  }
+}
+
 function setupMacOpenFileHandler() {
   macOpenFileHandler = (fsPath) => {
     pendingMacOpenFiles.push(fsPath);
@@ -613,6 +636,7 @@ function main() {
   app.on("ready", () => {
     setupCSP();
     setupIPC();
+    setupWindowsJumpList();
     setupMacOpenFileHandler();
     if (!openFilesFromCommandLine(process.argv) && !openPendingMacOpenFiles()) {
       newWindow();
