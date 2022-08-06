@@ -52,6 +52,15 @@
         "releaseType": "release"
       }
     ],
+    "snap": {
+      "publish": {
+        "provider": "snapStore",
+        "repo": "eomap-js",
+        "channels": [
+          "stable"
+        ]
+      }
+    },
     "win": {
       "executableName": "eomap-js"
     },
