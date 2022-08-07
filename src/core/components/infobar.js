@@ -153,7 +153,7 @@ export class InfoBar extends LitElement {
   }
 
   onZoomBlur(_event) {
-    if (this.zoomField.value === NaN) {
+    if (Number.isNaN(this.zoomField.value)) {
       this.zoomField.value = this.zoom;
     }
     if (this.zoomField.value !== this.zoom) {
