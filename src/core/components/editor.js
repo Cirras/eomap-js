@@ -51,7 +51,9 @@ export class Editor extends PhaserInstance {
   @property({ type: MapPropertiesState })
   mapPropertiesState;
 
-  updateZoom = () => {};
+  updateZoom = () => {
+    // do nothing
+  };
 
   setupEntityToolEvents(scene) {
     scene.events.on("request-entity-editor", (entityState) => {
