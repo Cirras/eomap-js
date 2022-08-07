@@ -6,10 +6,15 @@ import {
   DOMMenuEventSource,
   MenubarController,
 } from "../core/controllers/menubar-controller";
+import { titleFromMapState } from "../core/util/title-utils";
 
 function setupApplication() {
   const application = installApplication();
   application.fileSystemProvider = new WebFileSystemProvider();
+  application.addEventListener("map-state-changed", (event) => {
+    const mapState = event.detail;
+    document.title = titleFromMapState(mapState);
+  });
 }
 
 function setupControllers() {
