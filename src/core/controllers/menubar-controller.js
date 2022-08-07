@@ -7,7 +7,7 @@ import {
   SubmenuMenuItemState,
   DividerMenuItemState,
 } from "../state/menubar-state";
-import { isElectron, isMac } from "../util/platform-utils";
+import { isElectron, isMac, isWindows } from "../util/platform-utils";
 
 export const MenuEvent = {
   NewFile: "new-file",
@@ -220,36 +220,39 @@ export class MenubarController extends EventEmitter {
         .withEnabled(this.canAccessMapProperties)
     );
 
-    if (isElectron()) {
-      if (isMac()) {
-        items.push(
-          new DividerMenuItemState(),
-          new MenuItemState()
-            .withLabel("Close Window")
-            .withEventType(MenuEvent.CloseWindow)
-            .withKeybinding("Command+W")
-            .withEnabled(this.canCloseWindow)
-        );
-      } else {
-        items.push(
-          new DividerMenuItemState(),
-          new MenuItemState()
-            .withLabel("&Settings")
-            .withEventType(MenuEvent.Settings)
-            .withKeybinding("CommandOrControl+,")
-            .withEnabled(this.canAccessSettings),
-          new DividerMenuItemState(),
-          new MenuItemState()
-            .withLabel("Reload &Graphics")
-            .withEventType(MenuEvent.ReloadGraphics)
-            .withEnabled(this.canReloadGraphics),
-          new DividerMenuItemState(),
-          new MenuItemState()
-            .withLabel("E&xit")
-            .withEventType(MenuEvent.Exit)
-            .withEnabled(this.canCloseWindow)
-        );
-      }
+    items.push(new DividerMenuItemState());
+
+    if (isElectron() && isMac()) {
+      items.push(
+        new MenuItemState()
+          .withLabel("Close Window")
+          .withEventType(MenuEvent.CloseWindow)
+          .withKeybinding("Command+W")
+          .withEnabled(this.canCloseWindow)
+      );
+    } else {
+      items.push(
+        new MenuItemState()
+          .withLabel("&Settings")
+          .withEventType(MenuEvent.Settings)
+          .withKeybinding("CommandOrControl+,")
+          .withEnabled(this.canAccessSettings),
+        new DividerMenuItemState(),
+        new MenuItemState()
+          .withLabel("Reload &Graphics")
+          .withEventType(MenuEvent.ReloadGraphics)
+          .withEnabled(this.canReloadGraphics)
+      );
+    }
+
+    if (isElectron() && isWindows()) {
+      items.push(
+        new DividerMenuItemState(),
+        new MenuItemState()
+          .withLabel("E&xit")
+          .withEventType(MenuEvent.Exit)
+          .withEnabled(this.canCloseWindow)
+      );
     }
 
     return new MenuState(items).withWidth(250);
