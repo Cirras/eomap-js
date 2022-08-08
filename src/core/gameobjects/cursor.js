@@ -2,11 +2,9 @@ class CursorAnimation {
   static FRAMES = [0, 1, 2, 3, 4, 3, 2, 1, 0];
   static TICK_MS = 16.67;
 
-  constructor() {
-    this.accumulator = 0;
-    this.tick = 0;
-    this.isPlaying = false;
-  }
+  accumulator = 0;
+  tick = 0;
+  isPlaying = false;
 
   play() {
     this.stop();
