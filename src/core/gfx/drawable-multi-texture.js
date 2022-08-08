@@ -42,8 +42,20 @@ export class DrawableMultiTexture extends Texture {
   }
 }
 
-class WebGLTexturePage {
+class TexturePage {
+  draw(_imageData, _x, _y) {
+    throw new Error("TexturePage.draw() must be implemented");
+  }
+
+  destroy() {
+    throw new Error("TexturePage.destroy() must be implemented");
+  }
+}
+
+class WebGLTexturePage extends TexturePage {
   constructor(texture, width, height) {
+    super();
+
     this.texture = texture;
     this.width = width;
     this.height = height;
@@ -142,8 +154,10 @@ class WebGLTexturePage {
   }
 }
 
-class CanvasTexturePage {
+class CanvasTexturePage extends TexturePage {
   constructor(texture, width, height) {
+    super();
+
     this.texture = texture;
     this.width = width;
     this.height = height;
