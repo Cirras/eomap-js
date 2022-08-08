@@ -261,9 +261,9 @@ export class EOMap extends Phaser.GameObjects.GameObject {
 
     let result = [];
 
-    for (let y = top; y <= bottom; ++y) {
-      for (let x = left; x <= right; ++x) {
-        let section = this.getSection(x, y);
+    for (let sectionY = top; sectionY <= bottom; ++sectionY) {
+      for (let sectionX = left; sectionX <= right; ++sectionX) {
+        let section = this.getSection(sectionX, sectionY);
         result.push(section);
       }
     }
