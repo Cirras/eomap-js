@@ -4,7 +4,7 @@ import { LoadType } from "./load-type";
 import { PendingPromise } from "../../util/pending-promise";
 import { dataURLToImage } from "../../util/data-url-utils";
 
-import error from "../../assets/error.png";
+import errorImage from "../../assets/error.png";
 
 export class GFXLoader {
   constructor(loadingStrategy) {
@@ -130,7 +130,7 @@ export class GFXLoader {
     context.fillStyle = "white";
     context.textAlign = "center";
 
-    context.drawImage(await dataURLToImage(error), 0, 0);
+    context.drawImage(await dataURLToImage(errorImage), 0, 0);
     context.fillText(location, 32, 13);
     context.fillText(name, 32, 22);
 
