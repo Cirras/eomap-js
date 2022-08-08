@@ -1,7 +1,6 @@
 import { encodeNumber } from "./eo-encode";
 
 import crc32 from "crc-32";
-import { SHORT_MAX } from "./eo-numeric-limits";
 
 export class EOBuilder {
   constructor() {
