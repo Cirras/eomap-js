@@ -1,7 +1,9 @@
+import { FileSystemHandle } from "../../../core/filesystem/file-system-handle";
 import { isWindows } from "../../../core/util/platform-utils";
 
-export class ElectronFileSystemHandle {
+export class ElectronFileSystemHandle extends FileSystemHandle {
   constructor(name, path) {
+    super();
     this._name = name;
     this._path = path;
   }

@@ -1,7 +1,9 @@
+import { FileSystemHandle } from "../../core/filesystem/file-system-handle";
 import { isWindows } from "../../core/util/platform-utils";
 
-export class WebFileSystemHandle {
+export class WebFileSystemHandle extends FileSystemHandle {
   constructor(handle) {
+    super();
     this._handle = handle;
   }
 
