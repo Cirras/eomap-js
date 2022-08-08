@@ -33,24 +33,24 @@ export class MnemonicLabel extends LitElement {
     let index = this.data.index;
     let string = this.data.string;
 
-    if (index === null) {
-      return string;
-    }
-
     let result = [];
 
-    if (index > 0) {
-      result.push(html`<span>${string.substring(0, index)}</span>`);
-    }
+    if (index === null) {
+      result.push(html`<span>${string}</span>`);
+    } else {
+      if (index > 0) {
+        result.push(html`<span>${string.substring(0, index)}</span>`);
+      }
 
-    result.push(
-      html`
-        <span class="mnemonic" aria-hidden="true">${this.data.mnemonic}</span>
-      `
-    );
+      result.push(
+        html`
+          <span class="mnemonic" aria-hidden="true">${this.data.mnemonic}</span>
+        `
+      );
 
-    if (index < string.length - 1) {
-      result.push(html`<span>${string.substring(index + 1)}</span>`);
+      if (index < string.length - 1) {
+        result.push(html`<span>${string.substring(index + 1)}</span>`);
+      }
     }
 
     return result;
