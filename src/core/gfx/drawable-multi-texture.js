@@ -1,8 +1,8 @@
-var IsSizePowerOfTwo = Phaser.Math.Pow2.IsSize;
-var Texture = Phaser.Textures.Texture;
-var TextureSource = Phaser.Textures.TextureSource;
-var Remove = Phaser.Utils.Array.Remove;
-var CanvasPool = Phaser.Display.Canvas.CanvasPool;
+const IsSizePowerOfTwo = Phaser.Math.Pow2.IsSize;
+const Texture = Phaser.Textures.Texture;
+const TextureSource = Phaser.Textures.TextureSource;
+const Remove = Phaser.Utils.Array.Remove;
+const CanvasPool = Phaser.Display.Canvas.CanvasPool;
 
 export class DrawableMultiTexture extends Texture {
   constructor(manager, key, baseWidth, baseHeight) {
