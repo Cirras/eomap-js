@@ -104,14 +104,12 @@ export class KeybindingState {
   readAccelerator(accelerator) {
     const parts = accelerator.split("+");
 
-    for (let i = 0; i < parts.length; ++i) {
+    for (const part of parts) {
       if (this.key !== null) {
         throw new Error("Non-modifier key must come last in accelerator");
       }
 
-      let part = normalizeModifier(parts[i]);
-
-      switch (part) {
+      switch (normalizeModifier(part)) {
         case "Alt":
           this.altKey = true;
           break;
