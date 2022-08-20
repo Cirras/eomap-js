@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Menu item to clear recent files.
+
 ### Fixed
 
 - Allow menu items to be triggered by repeating keyboard events.

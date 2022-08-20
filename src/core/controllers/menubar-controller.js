@@ -14,6 +14,7 @@ export const MenuEvent = {
   NewWindow: "new-window",
   Open: "open",
   OpenRecent: "open-recent",
+  ClearRecent: "clear-recent",
   Save: "save",
   SaveAs: "save-as",
   MapProperties: "map-properties",
@@ -256,17 +257,29 @@ export class MenubarController extends EventEmitter {
   }
 
   generateRecentFilesMenu() {
-    return new MenuState(
-      this.recentFiles
-        .slice(0, 10)
-        .map((handle, index) =>
-          new MenuItemState()
-            .withLabel(escapeMnemonics(handle.path))
-            .withEventType(MenuEvent.OpenRecent)
-            .withEventDetail(index)
-            .withEnabled(this.canOpenMaps)
-        )
-    );
+    const items = this.recentFiles
+      .slice(0, 10)
+      .map((handle, index) =>
+        new MenuItemState()
+          .withLabel(escapeMnemonics(handle.path))
+          .withEventType(MenuEvent.OpenRecent)
+          .withEventDetail(index)
+          .withEnabled(this.canOpenMaps)
+      );
+
+    if (items.length > 0) {
+      items.push(new DividerMenuItemState());
+    }
+
+    if (items.length > 0 || (isElectron() && isMac())) {
+      items.push(
+        new MenuItemState()
+          .withLabel(isMac() ? "Clear Menu" : "&Clear Recently Opened")
+          .withEventType(MenuEvent.ClearRecent)
+          .withEnabled(items.length > 0)
+      );
+    }
+    return new MenuState(items);
   }
 
   generateEditMenu() {
@@ -392,6 +405,9 @@ export class MenubarController extends EventEmitter {
         break;
       case MenuEvent.OpenRecent:
         this.application.openRecent(event.detail);
+        break;
+      case MenuEvent.ClearRecent:
+        this.application.clearRecent();
         break;
       case MenuEvent.Save:
         this.application.save();

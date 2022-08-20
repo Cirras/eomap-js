@@ -679,6 +679,10 @@ export class Application extends LitElement {
     });
   }
 
+  async clearRecent() {
+    this.recentFilesController.clearRecentFiles();
+  }
+
   async openFile(fileHandle) {
     const pending = !this.validGfx();
     this.mapState = MapState.fromFileHandle(fileHandle).withPending(pending);
