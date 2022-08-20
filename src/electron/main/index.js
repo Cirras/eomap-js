@@ -581,6 +581,11 @@ function newWindow() {
     window.webContents.send("window:blur");
   });
 
+  window.webContents.setWindowOpenHandler((details) => {
+    shell.openExternal(details.url);
+    return { action: "deny" };
+  });
+
   windows.push(window);
 
   return window;

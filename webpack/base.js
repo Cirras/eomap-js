@@ -5,6 +5,17 @@ const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const mode = process.env.NODE_ENV || "development";
 const dev = mode === "development";
 
+function getVersion() {
+  return require("../package.json").version;
+}
+
+function getReleaseNotesUrl() {
+  return require("../package.json").releaseNotesUrl.replace(
+    "${version}",
+    getVersion()
+  );
+}
+
 module.exports = (env) => {
   return {
     mode,
@@ -44,7 +55,8 @@ module.exports = (env) => {
         FORCE_CONNECTED_MODE_URL: JSON.stringify(
           (env && env.FORCE_CONNECTED_MODE_URL) || ""
         ),
-        NPM_VERSION: JSON.stringify(require("../package.json").version),
+        NPM_VERSION: JSON.stringify(getVersion()),
+        RELEASE_NOTES_URL: JSON.stringify(getReleaseNotesUrl()),
       }),
       new HtmlWebpackPlugin({
         template: "./index.html",

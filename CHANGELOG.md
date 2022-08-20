@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Menu item to clear recent files.
+- Menu item to show release notes.
 - Menu item to close window. (Linux)
 - Menu item to quit application. (Linux)
 

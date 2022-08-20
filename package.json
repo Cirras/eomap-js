@@ -28,6 +28,7 @@
     "url": "https://github.com/Cirras/eomap-js/issues"
   },
   "homepage": "https://github.com/Cirras/eomap-js#readme",
+  "releaseNotesUrl": "https://github.com/Cirras/eomap-js/releases/tag/v${version}",
   "build": {
     "appId": "dev.eomap.app",
     "afterSign": "electron-builder-notarize",

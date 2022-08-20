@@ -25,10 +25,10 @@ export const MenuEvent = {
   Undo: "undo",
   Redo: "redo",
   VisibilityFlagToggle: "visibility-flag-toggle",
+  ReleaseNotes: "release-notes",
   DevTools: "toggle-developer-tools",
   About: "about",
 };
-
 export class MenuEventSource {
   constructor() {
     this.listeners = [];
@@ -351,7 +351,13 @@ export class MenubarController extends EventEmitter {
   }
 
   generateHelpMenu() {
-    let items = [];
+    const items = [
+      new MenuItemState()
+        .withLabel("&Release Notes")
+        .withEventType(MenuEvent.ReleaseNotes),
+      new DividerMenuItemState(),
+    ];
+
     if (isElectron()) {
       items.push(
         new MenuItemState()
@@ -362,6 +368,7 @@ export class MenubarController extends EventEmitter {
         new DividerMenuItemState()
       );
     }
+
     if (!(isElectron() && isMac())) {
       items.push(
         new MenuItemState()
@@ -370,6 +377,7 @@ export class MenubarController extends EventEmitter {
           .withEnabled(this.canShowAbout)
       );
     }
+
     return new MenuState(items);
   }
 
@@ -454,6 +462,9 @@ export class MenubarController extends EventEmitter {
         break;
       case MenuEvent.VisibilityFlagToggle:
         this.application.toggleVisibilityFlag(event.detail);
+        break;
+      case MenuEvent.ReleaseNotes:
+        window.open(RELEASE_NOTES_URL, "_blank");
         break;
       case MenuEvent.DevTools:
         window.bridge.toggleDevTools();
