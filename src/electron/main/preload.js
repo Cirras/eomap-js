@@ -11,6 +11,9 @@ contextBridge.exposeInMainWorld("bridge", {
   setRecentDocuments: (recentDocuments) => {
     ipcRenderer.send("app:set-recent-documents", recentDocuments);
   },
+  quit: () => {
+    ipcRenderer.send("app:quit");
+  },
   toggleDevTools: () => {
     ipcRenderer.send("window:toggle-dev-tools");
   },

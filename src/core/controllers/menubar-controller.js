@@ -7,7 +7,7 @@ import {
   SubmenuMenuItemState,
   DividerMenuItemState,
 } from "../state/menubar-state";
-import { isElectron, isMac, isWindows } from "../util/platform-utils";
+import { isElectron, isLinux, isMac, isWindows } from "../util/platform-utils";
 
 export const MenuEvent = {
   NewFile: "new-file",
@@ -21,7 +21,7 @@ export const MenuEvent = {
   Settings: "settings",
   ReloadGraphics: "reload-graphics",
   CloseWindow: "close-window",
-  Exit: "exit",
+  Quit: "quit",
   Undo: "undo",
   Redo: "redo",
   VisibilityFlagToggle: "visibility-flag-toggle",
@@ -243,14 +243,30 @@ export class MenubarController extends EventEmitter {
       );
     }
 
-    if (isElectron() && isWindows()) {
-      items.push(
-        new DividerMenuItemState(),
-        new MenuItemState()
-          .withLabel("E&xit")
-          .withEventType(MenuEvent.Exit)
-          .withEnabled(this.canCloseWindow)
-      );
+    if (isElectron()) {
+      if (isWindows()) {
+        items.push(
+          new DividerMenuItemState(),
+          new MenuItemState()
+            .withLabel("E&xit")
+            .withEventType(MenuEvent.canCloseWindow)
+            .withEnabled(this.canCloseWindow)
+        );
+      } else if (isLinux()) {
+        items.push(
+          new DividerMenuItemState(),
+          new MenuItemState()
+            .withLabel("&Close Window")
+            .withEventType(MenuEvent.CloseWindow)
+            .withKeybinding("Ctrl+W")
+            .withEnabled(this.canCloseWindow),
+          new MenuItemState()
+            .withLabel("&Quit")
+            .withEventType(MenuEvent.Quit)
+            .withKeybinding("Ctrl+Q")
+            .withEnabled(this.canCloseWindow)
+        );
+      }
     }
 
     return new MenuState(items).withWidth(250);
@@ -425,8 +441,10 @@ export class MenubarController extends EventEmitter {
         this.application.loadGFX();
         break;
       case MenuEvent.CloseWindow:
-      case MenuEvent.Exit:
         window.bridge.requestClose();
+        break;
+      case MenuEvent.Quit:
+        window.bridge.quit();
         break;
       case MenuEvent.Undo:
         this.application.undo();

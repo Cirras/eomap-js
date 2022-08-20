@@ -136,6 +136,10 @@ function setupIPC() {
     }
   });
 
+  ipcMain.on("app:quit", (_event) => {
+    app.quit();
+  });
+
   ipcMain.on("window:toggle-dev-tools", (event) => {
     event.sender.toggleDevTools();
   });
