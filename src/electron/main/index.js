@@ -42,10 +42,7 @@ function getLastActiveWindow() {
 function createMenuItemClick(state) {
   let eventType = JSON.stringify(state.eventType);
   let eventDetail = JSON.stringify(state.eventDetail);
-  return (_menuItem, _browserWindow, event) => {
-    if (event.isAutoRepeat) {
-      return;
-    }
+  return (_menuItem, _browserWindow, _event) => {
     let window = getLastActiveWindow();
     if (!window) {
       window = newWindow();

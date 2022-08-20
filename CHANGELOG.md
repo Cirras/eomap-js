@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Allow menu items to be triggered by repeating keyboard events.
+
 ## [1.0.0] - 2022-08-08
 
 ### Added
