@@ -463,10 +463,13 @@ export class Palette extends PhaserInstance {
   }
 
   onGutterPointerDown(event) {
+    const gutter = event.target;
+    gutter.setPointerCapture(event.pointerId);
+
     this.gutterActive = true;
 
-    let oldWidth = this.calcWidth();
-    let oldX = event.x;
+    const oldWidth = this.calcWidth();
+    const oldX = event.x;
 
     let onPointerMove = (moveEvent) => {
       this.width = oldWidth + oldX - moveEvent.x;
@@ -474,6 +477,7 @@ export class Palette extends PhaserInstance {
     };
 
     let onPointerUp = (_event) => {
+      gutter.releasePointerCapture(event.pointerId);
       this.gutterActive = false;
       this.width = this.calcWidth();
       this.dispatchEvent(new CustomEvent("resize-end"));
