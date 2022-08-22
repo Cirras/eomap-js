@@ -249,7 +249,7 @@ export class MenubarController extends EventEmitter {
           new DividerMenuItemState(),
           new MenuItemState()
             .withLabel("E&xit")
-            .withEventType(MenuEvent.canCloseWindow)
+            .withEventType(MenuEvent.CloseWindow)
             .withEnabled(this.canCloseWindow)
         );
       } else if (isLinux()) {

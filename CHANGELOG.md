@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Exit menu item. (Windows)
+
 ## [1.0.1] - 2022-08-21
 
 ### Added
