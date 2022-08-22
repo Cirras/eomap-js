@@ -2,6 +2,7 @@ import ShelfPack from "@mapbox/shelf-pack";
 import { AssetFactory } from "./asset";
 import { DrawableMultiTexture } from "./drawable-multi-texture";
 import { PendingPromise } from "../util/pending-promise";
+import { isEmpty } from "../util/object-utils";
 
 class TextureCacheEntry {
   constructor(key, defaultAsset) {
@@ -116,7 +117,7 @@ class TextureCachePage {
   }
 
   get empty() {
-    return this.shelfPacker.bins[1] === undefined;
+    return isEmpty(this.shelfPacker.bins);
   }
 }
 

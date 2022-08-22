@@ -1,3 +1,10 @@
+export function isEmpty(object) {
+  for (const _ in object) {
+    return false;
+  }
+  return true;
+}
+
 export function merge(target, source) {
   if (isObject(target) && isObject(source)) {
     for (const key in source) {
