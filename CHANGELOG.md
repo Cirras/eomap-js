@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Support for jumbo-sized (larger than 1024x1024) resources.
+
 ### Fixed
 
 - Exit menu item. (Windows)

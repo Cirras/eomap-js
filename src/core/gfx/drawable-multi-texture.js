@@ -5,10 +5,10 @@ const Remove = Phaser.Utils.Array.Remove;
 const CanvasPool = Phaser.Display.Canvas.CanvasPool;
 
 export class DrawableMultiTexture extends Texture {
-  constructor(manager, key, baseWidth, baseHeight) {
-    super(manager, key, [], baseWidth, baseHeight);
-    this.baseWidth = baseWidth;
-    this.baseHeight = baseHeight;
+  constructor(manager, key, width, height) {
+    super(manager, key, [], width, height);
+    this.width = width;
+    this.height = height;
     this.pages = [];
 
     manager.list[key] = this;
@@ -18,9 +18,9 @@ export class DrawableMultiTexture extends Texture {
   addPage() {
     let newPage;
     if (this.manager.game.renderer.gl) {
-      newPage = new WebGLTexturePage(this, this.baseWidth, this.baseHeight);
+      newPage = new WebGLTexturePage(this, this.width, this.height);
     } else {
-      newPage = new CanvasTexturePage(this, this.baseWidth, this.baseHeight);
+      newPage = new CanvasTexturePage(this, this.width, this.height);
     }
 
     this.pages.push(newPage);

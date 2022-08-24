@@ -3,6 +3,7 @@ import { AssetFactory } from "./asset";
 import { DrawableMultiTexture } from "./drawable-multi-texture";
 import { PendingPromise } from "../util/pending-promise";
 import { isEmpty } from "../util/object-utils";
+import { removeFirst } from "../util/array-utils";
 
 class TextureCacheEntry {
   constructor(key, defaultAsset) {
@@ -110,6 +111,25 @@ class BlackTileTextureCacheEntry extends TextureCacheEntry {
   }
 }
 
+class JumboTextureCacheEntry {
+  constructor(multiTexture, page, entry) {
+    this.multiTexture = multiTexture;
+    this.page = page;
+    this.entry = entry;
+  }
+
+  get empty() {
+    return this.page.empty;
+  }
+
+  destroy() {
+    this.multiTexture.destroy();
+    this.multiTexture = null;
+    this.page = null;
+    this.entry = null;
+  }
+}
+
 class TextureCachePage {
   constructor(texturePage) {
     this.texturePage = texturePage;
@@ -127,6 +147,7 @@ export class TextureCache {
     this.gfxLoader = gfxLoader;
     this.identifier = Phaser.Utils.String.UUID();
     this.pages = [];
+    this.jumboEntries = [];
     this.entries = new Map();
     this.pending = [];
     this.assetFactory = new AssetFactory(scene, this.identifier);
@@ -268,7 +289,10 @@ export class TextureCache {
   async loadEntry(entry) {
     let pixels = await entry.loadGFX(this.gfxLoader);
 
-    if (this.findSpace(entry, pixels.width, pixels.height)) {
+    if (
+      !this.handleJumboEntry(entry, pixels) &&
+      this.findSpace(entry, pixels.width, pixels.height)
+    ) {
       let page = entry.page.texturePage;
       let x = entry.bin.x;
       let y = entry.bin.y;
@@ -278,6 +302,45 @@ export class TextureCache {
 
     entry.loadingCompletePromise.resolve();
     entry.loadingCompletePromise = null;
+  }
+
+  handleJumboEntry(entry, pixels) {
+    if (
+      this.multiTexture.width >= pixels.width &&
+      this.multiTexture.height >= pixels.height
+    ) {
+      return false;
+    }
+
+    const multiTexture = new DrawableMultiTexture(
+      this.scene.textures,
+      Phaser.Utils.String.UUID(),
+      pixels.width,
+      pixels.height
+    );
+
+    const page = new TextureCachePage(multiTexture.pages[0]);
+    const bin = page.shelfPacker.packOne(pixels.width, pixels.height);
+
+    if (!bin) {
+      multiTexture.destroy();
+      throw new Error(
+        `Failed to find space in the texture cache for jumbo entry \"${entry.key}\"`
+      );
+    }
+
+    multiTexture.add(entry.key, 0, bin.x, bin.y, pixels.width, pixels.height);
+    page.texturePage.draw(pixels, bin.x, bin.y);
+
+    entry.page = page;
+    entry.bin = bin;
+    entry.asset = entry.createAsset(this.assetFactory, multiTexture.key);
+
+    this.jumboEntries.push(
+      new JumboTextureCacheEntry(multiTexture, page, entry)
+    );
+
+    return true;
   }
 
   update() {
@@ -330,6 +393,11 @@ export class EvictingTextureCache extends TextureCache {
         this.evictEntry(key);
       }
     }
+    for (let jumboEntry of this.jumboEntries) {
+      if (jumboEntry.empty) {
+        this.evictJumboEntry(jumboEntry);
+      }
+    }
     this.canEvict = false;
   }
 
@@ -365,5 +433,17 @@ export class EvictingTextureCache extends TextureCache {
     }
 
     this.entries.delete(key);
+  }
+
+  evictJumboEntry(jumboEntry) {
+    jumboEntry.destroy();
+    removeFirst(this.jumboEntries, jumboEntry);
+
+    // Mitigate a bug in the Phaser WebGLRenderer, which will be fixed in version 3.60.
+    // See: https://github.com/photonstorm/phaser/commit/4c2d3e3cff6b98ff05da99419a829203facf564f
+    const renderer = this.scene.game.renderer;
+    if (renderer.gl) {
+      renderer.isTextureClean = false;
+    }
   }
 }
