@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Exit menu item. (Windows)
 - Prevent the texture cache from breaking when an asset can't fit into an empty cache page.
+- Prevent an error triggered by creating a new map while GFX is loading.
 
 ## [1.0.1] - 2022-08-21
 

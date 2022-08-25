@@ -381,7 +381,12 @@ export class Application extends LitElement {
   }
 
   managePendingMapLoad() {
-    if (this.validGfx() && this.mapState && this.mapState.pending) {
+    if (
+      this.validGfx() &&
+      this.mapState &&
+      this.mapState.pending &&
+      this.mapState.fileHandle
+    ) {
       this.openFile(this.mapState.fileHandle);
     }
   }
