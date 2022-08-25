@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.2] - 2022-08-25
+
 ### Added
 
 - Support for jumbo-sized (larger than 1024x1024) resources.
@@ -38,6 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Desktop app for Windows, Linux, and macOS.
 - Web app available at [https://eomap.dev](https://eomap.dev)
 
-[unreleased]: https://github.com/cirras/eomap-js/compare/v1.0.1...HEAD
+[unreleased]: https://github.com/cirras/eomap-js/compare/v1.0.2...HEAD
+[1.0.2]: https://github.com/cirras/eomap-js/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/cirras/eomap-js/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/cirras/eomap-js/releases/tag/v1.0.0
