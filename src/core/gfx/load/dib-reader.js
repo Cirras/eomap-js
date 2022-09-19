@@ -274,7 +274,11 @@ export class DIBReader {
       case 8:
       case 16:
       case 24:
+        break;
       case 32:
+        if (this.headerType === HeaderType.Core) {
+          throw new Error(`32 is an invalid bit depth for ${this.headerType}`);
+        }
         break;
       default:
         throw new Error("Unsupported bit depth");
