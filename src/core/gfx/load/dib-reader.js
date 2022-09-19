@@ -448,8 +448,8 @@ class ReadLineStrategy {
   }
 
   read(outBuffer, row) {
-    const isBottomUp = this.height < 0;
-    const line = isBottomUp ? row : this.height - 1 - row;
+    const isTopDown = this.height < 0;
+    const line = isTopDown ? row : this.height - 1 - row;
 
     const outPos = this.width * row * 4;
     const linePos =
