@@ -260,6 +260,13 @@ export class DIBReader {
   }
 
   checkFormat() {
+    if (
+      this.dataView.byteLength < 4 ||
+      this.dataView.byteLength < this.headerSize
+    ) {
+      throw new Error("Truncated header");
+    }
+
     if (!Object.values(HeaderType).includes(this.headerType)) {
       throw new Error(`Unknown header type with size ${this.headerSize}.`);
     }
@@ -316,6 +323,9 @@ export class DIBReader {
   }
 
   determineHeaderType() {
+    if (this.dataView.byteLength < 4) {
+      return;
+    }
     switch (this.headerSize) {
       case 12:
         this.headerType = HeaderType.Core;
