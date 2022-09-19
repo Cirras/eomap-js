@@ -260,6 +260,10 @@ export class DIBReader {
   }
 
   checkFormat() {
+    if (!Object.values(HeaderType).includes(this.headerType)) {
+      throw new Error(`Unknown header type with size ${this.headerSize}.`);
+    }
+
     if (this.width < 0) {
       throw new Error("Image width less than zero");
     }
