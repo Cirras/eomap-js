@@ -75,6 +75,12 @@ export class PEReader {
     return result;
   }
 
+  readInt32() {
+    let result = this.dataView.getInt32(this.position, true);
+    this.position += 4;
+    return result;
+  }
+
   readString(length) {
     let decoder = new TextDecoder("utf-8");
     let result = decoder.decode(
@@ -186,8 +192,8 @@ export class PEReader {
         width = this.readUint16();
         height = this.readUint16();
       } else {
-        width = this.readUint32();
-        height = this.readUint32();
+        width = Math.abs(this.readInt32());
+        height = Math.abs(this.readInt32());
       }
 
       this.resourceInfo.set(

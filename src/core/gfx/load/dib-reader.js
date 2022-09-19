@@ -95,6 +95,10 @@ export class DIBReader {
     return this.dataView.getUint32(position, true);
   }
 
+  readInt32(position) {
+    return this.dataView.getInt32(position, true);
+  }
+
   readUInt32WithZeroPadding(position) {
     if (position + 4 < this.dataView.byteLength) {
       return this.dataView.getUint32(position, true);
@@ -120,7 +124,7 @@ export class DIBReader {
     if (this.headerType === HeaderType.Core) {
       return this.readUint16(4);
     } else {
-      return this.readUint32(4);
+      return this.readInt32(4);
     }
   }
 
@@ -128,7 +132,7 @@ export class DIBReader {
     if (this.headerType === HeaderType.Core) {
       return this.readUint16(6);
     } else {
-      return this.readUint32(8);
+      return this.readInt32(8);
     }
   }
 
