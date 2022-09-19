@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for obscure Windows 2.x `BITMAPCOREHEADER` bitmaps.
 - Support for 1-bit, 2-bit, and 4-bit bitmaps.
 
+### Changed
+
+- More robust validation in the bitmap decoder.
+
 ### Fixed
 
 - Fix issue where Down Walls were rendered below Overlays on the same tile.

@@ -239,7 +239,7 @@ export class DIBReader {
     return this.paletteColors[index];
   }
 
-  checkFormat() {
+  validateHeader() {
     if (
       this.dataView.byteLength < 4 ||
       this.dataView.byteLength < this.headerSize
@@ -291,6 +291,14 @@ export class DIBReader {
       throw new Error("Unsupported compression");
     }
 
+    if (this.colorsUsed > 1 << this.depth) {
+      throw new Error(
+        `Palette size ${this.paletteColorCount} exceeds maximum value for ${this.depth}-bit image`
+      );
+    }
+  }
+
+  validateBitFields() {
     if (this.bitFields) {
       let maxmask = (1 << NUM_CONVERT_TABLES) - 1;
       if (
@@ -301,12 +309,6 @@ export class DIBReader {
       ) {
         throw new Error("Bit mask too long");
       }
-    }
-
-    if (this.colorsUsed > 1 << this.depth) {
-      throw new Error(
-        `Palette size ${this.paletteColorCount} exceeds maximum value for ${this.depth}-bit image`
-      );
     }
   }
 
@@ -415,10 +417,11 @@ export class DIBReader {
     }
 
     this.determineHeaderType();
+    this.validateHeader();
     this.determineReadLineStrategy();
     this.decodeBitFields();
+    this.validateBitFields();
     this.indexPalette();
-    this.checkFormat();
 
     this.initialized = true;
   }
