@@ -77,6 +77,7 @@ export class DIBReader {
     this.dataView = new DataView(buffer);
 
     this.headerType = null;
+    this.readLineStrategy = null;
     this.bitFields = null;
     this.paletteColors = null;
 
@@ -97,23 +98,6 @@ export class DIBReader {
 
   readInt32(position) {
     return this.dataView.getInt32(position, true);
-  }
-
-  readUInt32WithZeroPadding(position) {
-    if (position + 4 < this.dataView.byteLength) {
-      return this.dataView.getUint32(position, true);
-    }
-
-    let bytes = new Uint8Array([0, 0, 0, 0]);
-
-    for (let i = 0; i < bytes.length; ++i) {
-      if (position >= this.dataView.byteLength) {
-        break;
-      }
-      bytes[i] = this.readUint8(position++);
-    }
-
-    return new DataView(bytes.buffer).getUint32(0, true);
   }
 
   get headerSize() {
@@ -196,10 +180,6 @@ export class DIBReader {
   get paletteSize() {
     const bytesPerColor = this.headerType === HeaderType.Core ? 3 : 4;
     return this.paletteColorCount * bytesPerColor;
-  }
-
-  get bpp() {
-    return this.depth >> 3;
   }
 
   get stride() {
@@ -287,13 +267,17 @@ export class DIBReader {
       throw new Error(`Invalid number of color planes (${this.planes})`);
     }
 
-    if (
-      this.depth !== 8 &&
-      this.depth !== 16 &&
-      this.depth !== 24 &&
-      this.depth !== 32
-    ) {
-      throw new Error("Unsupported bit depth");
+    switch (this.depth) {
+      case 1:
+      case 2:
+      case 4:
+      case 8:
+      case 16:
+      case 24:
+      case 32:
+        break;
+      default:
+        throw new Error("Unsupported bit depth");
     }
 
     if (
@@ -345,6 +329,24 @@ export class DIBReader {
       case 124:
         this.headerType = HeaderType.V5;
         break;
+    }
+  }
+
+  determineReadLineStrategy() {
+    switch (this.depth) {
+      case 1:
+      case 2:
+      case 4:
+      case 8:
+        this.readLineStrategy = new PalettedReadLineStrategy(this);
+        break;
+      case 16:
+      case 24:
+      case 32:
+        this.readLineStrategy = new DefaultReadLineStrategy(this);
+        break;
+      default:
+        throw Error(`Unhandled bit depth: ${this.depth}`);
     }
   }
 
@@ -409,62 +411,12 @@ export class DIBReader {
     }
 
     this.determineHeaderType();
+    this.determineReadLineStrategy();
     this.decodeBitFields();
     this.indexPalette();
     this.checkFormat();
 
     this.initialized = true;
-  }
-
-  readLine(outBuf, row) {
-    const isBottomUp = this.height < 0;
-    let line = isBottomUp ? row : this.height - 1 - row;
-    let pos =
-      this.headerSize +
-      this.optionalBitMasksSize +
-      this.paletteSize +
-      this.stride * line;
-    let outPos = this.width * row * 4;
-
-    for (let i = 0; i < this.width; ++i) {
-      let b = 0;
-      let g = 0;
-      let r = 0;
-      let a = 0;
-
-      switch (this.depth) {
-        case 8:
-          let paletteIndex = this.readUint8(pos);
-          let color = this.colorFromPalette(paletteIndex);
-          b = color.b;
-          g = color.g;
-          r = color.r;
-          break;
-
-        case 16:
-        case 24:
-        case 32:
-          let p = this.readUInt32WithZeroPadding(pos);
-          r = this.bitFields.r.read(p);
-          g = this.bitFields.g.read(p);
-          b = this.bitFields.b.read(p);
-          break;
-
-        default:
-          throw Error(`Unhandled bit depth: ${this.depth}`);
-      }
-
-      if (r !== 0 || g !== 0 || b !== 0) {
-        a = 0xff;
-      }
-
-      outBuf[outPos++] = r;
-      outBuf[outPos++] = g;
-      outBuf[outPos++] = b;
-      outBuf[outPos++] = a;
-
-      pos += this.bpp;
-    }
   }
 
   read() {
@@ -474,9 +426,166 @@ export class DIBReader {
     let imageData = new Uint8ClampedArray(this.width * rowCount * 4);
 
     for (let row = 0; row < rowCount; ++row) {
-      this.readLine(imageData, row);
+      this.readLineStrategy.read(imageData, row);
     }
 
     return imageData;
+  }
+}
+
+class ReadLineStrategy {
+  constructor(reader) {
+    this.reader = reader;
+    this.width = this.reader.width;
+    this.height = this.reader.height;
+  }
+
+  read(outBuffer, row) {
+    const isBottomUp = this.height < 0;
+    const line = isBottomUp ? row : this.height - 1 - row;
+
+    const outPos = this.width * row * 4;
+    const linePos =
+      this.reader.headerSize +
+      this.reader.optionalBitMasksSize +
+      this.reader.paletteSize +
+      this.reader.stride * line;
+
+    this.readLine(outBuffer, outPos, linePos);
+  }
+
+  readLine(_outBuffer, _outPos, _linePos) {
+    throw new Error("ReadLineStrategy.readLine() must be implemented");
+  }
+
+  getAlpha(r, g, b) {
+    if (r !== 0 || g !== 0 || b !== 0) {
+      return 0xff;
+    } else {
+      return 0x00;
+    }
+  }
+}
+
+class DefaultReadLineStrategy extends ReadLineStrategy {
+  constructor(reader) {
+    super(reader);
+    this.bytesPerPixel = this.reader.depth >> 3;
+  }
+
+  readLine(outBuffer, outPos, linePos) {
+    for (let i = 0; i < this.width; ++i) {
+      let r = 0;
+      let g = 0;
+      let b = 0;
+
+      let p = this.readUint32WithZeroPadding(linePos);
+      r = this.bitFields.r.read(p);
+      g = this.bitFields.g.read(p);
+      b = this.bitFields.b.read(p);
+
+      outBuffer[outPos++] = r;
+      outBuffer[outPos++] = g;
+      outBuffer[outPos++] = b;
+      outBuffer[outPos++] = this.getAlpha(r, g, b);
+
+      linePos += this.bytesPerPixel;
+    }
+  }
+
+  readUint32WithZeroPadding(position) {
+    if (position + 4 <= this.reader.dataView.byteLength) {
+      return this.reader.readUint32(position);
+    }
+
+    let bytes = new Uint8Array([0, 0, 0, 0]);
+
+    for (let i = 0; i < bytes.length; ++i) {
+      if (position >= this.reader.dataView.byteLength) {
+        break;
+      }
+      bytes[i] = this.reader.readUint8(position++);
+    }
+
+    return new DataView(bytes.buffer).getUint32(0, true);
+  }
+
+  get bitFields() {
+    return this.reader.bitFields;
+  }
+}
+
+class PalettedReadLineStrategy extends ReadLineStrategy {
+  constructor(reader) {
+    super(reader);
+    this.pixelsPerByte = 8 / this.reader.depth;
+    this.bytesPerLine = Math.ceil(this.width / this.pixelsPerByte);
+    this.getPaletteIndices = PalettedReadLineStrategy.createGetPaletteIndices(
+      this.reader.depth
+    );
+  }
+
+  static createGetPaletteIndices(depth) {
+    switch (depth) {
+      case 1:
+        return (byte) => {
+          let indices = new Array(8);
+          for (let i = 0; i < 8; ++i) {
+            indices[7 - i] = (byte & (1 << i)) >> i;
+          }
+          return indices;
+        };
+      case 2:
+        return (byte) => {
+          return [
+            (byte & 0xc0) >> 6,
+            (byte & 0x30) >> 4,
+            (byte & 0x0c) >> 2,
+            byte & 0x03,
+          ];
+        };
+      case 4:
+        return (byte) => {
+          return [(byte & 0xf0) >> 4, byte & 0x0f];
+        };
+      case 8:
+        return (byte) => {
+          return [byte];
+        };
+      default:
+        throw Error(`Unhandled bit depth: ${depth}`);
+    }
+  }
+
+  readLine(outBuffer, outPos, linePos) {
+    let written = 0;
+
+    for (let i = 0; i < this.bytesPerLine; ++i) {
+      const byte = this.readUint8WithZeroPadding(linePos);
+      const paletteIndices = this.getPaletteIndices(byte);
+
+      for (let paletteIndex of paletteIndices) {
+        const color = this.reader.colorFromPalette(paletteIndex);
+        const { b, g, r } = color;
+
+        outBuffer[outPos++] = r;
+        outBuffer[outPos++] = g;
+        outBuffer[outPos++] = b;
+        outBuffer[outPos++] = this.getAlpha(r, g, b);
+
+        if (++written === this.width) {
+          return;
+        }
+      }
+
+      ++linePos;
+    }
+  }
+
+  readUint8WithZeroPadding(position) {
+    if (position < this.reader.dataView.byteLength) {
+      return this.reader.readUint8(position);
+    }
+    return 0;
   }
 }

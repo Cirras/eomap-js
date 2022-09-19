@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Support for obscure Windows 2.x `BITMAPCOREHEADER` bitmaps.
+- Support for 1-bit, 2-bit, and 4-bit bitmaps.
 
 ### Fixed
 
