@@ -303,6 +303,12 @@ export class DIBReader {
         throw new Error("Bit mask too long");
       }
     }
+
+    if (this.colorsUsed > 1 << this.depth) {
+      throw new Error(
+        `Palette size ${this.paletteColorCount} exceeds maximum value for ${this.depth}-bit image`
+      );
+    }
   }
 
   determineHeaderType() {
