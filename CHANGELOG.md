@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Support for obscure Windows 2.x `BITMAPCOREHEADER` bitmaps.
+
 ### Fixed
 
 - Fix issue where Down Walls were rendered below Overlays on the same tile.

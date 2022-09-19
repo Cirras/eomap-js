@@ -12,6 +12,15 @@ const CONVERT_TABLES = (function () {
   return tables;
 })();
 
+const HeaderType = {
+  Core: "BITMAPCOREHEADER",
+  Info: "BITMAPINFOHEADER",
+  V2: "BITMAPV2INFOHEADER",
+  V3: "BITMAPV3INFOHEADER",
+  V4: "BITMAPV4HEADER",
+  V5: "BITMAPV5HEADER",
+};
+
 const Compression = {
   RGB: 0,
   RLE8: 1,
@@ -21,12 +30,11 @@ const Compression = {
   PNG: 5,
 };
 
-class RGBQuad {
-  constructor(b, g, r, quad) {
+class PaletteColor {
+  constructor(b, g, r) {
     this.b = b;
     this.g = g;
     this.r = r;
-    this.quad = quad;
   }
 }
 
@@ -68,6 +76,7 @@ export class DIBReader {
     this.data = buffer;
     this.dataView = new DataView(buffer);
 
+    this.headerType = null;
     this.bitFields = null;
     this.paletteColors = null;
 
@@ -108,11 +117,19 @@ export class DIBReader {
   }
 
   get width() {
-    return this.readUint32(4);
+    if (this.headerType === HeaderType.Core) {
+      return this.readUint16(4);
+    } else {
+      return this.readUint32(4);
+    }
   }
 
   get height() {
-    return this.readUint32(8);
+    if (this.headerType === HeaderType.Core) {
+      return this.readUint16(6);
+    } else {
+      return this.readUint32(8);
+    }
   }
 
   get colorPlanes() {
@@ -120,38 +137,34 @@ export class DIBReader {
   }
 
   get depth() {
-    return this.readUint16(14);
+    if (this.headerType === HeaderType.Core) {
+      return this.readUint16(10);
+    } else {
+      return this.readUint16(14);
+    }
   }
 
   get compression() {
-    return this.readUint32(16);
-  }
-
-  get imageSize() {
-    return this.readUint32(20);
-  }
-
-  get paletteColorCount() {
-    if (this.depth < 16) {
-      let colorsUsed = this.readUint32(32);
-      let numColors = colorsUsed;
-      if (numColors === 0) {
-        numColors = 1 << this.depth;
-      }
-      return numColors;
+    if (this.headerType === HeaderType.Core) {
+      return Compression.RGB;
+    } else {
+      return this.readUint32(16);
     }
-
-    return 0;
   }
 
-  get paletteSize() {
-    let numColors = this.paletteColorCount;
-
-    if (numColors > 0) {
-      return numColors * 4;
+  get colorsUsed() {
+    if (this.headerType === HeaderType.Core) {
+      return 0;
+    } else {
+      return this.readUint32(32);
     }
+  }
 
-    if (this.headerSize === 40 && this.compression == Compression.BitFields) {
+  get optionalBitMasksSize() {
+    if (
+      this.headerType === HeaderType.Info &&
+      this.compression == Compression.BitFields
+    ) {
       // The Windows NT variant of the Windows 3.x BMP format can store 16-bit and 32-bit
       // data in a BMP file.
       // If the bitmap contains 16 or 32 bits per pixel, then only BitFields Compression is
@@ -165,6 +178,18 @@ export class DIBReader {
     return 0;
   }
 
+  get paletteColorCount() {
+    if (this.depth <= 8) {
+      return this.colorsUsed || 1 << this.depth;
+    }
+    return 0;
+  }
+
+  get paletteSize() {
+    const bytesPerColor = this.headerType === HeaderType.Core ? 3 : 4;
+    return this.paletteColorCount * bytesPerColor;
+  }
+
   get bpp() {
     return this.depth >> 3;
   }
@@ -173,20 +198,47 @@ export class DIBReader {
     return ((this.width * this.depth + 31) & ~31) >> 3;
   }
 
+  get hasBitMasks() {
+    switch (this.headerType) {
+      case HeaderType.Core:
+        return false;
+      case HeaderType.Info:
+        return this.compression === Compression.BitFields;
+      default:
+        return true;
+    }
+  }
+
   get redMask() {
-    return this.readUint32(40);
+    if (!this.hasBitMasks) {
+      return 0;
+    } else {
+      return this.readUint32(40);
+    }
   }
 
   get greenMask() {
-    return this.readUint32(44);
+    if (!this.hasBitMasks) {
+      return 0;
+    } else {
+      return this.readUint32(44);
+    }
   }
 
   get blueMask() {
-    return this.readUint32(48);
+    if (!this.hasBitMasks) {
+      return 0;
+    } else {
+      return this.readUint32(48);
+    }
   }
 
   get alphaMask() {
-    return this.headerSize >= 56 ? this.readUint32(52) : 0;
+    if (!this.hasBitMasks || this.headerType === HeaderType.V2) {
+      return 0;
+    } else {
+      this.readUint32(52);
+    }
   }
 
   colorFromPalette(index) {
@@ -241,6 +293,29 @@ export class DIBReader {
     }
   }
 
+  determineHeaderType() {
+    switch (this.headerSize) {
+      case 12:
+        this.headerType = HeaderType.Core;
+        break;
+      case 40:
+        this.headerType = HeaderType.Info;
+        break;
+      case 52:
+        this.headerType = HeaderType.V2;
+        break;
+      case 56:
+        this.headerType = HeaderType.V3;
+        break;
+      case 108:
+        this.headerType = HeaderType.V4;
+        break;
+      case 124:
+        this.headerType = HeaderType.V5;
+        break;
+    }
+  }
+
   decodeBitFields() {
     if (this.compression === Compression.BitFields) {
       this.bitFields = new BitFields(
@@ -279,15 +354,20 @@ export class DIBReader {
     }
 
     this.paletteColors = new Array(this.paletteColorCount);
-    let pos = this.headerSize;
+    let pos = this.headerSize + this.optionalBitMasksSize;
 
     for (let i = 0; i < this.paletteColors.length; ++i) {
-      this.paletteColors[i] = new RGBQuad(
-        this.readUint8(pos++),
+      this.paletteColors[i] = new PaletteColor(
         this.readUint8(pos++),
         this.readUint8(pos++),
         this.readUint8(pos++)
       );
+
+      if (this.headerType !== HeaderType.Core) {
+        // rgbReserved is reserved and must be zero
+        // See: https://learn.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-rgbquad
+        pos++;
+      }
     }
   }
 
@@ -296,6 +376,7 @@ export class DIBReader {
       return;
     }
 
+    this.determineHeaderType();
     this.decodeBitFields();
     this.indexPalette();
     this.checkFormat();
@@ -306,7 +387,11 @@ export class DIBReader {
   readLine(outBuf, row) {
     const isBottomUp = this.height < 0;
     let line = isBottomUp ? row : this.height - 1 - row;
-    let pos = this.headerSize + this.paletteSize + this.stride * line;
+    let pos =
+      this.headerSize +
+      this.optionalBitMasksSize +
+      this.paletteSize +
+      this.stride * line;
     let outPos = this.width * row * 4;
 
     for (let i = 0; i < this.width; ++i) {
