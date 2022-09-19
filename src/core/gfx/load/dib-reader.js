@@ -248,7 +248,7 @@ export class DIBReader {
     }
 
     if (!Object.values(HeaderType).includes(this.headerType)) {
-      throw new Error(`Unknown header type with size ${this.headerSize}.`);
+      throw new Error(`Unknown header type with size ${this.headerSize}`);
     }
 
     if (this.width < 0) {
