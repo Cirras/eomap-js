@@ -136,8 +136,12 @@ export class DIBReader {
     }
   }
 
-  get colorPlanes() {
-    return 1;
+  get planes() {
+    if (this.headerType === HeaderType.Core) {
+      return this.readUint16(8);
+    } else {
+      return this.readUint16(12);
+    }
   }
 
   get depth() {
@@ -266,6 +270,10 @@ export class DIBReader {
       this.height > 0x40000000
     ) {
       throw new Error("Image dimensions out of bounds");
+    }
+
+    if (this.planes !== 1) {
+      throw new Error(`Invalid number of color planes (${this.planes})`);
     }
 
     if (
