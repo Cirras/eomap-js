@@ -14,7 +14,7 @@ const layerInfo = [
     { xoff: 0,  yoff:-1,  alpha: 1.00, centered: false, bottomOrigin: true,  depth: 0.0 + TDG * 4 }, // Down Wall
     { xoff: 32, yoff:-1,  alpha: 1.00, centered: false, bottomOrigin: true,  depth:-RDG + TDG * 5 }, // Right Wall
     { xoff: 0,  yoff:-64, alpha: 1.00, centered: false, bottomOrigin: true,  depth: 0.0 + TDG * 6 }, // Roof
-    { xoff: 0,  yoff:-32, alpha: 1.00, centered: false, bottomOrigin: true,  depth: 0.0 + TDG * 1 }, // Top
+    { xoff: 0,  yoff:-32, alpha: 1.00, centered: false, bottomOrigin: false, depth: 0.0 + TDG * 1 }, // Top
     { xoff:-24, yoff:-12, alpha: 0.20, centered: false, bottomOrigin: false, depth:-1.0 + TDG * 1 }, // Shadow
     { xoff:-2,  yoff:-2,  alpha: 1.00, centered: true,  bottomOrigin: true,  depth: 1.0 + TDG * 1 }, // Overlay 2
     { xoff: 0,  yoff: 0,  alpha: 0.25, centered: false, bottomOrigin: false, depth:-2.0 + TDG * 1 }, // TileSpec
