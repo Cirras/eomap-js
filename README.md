@@ -1,9 +1,9 @@
 ![eomap-js](https://github.com/cirras/eomap-js/blob/master/docs/images/header.svg)
 
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=Cirras_eomap-js&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=Cirras_eomap-js)
-![Format Status](https://github.com/cirras/eomap-js/actions/workflows/format.yml/badge.svg?event=push)
-![Build Status](https://github.com/cirras/eomap-js/actions/workflows/build.yml/badge.svg?event=push)
-![Release Status](https://github.com/cirras/eomap-js/actions/workflows/release.yml/badge.svg)
+[![Format](https://github.com/Cirras/eomap-js/actions/workflows/format.yml/badge.svg?event=push)](https://github.com/Cirras/eomap-js/actions/workflows/format.yml)
+[![Build](https://github.com/Cirras/eomap-js/actions/workflows/build.yml/badge.svg?event=push)](https://github.com/Cirras/eomap-js/actions/workflows/build.yml)
+[![Release](https://github.com/Cirras/eomap-js/actions/workflows/release.yml/badge.svg)](https://github.com/Cirras/eomap-js/actions/workflows/release.yml)
 
 An Endless Map File (EMF) editor written in JavaScript.
 
