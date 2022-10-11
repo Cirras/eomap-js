@@ -373,11 +373,13 @@ export class Menu extends SpectrumElement {
       this.submenu.open = true;
 
       requestAnimationFrame(() => {
-        let menu = this.submenu.menu;
-        menu.focus();
-        menu.focusMenuItemByIndex(0);
-        if (!focus) {
-          menu.blurFocusedMenuItem();
+        if (this.submenu) {
+          let menu = this.submenu.menu;
+          menu.focus();
+          menu.focusMenuItemByIndex(0);
+          if (!focus) {
+            menu.blurFocusedMenuItem();
+          }
         }
       });
     }
