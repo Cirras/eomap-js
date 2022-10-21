@@ -1,16 +1,22 @@
-const NUM_CONVERT_TABLES = 8;
-const CONVERT_TABLES = (function () {
-  let tables = new Array(NUM_CONVERT_TABLES);
-  for (let i = 0; i < NUM_CONVERT_TABLES; ++i) {
-    let entries = 1 << (i + 1);
-    let table = new Array(entries);
-    for (let ii = 0; ii < entries; ++ii) {
-      table[ii] = Math.trunc((ii * 255) / (entries - 1));
-    }
-    tables[i] = table;
-  }
-  return tables;
-})();
+import { countOnes, trailingZeros } from "../../util/math-utils";
+
+const LOOKUP_TABLE_3_BIT_TO_8_BIT = [0, 36, 73, 109, 146, 182, 219, 255];
+
+const LOOKUP_TABLE_4_BIT_TO_8_BIT = [
+  0, 17, 34, 51, 68, 85, 102, 119, 136, 153, 170, 187, 204, 221, 238, 255,
+];
+
+const LOOKUP_TABLE_5_BIT_TO_8_BIT = [
+  0, 8, 16, 25, 33, 41, 49, 58, 66, 74, 82, 90, 99, 107, 115, 123, 132, 140,
+  148, 156, 165, 173, 181, 189, 197, 206, 214, 222, 230, 239, 247, 255,
+];
+
+const LOOKUP_TABLE_6_BIT_TO_8_BIT = [
+  0, 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 45, 49, 53, 57, 61, 65, 69, 73, 77,
+  81, 85, 89, 93, 97, 101, 105, 109, 113, 117, 121, 125, 130, 134, 138, 142,
+  146, 150, 154, 158, 162, 166, 170, 174, 178, 182, 186, 190, 194, 198, 202,
+  206, 210, 215, 219, 223, 227, 231, 235, 239, 243, 247, 251, 255,
+];
 
 const HeaderType = {
   Core: "BITMAPCOREHEADER",
@@ -38,36 +44,78 @@ class PaletteColor {
   }
 }
 
-function trailingZeros(n) {
-  n |= 0;
-  return n ? 31 - Math.clz32(n & -n) : 0;
-}
-
+// Bitfield(s) implementation is based directly on the image-rs BMPDecoder
+// See: https://github.com/image-rs/image/blob/v0.24.4/src/codecs/bmp/decoder.rs#L479
 class BitField {
-  constructor(mask) {
+  constructor(length, shift) {
+    this.length = length;
+    this.shift = shift;
+  }
+
+  static fromMask(mask, maxLength) {
     if (mask === 0) {
-      this.shift = 0;
-      this.mask = 0;
-      this.length = 0;
+      return new BitField(0, 0);
     }
 
-    this.shift = trailingZeros(mask);
-    this.mask = mask >> this.shift;
-    this.length = trailingZeros(~this.mask);
+    let shift = trailingZeros(mask);
+    let length = trailingZeros(~(mask >>> shift));
+
+    if (length !== countOnes(mask)) {
+      throw new Error("Non-contiguous bitfield mask");
+    }
+
+    if (length + shift > maxLength) {
+      throw new Error("Bitfield mask too long");
+    }
+
+    if (length > 8) {
+      shift += length - 8;
+      length = 8;
+    }
+
+    return new BitField(length, shift);
   }
 
   read(data) {
-    data = (data >> this.shift) & this.mask;
-    return CONVERT_TABLES[this.length - 1][data];
+    data = data >> this.shift;
+    switch (this.length) {
+      case 1:
+        return (data & 0b1) * 0xff;
+      case 2:
+        return (data & 0b11) * 0x55;
+      case 3:
+        return LOOKUP_TABLE_3_BIT_TO_8_BIT[data & 0b00_0111];
+      case 4:
+        return LOOKUP_TABLE_4_BIT_TO_8_BIT[data & 0b00_1111];
+      case 5:
+        return LOOKUP_TABLE_5_BIT_TO_8_BIT[data & 0b01_1111];
+      case 6:
+        return LOOKUP_TABLE_6_BIT_TO_8_BIT[data & 0b11_1111];
+      case 7:
+        return ((data & 0x7f) << 1) | ((data & 0x7f) >> 6);
+      case 8:
+        return data & 0xff;
+      default:
+        throw new Error(`Unhandled bitfield mask length ${this.length}`);
+    }
   }
 }
 
 class BitFields {
-  constructor(redMask, greenMask, blueMask, alphaMask) {
-    this.r = new BitField(redMask);
-    this.g = new BitField(greenMask);
-    this.b = new BitField(blueMask);
-    this.a = new BitField(alphaMask);
+  constructor(r, g, b, a) {
+    this.r = r;
+    this.g = g;
+    this.b = b;
+    this.a = a;
+  }
+
+  static fromMask(redMask, greenMask, blueMask, alphaMask, maxLength) {
+    return new BitFields(
+      BitField.fromMask(redMask, maxLength),
+      BitField.fromMask(greenMask, maxLength),
+      BitField.fromMask(blueMask, maxLength),
+      BitField.fromMask(alphaMask, maxLength)
+    );
   }
 }
 
@@ -274,14 +322,10 @@ export class DIBReader {
       case 8:
       case 16:
       case 24:
-        break;
       case 32:
-        if (this.headerType === HeaderType.Core) {
-          throw new Error(`32 is an invalid bit depth for ${this.headerType}`);
-        }
         break;
       default:
-        throw new Error("Unsupported bit depth");
+        throw new Error(`Unsupported bit depth (${this.depth})`);
     }
 
     if (
@@ -291,24 +335,26 @@ export class DIBReader {
       throw new Error("Unsupported compression");
     }
 
+    if (this.headerType === HeaderType.Core && this.depth > 24) {
+      throw new Error(
+        `Invalid bit depth for ${this.headerType} (${this.depth})`
+      );
+    }
+
+    if (
+      this.compression === Compression.BitFields &&
+      this.depth !== 16 &&
+      this.depth !== 32
+    ) {
+      throw new Error(
+        `Invalid bit depth for BitFields compression (${this.depth})`
+      );
+    }
+
     if (this.colorsUsed > 1 << this.depth) {
       throw new Error(
         `Palette size ${this.paletteColorCount} exceeds maximum value for ${this.depth}-bit image`
       );
-    }
-  }
-
-  validateBitFields() {
-    if (this.bitFields) {
-      let maxmask = (1 << NUM_CONVERT_TABLES) - 1;
-      if (
-        this.bitFields.r.mask > maxmask ||
-        this.bitFields.g.mask > maxmask ||
-        this.bitFields.b.mask > maxmask ||
-        this.bitFields.a.mask > maxmask
-      ) {
-        throw new Error("Bit mask too long");
-      }
     }
   }
 
@@ -358,30 +404,33 @@ export class DIBReader {
 
   decodeBitFields() {
     if (this.compression === Compression.BitFields) {
-      this.bitFields = new BitFields(
+      this.bitFields = BitFields.fromMask(
         this.redMask,
         this.greenMask,
         this.blueMask,
-        this.alphaMask
+        this.alphaMask,
+        this.depth
       );
     } else {
       switch (this.depth) {
         case 16:
-          this.bitFields = new BitFields(
+          this.bitFields = BitFields.fromMask(
             0x00007c00,
             0x000003e0,
             0x0000001f,
-            0x00000000
+            0x00000000,
+            this.depth
           );
           break;
 
         case 24:
         case 32:
-          this.bitFields = new BitFields(
+          this.bitFields = BitFields.fromMask(
             0x00ff0000,
             0x0000ff00,
             0x000000ff,
-            0x00000000
+            0x00000000,
+            this.depth
           );
           break;
       }
@@ -420,7 +469,6 @@ export class DIBReader {
     this.validateHeader();
     this.determineReadLineStrategy();
     this.decodeBitFields();
-    this.validateBitFields();
     this.indexPalette();
 
     this.initialized = true;

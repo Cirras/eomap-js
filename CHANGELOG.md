@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Support for bitmaps with unusually-sized bitfield masks.
+
 ## [1.0.4] - 2022-10-15
 
 ### Fixed
