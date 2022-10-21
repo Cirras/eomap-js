@@ -341,7 +341,7 @@ export class DIBReader {
         Compression.AlphaBitfields,
       ].includes(this.compression)
     ) {
-      throw new Error("Unsupported compression");
+      throw new Error(`Unsupported compression (${this.compression})`);
     }
 
     if (this.headerType === HeaderType.Core && this.depth > 24) {
