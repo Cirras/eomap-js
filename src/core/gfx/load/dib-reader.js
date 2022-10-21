@@ -126,7 +126,7 @@ export class DIBReader {
     this.dataView = new DataView(buffer);
 
     this.headerType = null;
-    this.readLineStrategy = null;
+    this.readStrategy = null;
     this.bitFields = null;
     this.paletteColors = null;
 
@@ -394,18 +394,18 @@ export class DIBReader {
     }
   }
 
-  determineReadLineStrategy() {
+  determineReadStrategy() {
     switch (this.depth) {
       case 1:
       case 2:
       case 4:
       case 8:
-        this.readLineStrategy = new PalettedReadLineStrategy(this);
+        this.readStrategy = new PalettedReadStrategy(this);
         break;
       case 16:
       case 24:
       case 32:
-        this.readLineStrategy = new DefaultReadLineStrategy(this);
+        this.readStrategy = new RGBReadStrategy(this);
         break;
       default:
         throw Error(`Unhandled bit depth: ${this.depth}`);
@@ -481,7 +481,7 @@ export class DIBReader {
 
     this.determineHeaderType();
     this.validateHeader();
-    this.determineReadLineStrategy();
+    this.determineReadStrategy();
     this.decodeBitfields();
     this.indexPalette();
 
@@ -491,40 +491,23 @@ export class DIBReader {
   read() {
     this.initialize();
 
-    const rowCount = Math.abs(this.height);
-    let imageData = new Uint8ClampedArray(this.width * rowCount * 4);
-
-    for (let row = 0; row < rowCount; ++row) {
-      this.readLineStrategy.read(imageData, row);
-    }
+    const outputSize = this.width * Math.abs(this.height) * 4;
+    const imageData = new Uint8ClampedArray(outputSize);
+    this.readStrategy.read(imageData);
 
     return imageData;
   }
 }
 
-class ReadLineStrategy {
+class ReadStrategy {
   constructor(reader) {
     this.reader = reader;
     this.width = this.reader.width;
     this.height = this.reader.height;
   }
 
-  read(outBuffer, row) {
-    const isTopDown = this.height < 0;
-    const line = isTopDown ? row : this.height - 1 - row;
-
-    const outPos = this.width * row * 4;
-    const linePos =
-      this.reader.headerSize +
-      this.reader.optionalBitMasksSize +
-      this.reader.paletteSize +
-      this.reader.stride * line;
-
-    this.readLine(outBuffer, outPos, linePos);
-  }
-
-  readLine(_outBuffer, _outPos, _linePos) {
-    throw new Error("ReadLineStrategy.readLine() must be implemented");
+  read(_outBuffer) {
+    throw new Error("ReadStrategy.read() must be implemented");
   }
 
   getAlpha(r, g, b) {
@@ -536,7 +519,31 @@ class ReadLineStrategy {
   }
 }
 
-class DefaultReadLineStrategy extends ReadLineStrategy {
+class LineByLineReadStrategy extends ReadStrategy {
+  read(outBuffer) {
+    const rowCount = Math.abs(this.height);
+    const isTopDown = this.height < 0;
+
+    for (let row = 0; row < rowCount; ++row) {
+      const line = isTopDown ? row : this.height - 1 - row;
+
+      const outPos = this.width * row * 4;
+      const linePos =
+        this.reader.headerSize +
+        this.reader.optionalBitMasksSize +
+        this.reader.paletteSize +
+        this.reader.stride * line;
+
+      this.readLine(outBuffer, outPos, linePos);
+    }
+  }
+
+  readLine(_outBuffer, _outPos, _linePos) {
+    throw new Error("LineByLineReadStrategy.readLine() must be implemented");
+  }
+}
+
+class RGBReadStrategy extends LineByLineReadStrategy {
   constructor(reader) {
     super(reader);
     this.bytesPerPixel = this.reader.depth >> 3;
@@ -584,12 +591,12 @@ class DefaultReadLineStrategy extends ReadLineStrategy {
   }
 }
 
-class PalettedReadLineStrategy extends ReadLineStrategy {
+class PalettedReadStrategy extends LineByLineReadStrategy {
   constructor(reader) {
     super(reader);
     this.pixelsPerByte = 8 / this.reader.depth;
     this.bytesPerLine = Math.ceil(this.width / this.pixelsPerByte);
-    this.getPaletteIndices = PalettedReadLineStrategy.createGetPaletteIndices(
+    this.getPaletteIndices = PalettedReadStrategy.createGetPaletteIndices(
       this.reader.depth
     );
   }
