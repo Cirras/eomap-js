@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Support for bitmaps with unusually-sized bitfield masks.
+- Support for bitmaps with obscure `BI_ALPHABITFIELDS` compression.
 - Support for bitmaps with non-paletted pixel data and superfluous color tables.
 
 ## [1.0.4] - 2022-10-15

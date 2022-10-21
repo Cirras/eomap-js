@@ -34,6 +34,7 @@ const Compression = {
   Bitfields: 3,
   JPEG: 4,
   PNG: 5,
+  AlphaBitfields: 6,
 };
 
 class PaletteColor {
@@ -201,18 +202,17 @@ export class DIBReader {
   }
 
   get optionalBitMasksSize() {
-    if (
-      this.headerType === HeaderType.Info &&
-      this.compression == Compression.Bitfields
-    ) {
-      // The Windows NT variant of the Windows 3.x BMP format can store 16-bit and 32-bit
-      // data in a BMP file.
-      // If the bitmap contains 16 or 32 bits per pixel, then only Bitfields Compression is
-      // supported and the redMask, greenMask, and blueMask fields will be present following
-      // the header in place of a color palette.
-      // Otherwise, the file is identical to a Windows 3.x BMP file.
-      // See: https://www.fileformat.info/format/bmp/egff.htm
-      return 12;
+    // Present only in case the DIB header is the BITMAPINFOHEADER and the
+    // Compression Method member is set to either BI_BITFIELDS or BI_ALPHABITFIELDS
+    if (this.headerType === HeaderType.Info) {
+      switch (this.compression) {
+        case Compression.Bitfields:
+          return 12;
+        case Compression.AlphaBitfields:
+          return 16;
+        default:
+        // do nothing
+      }
     }
 
     return 0;
@@ -242,7 +242,10 @@ export class DIBReader {
       case HeaderType.Core:
         return false;
       case HeaderType.Info:
-        return this.compression === Compression.Bitfields;
+        return (
+          this.compression === Compression.Bitfields ||
+          this.compression === Compression.AlphaBitfields
+        );
       default:
         return true;
     }
@@ -332,8 +335,11 @@ export class DIBReader {
     }
 
     if (
-      this.compression !== Compression.RGB &&
-      this.compression !== Compression.Bitfields
+      ![
+        Compression.RGB,
+        Compression.Bitfields,
+        Compression.AlphaBitfields,
+      ].includes(this.compression)
     ) {
       throw new Error("Unsupported compression");
     }
@@ -345,7 +351,8 @@ export class DIBReader {
     }
 
     if (
-      this.compression === Compression.Bitfields &&
+      // prettier-ignore
+      [Compression.Bitfields, Compression.AlphaBitfields].includes(this.compression) &&
       this.depth !== 16 &&
       this.depth !== 32
     ) {
@@ -406,7 +413,11 @@ export class DIBReader {
   }
 
   decodeBitfields() {
-    if (this.compression === Compression.Bitfields) {
+    if (
+      [Compression.Bitfields, Compression.AlphaBitfields].includes(
+        this.compression
+      )
+    ) {
       this.bitFields = Bitfields.fromMask(
         this.redMask,
         this.greenMask,
