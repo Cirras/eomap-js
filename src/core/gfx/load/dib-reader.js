@@ -31,7 +31,7 @@ const Compression = {
   RGB: 0,
   RLE8: 1,
   RLE4: 2,
-  BitFields: 3,
+  Bitfields: 3,
   JPEG: 4,
   PNG: 5,
 };
@@ -46,7 +46,7 @@ class PaletteColor {
 
 // Bitfield(s) implementation is based directly on the image-rs BMPDecoder
 // See: https://github.com/image-rs/image/blob/v0.24.4/src/codecs/bmp/decoder.rs#L479
-class BitField {
+class Bitfield {
   constructor(length, shift) {
     this.length = length;
     this.shift = shift;
@@ -54,7 +54,7 @@ class BitField {
 
   static fromMask(mask, maxLength) {
     if (mask === 0) {
-      return new BitField(0, 0);
+      return new Bitfield(0, 0);
     }
 
     let shift = trailingZeros(mask);
@@ -73,7 +73,7 @@ class BitField {
       length = 8;
     }
 
-    return new BitField(length, shift);
+    return new Bitfield(length, shift);
   }
 
   read(data) {
@@ -101,7 +101,7 @@ class BitField {
   }
 }
 
-class BitFields {
+class Bitfields {
   constructor(r, g, b, a) {
     this.r = r;
     this.g = g;
@@ -110,11 +110,11 @@ class BitFields {
   }
 
   static fromMask(redMask, greenMask, blueMask, alphaMask, maxLength) {
-    return new BitFields(
-      BitField.fromMask(redMask, maxLength),
-      BitField.fromMask(greenMask, maxLength),
-      BitField.fromMask(blueMask, maxLength),
-      BitField.fromMask(alphaMask, maxLength)
+    return new Bitfields(
+      Bitfield.fromMask(redMask, maxLength),
+      Bitfield.fromMask(greenMask, maxLength),
+      Bitfield.fromMask(blueMask, maxLength),
+      Bitfield.fromMask(alphaMask, maxLength)
     );
   }
 }
@@ -203,11 +203,11 @@ export class DIBReader {
   get optionalBitMasksSize() {
     if (
       this.headerType === HeaderType.Info &&
-      this.compression == Compression.BitFields
+      this.compression == Compression.Bitfields
     ) {
       // The Windows NT variant of the Windows 3.x BMP format can store 16-bit and 32-bit
       // data in a BMP file.
-      // If the bitmap contains 16 or 32 bits per pixel, then only BitFields Compression is
+      // If the bitmap contains 16 or 32 bits per pixel, then only Bitfields Compression is
       // supported and the redMask, greenMask, and blueMask fields will be present following
       // the header in place of a color palette.
       // Otherwise, the file is identical to a Windows 3.x BMP file.
@@ -242,7 +242,7 @@ export class DIBReader {
       case HeaderType.Core:
         return false;
       case HeaderType.Info:
-        return this.compression === Compression.BitFields;
+        return this.compression === Compression.Bitfields;
       default:
         return true;
     }
@@ -333,7 +333,7 @@ export class DIBReader {
 
     if (
       this.compression !== Compression.RGB &&
-      this.compression !== Compression.BitFields
+      this.compression !== Compression.Bitfields
     ) {
       throw new Error("Unsupported compression");
     }
@@ -345,12 +345,12 @@ export class DIBReader {
     }
 
     if (
-      this.compression === Compression.BitFields &&
+      this.compression === Compression.Bitfields &&
       this.depth !== 16 &&
       this.depth !== 32
     ) {
       throw new Error(
-        `Invalid bit depth for BitFields compression (${this.depth})`
+        `Invalid bit depth for Bitfields compression (${this.depth})`
       );
     }
 
@@ -405,9 +405,9 @@ export class DIBReader {
     }
   }
 
-  decodeBitFields() {
-    if (this.compression === Compression.BitFields) {
-      this.bitFields = BitFields.fromMask(
+  decodeBitfields() {
+    if (this.compression === Compression.Bitfields) {
+      this.bitFields = Bitfields.fromMask(
         this.redMask,
         this.greenMask,
         this.blueMask,
@@ -417,7 +417,7 @@ export class DIBReader {
     } else {
       switch (this.depth) {
         case 16:
-          this.bitFields = BitFields.fromMask(
+          this.bitFields = Bitfields.fromMask(
             0x00007c00,
             0x000003e0,
             0x0000001f,
@@ -428,7 +428,7 @@ export class DIBReader {
 
         case 24:
         case 32:
-          this.bitFields = BitFields.fromMask(
+          this.bitFields = Bitfields.fromMask(
             0x00ff0000,
             0x0000ff00,
             0x000000ff,
@@ -441,7 +441,7 @@ export class DIBReader {
   }
 
   indexPalette() {
-    if (this.compression === Compression.BitFields) {
+    if (this.compression === Compression.Bitfields) {
       return;
     }
 
@@ -471,7 +471,7 @@ export class DIBReader {
     this.determineHeaderType();
     this.validateHeader();
     this.determineReadLineStrategy();
-    this.decodeBitFields();
+    this.decodeBitfields();
     this.indexPalette();
 
     this.initialized = true;
