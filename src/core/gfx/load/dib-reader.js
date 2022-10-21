@@ -452,7 +452,7 @@ export class DIBReader {
   }
 
   indexPalette() {
-    if (this.compression === Compression.Bitfields) {
+    if (this.depth > 8) {
       return;
     }
 
