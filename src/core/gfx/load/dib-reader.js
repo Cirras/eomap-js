@@ -219,10 +219,13 @@ export class DIBReader {
   }
 
   get paletteColorCount() {
-    if (this.depth <= 8) {
-      return this.colorsUsed || 1 << this.depth;
+    if (this.colorsUsed) {
+      return this.colorsUsed;
+    } else if (this.depth <= 8) {
+      return 1 << this.depth;
+    } else {
+      return 0;
     }
-    return 0;
   }
 
   get paletteSize() {
