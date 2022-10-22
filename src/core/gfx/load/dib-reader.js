@@ -321,27 +321,26 @@ export class DIBReader {
       throw new Error(`Invalid number of color planes (${this.planes})`);
     }
 
-    switch (this.depth) {
-      case 1:
-      case 2:
-      case 4:
-      case 8:
-      case 16:
-      case 24:
-      case 32:
+    switch (this.compression) {
+      case Compression.RGB:
+        this.validateCompressionDepth("RGB", 1, 2, 4, 8, 16, 24, 32);
         break;
-      default:
-        throw new Error(`Unsupported bit depth (${this.depth})`);
-    }
 
-    if (
-      ![
-        Compression.RGB,
-        Compression.Bitfields,
-        Compression.AlphaBitfields,
-      ].includes(this.compression)
-    ) {
-      throw new Error(`Unsupported compression (${this.compression})`);
+      case Compression.RLE8:
+        this.validateCompressionDepth("RLE8", 8);
+        break;
+
+      case Compression.RLE4:
+        this.validateCompressionDepth("RLE4", 4);
+        break;
+
+      case Compression.Bitfields:
+      case Compression.AlphaBitfields:
+        this.validateCompressionDepth("Bitfields", 16, 32);
+        break;
+
+      default:
+        throw new Error(`Unsupported compression (${this.compression})`);
     }
 
     if (this.headerType === HeaderType.Core && this.depth > 24) {
@@ -350,21 +349,16 @@ export class DIBReader {
       );
     }
 
-    if (
-      // prettier-ignore
-      [Compression.Bitfields, Compression.AlphaBitfields].includes(this.compression) &&
-      this.depth !== 16 &&
-      this.depth !== 32
-    ) {
-      throw new Error(
-        `Invalid bit depth for Bitfields compression (${this.depth})`
-      );
-    }
-
     if (this.colorsUsed > 1 << this.depth) {
       throw new Error(
         `Palette size ${this.paletteColorCount} exceeds maximum value for ${this.depth}-bit image`
       );
+    }
+  }
+
+  validateCompressionDepth(name, ...allowedDepths) {
+    if (!allowedDepths.includes(this.depth)) {
+      throw new Error(`Invalid bit depth for ${name} (${this.depth})`);
     }
   }
 
@@ -395,6 +389,15 @@ export class DIBReader {
   }
 
   determineReadStrategy() {
+    switch (this.compression) {
+      case Compression.RLE4:
+      case Compression.RLE8:
+        this.readStrategy = new RLEReadStrategy(this);
+        return;
+      default:
+      // do nothing
+    }
+
     switch (this.depth) {
       case 1:
       case 2:
@@ -591,46 +594,44 @@ class RGBReadStrategy extends LineByLineReadStrategy {
   }
 }
 
+function createGetPaletteIndicesFunction(depth) {
+  switch (depth) {
+    case 1:
+      return (byte) => {
+        let indices = new Array(8);
+        for (let i = 0; i < 8; ++i) {
+          indices[7 - i] = (byte & (1 << i)) >> i;
+        }
+        return indices;
+      };
+    case 2:
+      return (byte) => {
+        return [
+          (byte & 0xc0) >> 6,
+          (byte & 0x30) >> 4,
+          (byte & 0x0c) >> 2,
+          byte & 0x03,
+        ];
+      };
+    case 4:
+      return (byte) => {
+        return [(byte & 0xf0) >> 4, byte & 0x0f];
+      };
+    case 8:
+      return (byte) => {
+        return [byte];
+      };
+    default:
+      throw Error(`Unhandled bit depth: ${depth}`);
+  }
+}
+
 class PalettedReadStrategy extends LineByLineReadStrategy {
   constructor(reader) {
     super(reader);
     this.pixelsPerByte = 8 / this.reader.depth;
     this.bytesPerLine = Math.ceil(this.width / this.pixelsPerByte);
-    this.getPaletteIndices = PalettedReadStrategy.createGetPaletteIndices(
-      this.reader.depth
-    );
-  }
-
-  static createGetPaletteIndices(depth) {
-    switch (depth) {
-      case 1:
-        return (byte) => {
-          let indices = new Array(8);
-          for (let i = 0; i < 8; ++i) {
-            indices[7 - i] = (byte & (1 << i)) >> i;
-          }
-          return indices;
-        };
-      case 2:
-        return (byte) => {
-          return [
-            (byte & 0xc0) >> 6,
-            (byte & 0x30) >> 4,
-            (byte & 0x0c) >> 2,
-            byte & 0x03,
-          ];
-        };
-      case 4:
-        return (byte) => {
-          return [(byte & 0xf0) >> 4, byte & 0x0f];
-        };
-      case 8:
-        return (byte) => {
-          return [byte];
-        };
-      default:
-        throw Error(`Unhandled bit depth: ${depth}`);
-    }
+    this.getPaletteIndices = createGetPaletteIndicesFunction(this.reader.depth);
   }
 
   readLine(outBuffer, outPos, linePos) {
@@ -663,5 +664,142 @@ class PalettedReadStrategy extends LineByLineReadStrategy {
       return this.reader.readUint8(position);
     }
     return 0;
+  }
+}
+
+// See: https://learn.microsoft.com/en-us/windows/win32/gdi/bitmap-compression
+class RLEReadStrategy extends ReadStrategy {
+  constructor(reader) {
+    super(reader);
+    this.compression = reader.compression;
+    this.getPaletteIndices = createGetPaletteIndicesFunction(this.reader.depth);
+    this.init();
+  }
+
+  init() {
+    this.dataPos =
+      this.reader.headerSize +
+      this.reader.optionalBitMasksSize +
+      this.reader.paletteSize;
+    this.x = 0;
+    this.y = 0;
+  }
+
+  validatePosition() {
+    if (this.x >= this.width || this.y >= Math.abs(this.height)) {
+      throw new Error("Image output position out of bounds");
+    }
+  }
+
+  nextLine() {
+    this.x = 0;
+    this.y++;
+    this.validatePosition();
+  }
+
+  setPixel(paletteIndex, outBuffer) {
+    const isTopDown = this.height < 0;
+    const line = isTopDown ? this.y : this.height - 1 - this.y;
+    const pos = this.width * line * 4 + this.x * 4;
+    const color = this.reader.colorFromPalette(paletteIndex);
+    const { b, g, r } = color;
+
+    outBuffer[pos + 0] = r;
+    outBuffer[pos + 1] = g;
+    outBuffer[pos + 2] = b;
+    outBuffer[pos + 3] = this.getAlpha(r, g, b);
+
+    this.x++;
+  }
+
+  executeInstruction(instruction, outBuffer) {
+    switch (instruction) {
+      // End of line
+      case 0:
+        if (this.y + 1 === Math.abs(this.height)) {
+          return false;
+        }
+        this.nextLine();
+        break;
+
+      // End of bitmap
+      case 1:
+        return false;
+
+      // Delta
+      case 2:
+        this.x += this.readUint8();
+        this.y += this.readUint8();
+        this.validatePosition();
+        break;
+
+      // Absolute
+      default:
+        const length = instruction;
+        let byteLength = length;
+        if (this.compression === Compression.RLE4) {
+          byteLength = Math.trunc((length + 1) / 2);
+        }
+
+        let paletteIndices = [];
+        for (let i = 0; i < byteLength; ++i) {
+          const byte = this.readUint8();
+          paletteIndices.push(...this.getPaletteIndices(byte));
+        }
+        paletteIndices.length = length;
+
+        // In absolute mode, each run must be aligned on a word boundary.
+        this.dataPos += this.dataPos & 1;
+
+        for (let paletteIndex of paletteIndices) {
+          if (this.x === this.width) {
+            // Absolute mode cannot span multiple rows
+            return false;
+          }
+          this.setPixel(paletteIndex, outBuffer);
+        }
+
+        break;
+    }
+
+    return true;
+  }
+
+  read(outBuffer) {
+    this.init();
+
+    while (this.dataPos < this.dataLength) {
+      const controlByte = this.readUint8();
+      if (controlByte === 0) {
+        const instruction = this.readUint8();
+        if (!this.executeInstruction(instruction, outBuffer)) {
+          break;
+        }
+      } else {
+        const length = controlByte;
+        const paletteIndices = this.getPaletteIndices(this.readUint8());
+        for (let i = 0; i < length; ++i) {
+          if (this.x === this.width) {
+            this.nextLine();
+            break;
+          }
+          this.setPixel(paletteIndices[i % paletteIndices.length], outBuffer);
+        }
+      }
+    }
+
+    return this.imageData;
+  }
+
+  readUint8() {
+    try {
+      return this.reader.readUint8(this.dataPos++);
+    } catch (e) {
+      throw new Error("Ran out of RLE data");
+    }
+  }
+
+  get dataLength() {
+    return this.reader.dataView.byteLength;
   }
 }
