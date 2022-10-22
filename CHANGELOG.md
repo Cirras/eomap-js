@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.5] - 2022-10-22
+
 ### Added
 
 - Support for bitmaps with `BI_RLE4` compression.
@@ -70,7 +72,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Desktop app for Windows, Linux, and macOS.
 - Web app available at [https://eomap.dev](https://eomap.dev)
 
-[unreleased]: https://github.com/cirras/eomap-js/compare/v1.0.4...HEAD
+[unreleased]: https://github.com/cirras/eomap-js/compare/v1.0.5...HEAD
+[1.0.5]: https://github.com/cirras/eomap-js/compare/v1.0.4...v1.0.5
 [1.0.4]: https://github.com/cirras/eomap-js/compare/v1.0.3...v1.0.4
 [1.0.3]: https://github.com/cirras/eomap-js/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/cirras/eomap-js/compare/v1.0.1...v1.0.2
