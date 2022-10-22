@@ -21,14 +21,13 @@ jobs:
 
       - name: Get version from tag
         id: get-version
-        run: echo ::set-output name=version::${GITHUB_REF#refs/tags/v}
-        shell: bash
+        uses: battila7/get-version-action@v2
 
       - name: Parse Changelog
         id: changelog
         uses: coditory/changelog-parser@v1
         with:
-          version: ${{ steps.get-version.outputs.version }}
+          version: ${{ steps.get-version.outputs.version-without-v }}
 
       - name: Delete drafts
         uses: hugo19941994/delete-draft-releases@v1.0.0
