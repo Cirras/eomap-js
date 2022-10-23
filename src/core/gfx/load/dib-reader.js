@@ -685,15 +685,36 @@ class RLEReadStrategy extends ReadStrategy {
     this.y = 0;
   }
 
+  peekInstruction() {
+    if (this.reader.readUint8(this.dataPos) === 0) {
+      return this.reader.readUint8(this.dataPos + 1);
+    }
+    return null;
+  }
+
   validatePosition() {
     if (this.x >= this.width || this.y >= Math.abs(this.height)) {
       throw new Error("Image output position out of bounds");
     }
   }
 
+  offsetCursor(x, y) {
+    this.x += x;
+    this.y += y;
+    if (this.peekInstruction() === 1) {
+      // End of bitmap
+      return;
+    }
+    this.validatePosition();
+  }
+
   nextLine() {
     this.x = 0;
     this.y++;
+    if (this.peekInstruction() === 1) {
+      // End of bitmap
+      return;
+    }
     this.validatePosition();
   }
 
@@ -716,9 +737,6 @@ class RLEReadStrategy extends ReadStrategy {
     switch (instruction) {
       // End of line
       case 0:
-        if (this.y + 1 === Math.abs(this.height)) {
-          return false;
-        }
         this.nextLine();
         break;
 
@@ -728,9 +746,7 @@ class RLEReadStrategy extends ReadStrategy {
 
       // Delta
       case 2:
-        this.x += this.readUint8();
-        this.y += this.readUint8();
-        this.validatePosition();
+        this.offsetCursor(this.readUint8(), this.readUint8());
         break;
 
       // Absolute
