@@ -20,6 +20,7 @@ const LOOKUP_TABLE_6_BIT_TO_8_BIT = [
 
 const HeaderType = {
   Core: "BITMAPCOREHEADER",
+  Core2: "BITMAPCOREHEADER2",
   Info: "BITMAPINFOHEADER",
   V2: "BITMAPV2INFOHEADER",
   V3: "BITMAPV3INFOHEADER",
@@ -28,13 +29,18 @@ const HeaderType = {
 };
 
 const Compression = {
-  RGB: 0,
-  RLE8: 1,
-  RLE4: 2,
-  Bitfields: 3,
-  JPEG: 4,
-  PNG: 5,
-  AlphaBitfields: 6,
+  RGB: "BI_RGB",
+  RLE8: "BI_RLE8",
+  RLE4: "BI_RLE4",
+  Bitfields: "BI_BITFIELDS",
+  Huffman1D: "BI_HUFFMAN1D",
+  RLE24: "BI_RLE24",
+  JPEG: "BI_JPEG",
+  PNG: "BI_PNG",
+  AlphaBitfields: "BI_ALPHABITFIELDS",
+  CMYK: "BI_CMYK",
+  CMYKRLE8: "BI_CMYKRLE8",
+  CMYKRLE4: "BI_CMYKRLE4",
 };
 
 class PaletteColor {
@@ -126,6 +132,7 @@ export class DIBReader {
     this.dataView = new DataView(buffer);
 
     this.headerType = null;
+    this.compression = null;
     this.readStrategy = null;
     this.bitFields = null;
     this.paletteColors = null;
@@ -185,16 +192,8 @@ export class DIBReader {
     }
   }
 
-  get compression() {
-    if (this.headerType === HeaderType.Core) {
-      return Compression.RGB;
-    } else {
-      return this.readUint32(16);
-    }
-  }
-
   get colorsUsed() {
-    if (this.headerType === HeaderType.Core) {
+    if (this.headerSize < 36) {
       return 0;
     } else {
       return this.readUint32(32);
@@ -240,6 +239,7 @@ export class DIBReader {
   get hasBitMasks() {
     switch (this.headerType) {
       case HeaderType.Core:
+      case HeaderType.Core2:
         return false;
       case HeaderType.Info:
         return (
@@ -305,8 +305,23 @@ export class DIBReader {
       throw new Error(`Unknown header type with size ${this.headerSize}`);
     }
 
-    if (this.width < 0) {
-      throw new Error("Image width less than zero");
+    if (!Object.values(Compression).includes(this.compression)) {
+      throw new Error("Unknown compression type");
+    }
+
+    if (this.width <= 0) {
+      throw new Error("Image width must be positive");
+    }
+
+    if (this.height === 0) {
+      throw new Error("Image height cannot be zero");
+    }
+
+    if (
+      this.height < 0 &&
+      [HeaderType.Core, HeaderType.Core2].includes(this.headerType)
+    ) {
+      throw new Error(`Top-down bitmaps not supported for ${this.headerType}`);
     }
 
     if (
@@ -321,32 +336,53 @@ export class DIBReader {
       throw new Error(`Invalid number of color planes (${this.planes})`);
     }
 
+    switch (this.headerType) {
+      case HeaderType.Core:
+        this.validateHeaderTypeDepth(1, 2, 4, 8, 24);
+        break;
+      case HeaderType.Core2:
+        this.validateHeaderTypeDepth(1, 2, 4, 8, 24);
+        this.validateHeaderTypeCompression(
+          Compression.RGB,
+          Compression.RLE8,
+          Compression.RLE4,
+          Compression.Huffman1D,
+          Compression.RLE24
+        );
+        break;
+      default:
+        this.validateHeaderTypeDepth(1, 2, 4, 8, 16, 24, 32);
+        this.validateHeaderTypeCompression(
+          Compression.RGB,
+          Compression.RLE8,
+          Compression.RLE4,
+          Compression.Bitfields,
+          Compression.JPEG,
+          Compression.PNG,
+          Compression.AlphaBitfields
+        );
+    }
+
     switch (this.compression) {
       case Compression.RGB:
-        this.validateCompressionDepth("RGB", 1, 2, 4, 8, 16, 24, 32);
+        this.validateCompressionDepth(1, 2, 4, 8, 16, 24, 32);
         break;
 
       case Compression.RLE8:
-        this.validateCompressionDepth("RLE8", 8);
+        this.validateCompressionDepth(8);
         break;
 
       case Compression.RLE4:
-        this.validateCompressionDepth("RLE4", 4);
+        this.validateCompressionDepth(4);
         break;
 
       case Compression.Bitfields:
       case Compression.AlphaBitfields:
-        this.validateCompressionDepth("Bitfields", 16, 32);
+        this.validateCompressionDepth(16, 32);
         break;
 
       default:
         throw new Error(`Unsupported compression (${this.compression})`);
-    }
-
-    if (this.headerType === HeaderType.Core && this.depth > 24) {
-      throw new Error(
-        `Invalid bit depth for ${this.headerType} (${this.depth})`
-      );
     }
 
     if (this.colorsUsed > 1 << this.depth) {
@@ -356,9 +392,27 @@ export class DIBReader {
     }
   }
 
-  validateCompressionDepth(name, ...allowedDepths) {
+  validateHeaderTypeDepth(...allowedDepths) {
     if (!allowedDepths.includes(this.depth)) {
-      throw new Error(`Invalid bit depth for ${name} (${this.depth})`);
+      throw new Error(
+        `Invalid bit depth for ${this.headerType} (${this.depth})`
+      );
+    }
+  }
+
+  validateHeaderTypeCompression(...allowedCompressions) {
+    if (!allowedCompressions.includes(this.compression)) {
+      throw new Error(
+        `Invalid compression for ${this.headerType} (${this.compression})`
+      );
+    }
+  }
+
+  validateCompressionDepth(...allowedDepths) {
+    if (!allowedDepths.includes(this.depth)) {
+      throw new Error(
+        `Invalid bit depth for ${this.compression} (${this.depth})`
+      );
     }
   }
 
@@ -366,7 +420,10 @@ export class DIBReader {
     if (this.dataView.byteLength < 4) {
       return;
     }
-    switch (this.headerSize) {
+
+    const size = this.headerSize;
+
+    switch (size) {
       case 12:
         this.headerType = HeaderType.Core;
         break;
@@ -384,6 +441,92 @@ export class DIBReader {
         break;
       case 124:
         this.headerType = HeaderType.V5;
+        break;
+      default:
+        if (this.detectCoreHeader2WithSizeHeuristic()) {
+          this.headerType = HeaderType.Core2;
+        }
+    }
+
+    if (this.detectCoreHeader2WithCompressionTypeHeuristic()) {
+      this.headerType = HeaderType.Core2;
+    }
+  }
+
+  detectCoreHeader2WithSizeHeuristic() {
+    const size = this.headerSize;
+    // BITMAPCOREHEADER2 headers are variable-sized.
+    // Any multiple of 4 between 16 and 64, or 42, or 46.
+    return (
+      size >= 16 && size <= 64 && (size % 4 === 0 || size === 42 || size === 46)
+    );
+  }
+
+  detectCoreHeader2WithCompressionTypeHeuristic() {
+    if (this.headerSize >= 20 && this.dataView.byteLength >= 20) {
+      const compression = this.readUint32(16);
+      if (compression === 3 && this.depth === 1) {
+        // HUFFMAN1D
+        return true;
+      }
+      if (compression === 4 && this.depth === 24) {
+        // RLE24
+        return true;
+      }
+    }
+    return false;
+  }
+
+  determineCompression() {
+    if (this.headerSize < 20) {
+      this.compression = Compression.RGB;
+      return;
+    }
+
+    if (this.dataView.byteLength < 20) {
+      this.compression = null;
+      return;
+    }
+
+    switch (this.readUint32(16)) {
+      case 0:
+        this.compression = Compression.RGB;
+        break;
+      case 1:
+        this.compression = Compression.RLE8;
+        break;
+      case 2:
+        this.compression = Compression.RLE4;
+        break;
+      case 3:
+        this.compression =
+          this.headerType === HeaderType.Core2
+            ? Compression.Huffman1D
+            : Compression.Bitfields;
+        break;
+      case 4:
+        this.compression =
+          this.headerType === HeaderType.Core2
+            ? Compression.RLE24
+            : Compression.JPEG;
+        break;
+      case 5:
+        this.compression = Compression.PNG;
+        break;
+      case 6:
+        this.compression = Compression.AlphaBitfields;
+        break;
+      case 11:
+        this.compression = Compression.CMYK;
+        break;
+      case 12:
+        this.compression = Compression.CMYKRLE8;
+        break;
+      case 13:
+        this.compression = Compression.CMYKRLE4;
+        break;
+      default:
+        this.compression = null;
         break;
     }
   }
@@ -483,6 +626,7 @@ export class DIBReader {
     }
 
     this.determineHeaderType();
+    this.determineCompression();
     this.validateHeader();
     this.determineReadStrategy();
     this.decodeBitfields();

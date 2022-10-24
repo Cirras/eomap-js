@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Support for obscure OS/2 `BITMAPCOREHEADER2` bitmaps.
+
 ## [1.0.5] - 2022-10-22
 
 ### Added
