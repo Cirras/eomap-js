@@ -289,7 +289,7 @@ export class DIBReader {
     this.initialize();
 
     if (index >= this.paletteColors.length) {
-      return this.colorFromPalette(0);
+      return new PaletteColor(0, 0, 0);
     }
 
     return this.paletteColors[index];

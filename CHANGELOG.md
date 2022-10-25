@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for bitmaps with `BI_RLE24` compression.
 - Support for bitmaps with undefined color channels.
 
+### Changed
+
+- Bitmaps with palatte indices that are not present in the palette will now display those pixels as black.
+
 ## [1.0.5] - 2022-10-22
 
 ### Added
