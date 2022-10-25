@@ -86,6 +86,8 @@ class Bitfield {
   read(data) {
     data = data >> this.shift;
     switch (this.length) {
+      case 0:
+        return 0;
       case 1:
         return (data & 0b1) * 0xff;
       case 2:
