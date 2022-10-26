@@ -633,6 +633,7 @@ function openFiles(filenames) {
     });
   }
 }
+
 function main() {
   app.on("open-file", (event, fsPath) => {
     event.preventDefault();
