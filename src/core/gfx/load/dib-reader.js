@@ -1,4 +1,5 @@
 import { countOnes, trailingZeros } from "../../util/math-utils";
+import { FaxCode } from "./fax-code";
 
 const LOOKUP_TABLE_3_BIT_TO_8_BIT = [0, 36, 73, 109, 146, 182, 219, 255];
 
@@ -383,6 +384,10 @@ export class DIBReader {
         this.validateCompressionDepth(16, 32);
         break;
 
+      case Compression.Huffman1D:
+        this.validateCompressionDepth(1);
+        break;
+
       case Compression.RLE24:
         this.validateCompressionDepth(24);
         break;
@@ -543,6 +548,9 @@ export class DIBReader {
       case Compression.RLE8:
       case Compression.RLE24:
         this.readStrategy = new RLEReadStrategy(this);
+        return;
+      case Compression.Huffman1D:
+        this.readStrategy = new HuffmanReadStrategy(this);
         return;
       default:
       // do nothing
@@ -827,7 +835,9 @@ class RLEReadStrategy extends ReadStrategy {
     this.setPixelGenerator = RLEReadStrategy.createSetPixelGeneratorFunction(
       this.compression
     );
-    this.init();
+    this.dataPos = null;
+    this.x = null;
+    this.y = null;
   }
 
   static createSetPixelGeneratorFunction(compression) {
@@ -918,7 +928,7 @@ class RLEReadStrategy extends ReadStrategy {
   setPixel(r, g, b, outBuffer) {
     const isTopDown = this.height < 0;
     const line = isTopDown ? this.y : this.height - 1 - this.y;
-    const pos = this.width * line * 4 + this.x * 4;
+    const pos = (this.width * line + this.x) * 4;
 
     outBuffer[pos + 0] = r;
     outBuffer[pos + 1] = g;
@@ -1015,5 +1025,159 @@ class RLEReadStrategy extends ReadStrategy {
 
   get dataLength() {
     return this.reader.dataView.byteLength;
+  }
+}
+
+const RunType = {
+  White: 0,
+  Black: 1,
+};
+
+const RunResult = {
+  Continue: 0,
+  EOL: 1,
+  EOF: 2,
+};
+
+// Based on ReadHuffmanG31D from Clowd.Clipboard
+//
+// See:
+// https://github.com/clowd/Clowd.Clipboard/blob/c46ff3b83a22ac05822be67266e314207e48978f/src/Clowd.Clipboard/Bitmaps/BitmapCorePixelReader.cs#L455
+class HuffmanReadStrategy extends ReadStrategy {
+  constructor(reader) {
+    super(reader);
+    this.dataPos = null;
+    this.firstCode = null;
+    this.currentCode = null;
+    this.bitsRemaining = null;
+    this.x = null;
+  }
+
+  init() {
+    this.dataPos = this.reader.headerSize + this.reader.paletteSize;
+    this.firstCode = true;
+    this.currentCode = 0;
+    this.bitsRemaining = 0;
+  }
+
+  readCode(faxCodes) {
+    for (const faxCode of faxCodes) {
+      while (this.bitsRemaining < faxCode.bitLength) {
+        if (this.dataPos >= this.reader.dataView.byteLength) {
+          return null;
+        }
+
+        this.currentCode <<= 8;
+        this.currentCode |= this.readUint8();
+        this.bitsRemaining += 8;
+      }
+
+      if (
+        faxCode.code ===
+        this.currentCode >>> (this.bitsRemaining - faxCode.bitLength)
+      ) {
+        this.bitsRemaining -= faxCode.bitLength;
+
+        const mask = (1 << this.bitsRemaining) - 1;
+        this.currentCode &= mask;
+
+        if (this.firstCode && faxCode.runLength < 0) {
+          // Sometimes the data stream starts with an EOL code, let's skip it.
+          this.firstCode = false;
+          return this.readCode(faxCodes);
+        }
+
+        this.firstCode = false;
+        return faxCode;
+      }
+    }
+    return null;
+  }
+
+  readRun(runType, outBuffer) {
+    let color;
+    let faxCodes;
+
+    switch (runType) {
+      case RunType.White:
+        color = 0xff;
+        faxCodes = FaxCode.WHITE_CODES;
+        break;
+      case RunType.Black:
+        color = 0x00;
+        faxCodes = FaxCode.BLACK_CODES;
+        break;
+      default:
+        throw new Error(`Unhandled RunType: ${runType}`);
+    }
+
+    let code;
+
+    while (true) {
+      code = this.readCode(faxCodes);
+      if (!code) {
+        return RunResult.EOF;
+      }
+
+      if (code.runLength > 0) {
+        let pos = (this.y * this.width + this.x) * 4;
+        for (let i = 0; i < code.runLength; ++i) {
+          outBuffer[pos++] = color;
+          outBuffer[pos++] = color;
+          outBuffer[pos++] = color;
+          outBuffer[pos++] = this.getAlpha(color, color, color);
+          this.x++;
+        }
+      }
+
+      if (code.runLength < 64) {
+        // EOL or terminating code
+        break;
+      }
+    }
+
+    if (code.runLength < 0) {
+      return RunResult.EOL;
+    }
+
+    return RunResult.Continue;
+  }
+
+  read(outBuffer) {
+    this.init();
+
+    for (this.y = this.height - 1; this.y >= 0; --this.y) {
+      this.x = 0;
+
+      while (true) {
+        {
+          const result = this.readRun(RunType.White, outBuffer);
+
+          if (result === RunResult.EOL) {
+            break;
+          }
+
+          if (result === RunResult.EOF) {
+            return;
+          }
+        }
+
+        {
+          const result = this.readRun(RunType.Black, outBuffer);
+
+          if (result === RunResult.EOL) {
+            break;
+          }
+
+          if (result === RunResult.EOF) {
+            return;
+          }
+        }
+      }
+    }
+  }
+
+  readUint8() {
+    return this.reader.readUint8(this.dataPos++);
   }
 }
