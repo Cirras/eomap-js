@@ -18,6 +18,22 @@ import "./sidebar-menubar";
 import "./sidebar-button";
 
 import { MenubarController } from "../controllers/menubar-controller";
+import { KeybindingState } from "../state/keybinding-state";
+
+const TOOLS = [
+  { label: "Draw", key: "draw", icon: DrawIcon, kbd: "D" },
+  { label: "Erase", key: "erase", icon: EraseIcon, kbd: "R" },
+  { label: "Eyedropper", key: "eyedropper", icon: SamplerIcon, kbd: "I" },
+  { label: "Move", key: "move", icon: HandIcon, kbd: "M" },
+  { label: "Zoom", key: "zoom", icon: MagnifyIcon, kbd: "Z" },
+  { label: "Fill", key: "fill", icon: ColorFillIcon, kbd: "F" },
+  { label: "Entity", key: "entity", icon: StarIcon, kbd: "E" },
+];
+
+const KEYBINDING_MAP = TOOLS.reduce((map, tool) => {
+  map.set(new KeybindingState(tool.kbd), tool.key);
+  return map;
+}, new Map());
 
 @customElement("eomap-sidebar")
 export class Sidebar extends LitElement {
@@ -62,66 +78,27 @@ export class Sidebar extends LitElement {
     }
   }
 
+  renderToolButtons() {
+    return TOOLS.map(
+      (tool) =>
+        html`
+          <eomap-sidebar-button
+            .value=${tool.key}
+            .label=${`${tool.label} (${tool.kbd})`}
+            .icon=${tool.icon}
+            ?selected=${tool.key === this.selectedTool}
+            @click=${this.onToolClick}
+          >
+          </eomap-sidebar-button>
+        `
+    );
+  }
+
   render() {
     return html`
       <eomap-action-group vertical>
         ${this.renderMenubar()}
-        <eomap-sidebar-button
-          value="draw"
-          label="Draw"
-          .icon=${DrawIcon}
-          ?selected=${"draw" === this.selectedTool}
-          @click=${this.onToolClick}
-        >
-        </eomap-sidebar-button>
-        <eomap-sidebar-button
-          value="erase"
-          label="Erase"
-          .icon=${EraseIcon}
-          ?selected=${"erase" === this.selectedTool}
-          @click=${this.onToolClick}
-        >
-        </eomap-sidebar-button>
-        <eomap-sidebar-button
-          value="eyedropper"
-          label="Eyedropper"
-          .icon=${SamplerIcon}
-          ?selected=${"eyedropper" === this.selectedTool}
-          @click=${this.onToolClick}
-        >
-        </eomap-sidebar-button>
-        <eomap-sidebar-button
-          value="move"
-          label="Move"
-          .icon=${HandIcon}
-          ?selected=${"move" === this.selectedTool}
-          @click=${this.onToolClick}
-        >
-        </eomap-sidebar-button>
-        <eomap-sidebar-button
-          value="zoom"
-          label="Zoom"
-          .icon=${MagnifyIcon}
-          ?selected=${"zoom" === this.selectedTool}
-          @click=${this.onToolClick}
-        >
-        </eomap-sidebar-button>
-        <eomap-sidebar-button
-          value="fill"
-          label="Fill"
-          .icon=${ColorFillIcon}
-          ?selected=${"fill" === this.selectedTool}
-          @click=${this.onToolClick}
-        >
-        </eomap-sidebar-button>
-        <eomap-sidebar-button
-          value="entity"
-          label="Entity"
-          .icon=${StarIcon}
-          ?selected=${"entity" === this.selectedTool}
-          @click=${this.onToolClick}
-        >
-        </eomap-sidebar-button>
+        ${this.renderToolButtons()}
       </sp-action-group>
       <sp-action-group vertical>
         <eomap-sidebar-button
@@ -158,5 +135,14 @@ export class Sidebar extends LitElement {
   onRedoClick(event) {
     event.preventDefault();
     this.dispatchEvent(new CustomEvent("redo"));
+  }
+
+  getToolKeyForKeybinding(event) {
+    for (let keybinding of KEYBINDING_MAP.keys()) {
+      if (keybinding.triggeredBy(event)) {
+        return KEYBINDING_MAP.get(keybinding);
+      }
+    }
+    return null;
   }
 }

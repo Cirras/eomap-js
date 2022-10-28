@@ -193,4 +193,8 @@ export class Tool {
   shouldUsePointerCapture() {
     return false;
   }
+
+  get isBeingUsed() {
+    return this.pointerDownState !== PointerDownState.None;
+  }
 }

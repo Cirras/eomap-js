@@ -265,6 +265,7 @@ export class EditorScene extends Phaser.Scene {
   handlePointerMove(pointer) {
     this.updateOverrideTool(pointer);
     this.tool.pointerMove(this, pointer);
+    this.updateIsToolBeingUsed();
     if (this.tool.shouldUsePointerCapture()) {
       this.setPointerCapture();
     }
@@ -273,11 +274,13 @@ export class EditorScene extends Phaser.Scene {
   handlePointerDown(pointer) {
     this.updateOverrideTool(pointer);
     this.tool.pointerDown(this, pointer);
+    this.updateIsToolBeingUsed();
   }
 
   handlePointerUp(pointer) {
     this.tool.pointerUp(this, pointer);
     this.updateOverrideTool(pointer);
+    this.updateIsToolBeingUsed();
   }
 
   setPointerCapture() {
@@ -383,6 +386,10 @@ export class EditorScene extends Phaser.Scene {
     } else {
       this.overrideTool = null;
     }
+  }
+
+  updateIsToolBeingUsed() {
+    this.data.set("isToolBeingUsed", this.tool.isBeingUsed);
   }
 
   updateCurrentPos(pointerPos) {

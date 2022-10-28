@@ -110,7 +110,7 @@ export class Editor extends PhaserInstance {
   }
 
   get phaserDataKeys() {
-    return ["currentPos", "eyedrop"];
+    return ["currentPos", "eyedrop", "isToolBeingUsed"];
   }
 
   get componentDataKeys() {

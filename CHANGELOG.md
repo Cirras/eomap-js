@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Shortcut keys to switch between tools.
 - Support for obscure OS/2 `BITMAPCOREHEADER2` bitmaps.
 - Support for bitmaps with `BI_RLE24` compression.
 - Support for bitmaps with `BI_HUFFMAN1D` compression.

@@ -226,6 +226,21 @@ export class Application extends LitElement {
 
   pendingGFXLoader = null;
 
+  isToolBeingUsed = false;
+
+  onWindowKeyDown = (event) => {
+    if (!this.keyboardEnabled()) {
+      return;
+    }
+
+    if (!this.isToolBeingUsed && !event.repeat) {
+      const tool = this.sidebar.getToolKeyForKeybinding(event);
+      if (tool) {
+        this.selectedTool = tool;
+      }
+    }
+  };
+
   onResize = (_event) => {
     this.calculateMaxPaletteWidth();
   };
@@ -461,6 +476,7 @@ export class Application extends LitElement {
           .keyboardEnabled=${this.keyboardEnabled()}
           @changedata-currentPos=${this.onCurrentPosChanged}
           @changedata-eyedrop=${this.onEyedropChanged}
+          @changedata-isToolBeingUsed=${this.onIsToolBeingUsedChanged}
           @request-entity-editor=${this.onEntityEditorRequested}
           @zoom-changed=${this.onEditorZoomChanged}
         ></eomap-editor>
@@ -541,11 +557,13 @@ export class Application extends LitElement {
 
   connectedCallback() {
     super.connectedCallback();
+    window.addEventListener("keydown", this.onWindowKeyDown);
     window.addEventListener("resize", this.onResize);
     window.addEventListener("beforeunload", this.onBeforeUnload);
   }
 
   disconnectedCallback() {
+    window.removeEventListener("keydown", this.onWindowKeyDown);
     window.removeEventListener("resize", this.onResize);
     window.removeEventListener("beforeunload", this.onBeforeUnload);
     super.disconnectedCallback();
@@ -845,6 +863,10 @@ export class Application extends LitElement {
 
   onEyedropChanged(event) {
     this.eyedrop = event.detail;
+  }
+
+  onIsToolBeingUsedChanged(event) {
+    this.isToolBeingUsed = event.detail;
   }
 
   onPaletteResizeStart(_event) {
