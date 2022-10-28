@@ -221,4 +221,8 @@ export class ZoomTool extends Tool {
   shouldMoveCursor() {
     return !this.dragging;
   }
+
+  shouldUsePointerCapture() {
+    return true;
+  }
 }

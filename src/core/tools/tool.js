@@ -189,4 +189,8 @@ export class Tool {
   shouldPointerDownOnMove() {
     return false;
   }
+
+  shouldUsePointerCapture() {
+    return false;
+  }
 }

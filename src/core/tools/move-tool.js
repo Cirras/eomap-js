@@ -54,4 +54,8 @@ export class MoveTool extends Tool {
   shouldMoveCursor() {
     return !this.dragging;
   }
+
+  shouldUsePointerCapture() {
+    return true;
+  }
 }

@@ -85,30 +85,8 @@ export class EditorScene extends Phaser.Scene {
       this.handlePointerUp(pointer)
     );
 
-    // We have to sidestep the Phaser input manager here, because it ignores
-    // input event that had `preventDefault()` called on them.
-    //
-    // This happens for spacebar keyboard events when an action button on the
-    // sidebar or palette has focus.
-    this.onKeyDown = (event) => {
-      if (event.code === "Space") {
-        this.spacebarDown = true;
-      }
-    };
-
-    this.onKeyUp = (event) => {
-      if (event.code === "Space") {
-        this.spacebarDown = false;
-      }
-    };
-
-    window.addEventListener("keydown", this.onKeyDown);
-    window.addEventListener("keyup", this.onKeyUp);
-
-    this.sys.events.once("destroy", () => {
-      window.removeEventListener("keydown", this.onKeyDown);
-      window.removeEventListener("keyup", this.onKeyUp);
-    });
+    this.setupWorkaroundPointerEvents();
+    this.setupWorkaroundKeyboardEvents();
 
     this.data.set("eyedrop", null);
 
@@ -154,6 +132,63 @@ export class EditorScene extends Phaser.Scene {
       ["fill", new FillTool()],
       ["entity", new EntityTool()],
     ]);
+  }
+
+  setupWorkaroundPointerEvents() {
+    // We have to sidestep the Phaser input manager here, because it only deals
+    // in terms of MouseEvents and TouchEvents.
+    //
+    // MouseEvents don't have a `pointerId`, which we need for pointer-capture
+    // purposes.
+    //
+    // Frustratingly, there's even a `pointerId` field on the phaser `Pointer`
+    // interface, but this is null most of the time because it's only set by
+    // TouchStart events.
+    this.lastPointerDownId = null;
+
+    this.onPointerDown = (event) => {
+      this.lastPointerDownId = event.pointerId;
+    };
+
+    const target = this.input.manager.canvas;
+    this.onPointerUp = (event) => {
+      target.releasePointerCapture(event.pointerId);
+    };
+
+    target.addEventListener("pointerdown", this.onPointerDown);
+    target.addEventListener("pointerup", this.onPointerUp);
+
+    this.sys.events.once("destroy", () => {
+      target.removeEventListener("pointerdown", this.onPointerDown);
+      target.removeEventListener("pointerup", this.onPointerUp);
+    });
+  }
+
+  setupWorkaroundKeyboardEvents() {
+    // We have to sidestep the Phaser input manager here, because it ignores
+    // keyboard events that had `preventDefault()` called on them.
+    //
+    // This happens for spacebar keyboard events when an action button on the
+    // sidebar or palette has focus.
+    this.onKeyDown = (event) => {
+      if (event.code === "Space") {
+        this.spacebarDown = true;
+      }
+    };
+
+    this.onKeyUp = (event) => {
+      if (event.code === "Space") {
+        this.spacebarDown = false;
+      }
+    };
+
+    window.addEventListener("keydown", this.onKeyDown);
+    window.addEventListener("keyup", this.onKeyUp);
+
+    this.sys.events.once("destroy", () => {
+      window.removeEventListener("keydown", this.onKeyDown);
+      window.removeEventListener("keyup", this.onKeyUp);
+    });
   }
 
   update(time, delta) {
@@ -230,6 +265,9 @@ export class EditorScene extends Phaser.Scene {
   handlePointerMove(pointer) {
     this.updateOverrideTool(pointer);
     this.tool.pointerMove(this, pointer);
+    if (this.tool.shouldUsePointerCapture()) {
+      this.setPointerCapture();
+    }
   }
 
   handlePointerDown(pointer) {
@@ -240,6 +278,15 @@ export class EditorScene extends Phaser.Scene {
   handlePointerUp(pointer) {
     this.tool.pointerUp(this, pointer);
     this.updateOverrideTool(pointer);
+  }
+
+  setPointerCapture() {
+    const target = this.input.manager.canvas;
+    try {
+      target.setPointerCapture(this.lastPointerDownId);
+    } catch (e) {
+      console.error("Pointer capture failed: ", e);
+    }
   }
 
   canDraw(drawID) {

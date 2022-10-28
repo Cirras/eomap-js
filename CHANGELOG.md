@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Bitmaps with palatte indices that are not present in the palette will now display those pixels as black.
+- `Move` and `Zoom` tools now continue to work when the mouse leaves the editor viewport.
 
 ### Fixed
 
