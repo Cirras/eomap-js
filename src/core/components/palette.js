@@ -98,6 +98,9 @@ export class Palette extends PhaserInstance {
           background-color: var(--spectrum-global-color-gray-75);
           overflow-y: scroll;
         }
+        #palette-scroll-container:focus-visible {
+          outline: unset;
+        }
         .palette-viewport {
           width: 100%;
           position: -webkit-sticky;

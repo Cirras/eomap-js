@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Fix issue where the `Space`+`Click` shortcut for the Hand tool would misbehave if a button or input had focus.
+- Remove ugly focus ring that would appear if a key was pressed while the palette had focus.
 
 ## [1.0.5] - 2022-10-22
 
