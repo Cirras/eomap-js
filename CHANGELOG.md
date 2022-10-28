@@ -18,6 +18,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Bitmaps with palatte indices that are not present in the palette will now display those pixels as black.
 
+### Fixed
+
+- Fix issue where the `Space`+`Click` shortcut for the Hand tool would misbehave if a button or input had focus.
+
 ## [1.0.5] - 2022-10-22
 
 ### Added

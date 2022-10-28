@@ -23,7 +23,7 @@ import { isMac } from "../util/platform-utils";
 export class EditorScene extends Phaser.Scene {
   constructor() {
     super("editor");
-    this.ctrlKeyDown = false;
+    this.spacebarDown = false;
     this.currentPosDirty = false;
 
     this.currentPos = null;
@@ -67,9 +67,6 @@ export class EditorScene extends Phaser.Scene {
     this.mapState.gameObject = this.map;
 
     this.tools = this.createTools();
-    this.spacebarKey = this.input.keyboard.addKey(
-      Phaser.Input.Keyboard.KeyCodes.SPACE
-    );
 
     let cursorKeys = this.input.keyboard.createCursorKeys();
     this.cameraControls = new Phaser.Cameras.Controls.FixedKeyControl({
@@ -87,6 +84,31 @@ export class EditorScene extends Phaser.Scene {
     this.input.on("pointerupoutside", (pointer) =>
       this.handlePointerUp(pointer)
     );
+
+    // We have to sidestep the Phaser input manager here, because it ignores
+    // input event that had `preventDefault()` called on them.
+    //
+    // This happens for spacebar keyboard events when an action button on the
+    // sidebar or palette has focus.
+    this.onKeyDown = (event) => {
+      if (event.code === "Space") {
+        this.spacebarDown = true;
+      }
+    };
+
+    this.onKeyUp = (event) => {
+      if (event.code === "Space") {
+        this.spacebarDown = false;
+      }
+    };
+
+    window.addEventListener("keydown", this.onKeyDown);
+    window.addEventListener("keyup", this.onKeyUp);
+
+    this.sys.events.once("destroy", () => {
+      window.removeEventListener("keydown", this.onKeyDown);
+      window.removeEventListener("keyup", this.onKeyUp);
+    });
 
     this.data.set("eyedrop", null);
 
@@ -307,7 +329,7 @@ export class EditorScene extends Phaser.Scene {
       return;
     }
 
-    if (pointer.middleButtonDown() || this.spacebarKey.isDown) {
+    if (pointer.middleButtonDown() || this.spacebarDown) {
       this.overrideTool = "move";
     } else if (isMac() ? pointer.event.metaKey : pointer.event.ctrlKey) {
       this.overrideTool = "eyedropper";

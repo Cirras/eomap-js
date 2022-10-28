@@ -143,6 +143,9 @@ export class InfoBar extends LitElement {
   }
 
   onZoomKeyDown(event) {
+    if (event.code === "Space") {
+      return;
+    }
     if (event.key === "Shift") {
       return;
     }

@@ -808,6 +808,7 @@ export class Application extends LitElement {
 
   onToolSelected(event) {
     this.selectedTool = event.detail;
+    document.activeElement.blur();
   }
 
   isValidDataTransfer(dataTransfer) {
@@ -859,6 +860,7 @@ export class Application extends LitElement {
     this.layerVisibility = this.layerVisibility.withSelectedLayer(
       this.selectedLayer
     );
+    document.activeElement.blur();
   }
 
   onSelectedDrawIDChanged(event) {
