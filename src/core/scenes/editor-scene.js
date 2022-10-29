@@ -145,16 +145,17 @@ export class EditorScene extends Phaser.Scene {
     // interface, but this is null most of the time because it's only set by
     // TouchStart events.
     this.lastPointerDownId = null;
+    this.lastPointerUpId = null;
 
     this.onPointerDown = (event) => {
       this.lastPointerDownId = event.pointerId;
     };
 
-    const target = this.input.manager.canvas;
     this.onPointerUp = (event) => {
-      target.releasePointerCapture(event.pointerId);
+      this.lastPointerUpId = event.pointerId;
     };
 
+    const target = this.input.manager.canvas;
     target.addEventListener("pointerdown", this.onPointerDown);
     target.addEventListener("pointerup", this.onPointerUp);
 
@@ -272,9 +273,6 @@ export class EditorScene extends Phaser.Scene {
     this.updateOverrideTool(pointer);
     this.tool.pointerDown(this, pointer);
     this.updateIsToolBeingUsed();
-    if (this.tool.shouldUsePointerCapture()) {
-      this.setPointerCapture();
-    }
   }
 
   handlePointerUp(pointer) {
@@ -288,8 +286,20 @@ export class EditorScene extends Phaser.Scene {
     try {
       target.setPointerCapture(this.lastPointerDownId);
     } catch (e) {
-      console.error("Pointer capture failed", {
+      console.error("setPointerCapture failed", {
         pointerId: this.lastPointerDownId,
+        error: e,
+      });
+    }
+  }
+
+  releasePointerCapture() {
+    const target = this.input.manager.canvas;
+    try {
+      target.releasePointerCapture(this.lastPointerUpId);
+    } catch (e) {
+      console.error("releasePointerCapture failed", {
+        pointerId: this.lastPointerUpId,
         error: e,
       });
     }

@@ -42,6 +42,7 @@ class PointerDistance {
 export class Tool {
   pointerDownState = PointerDownState.None;
   pointerDownDistance = new PointerDistance();
+  hasPointerCapture = false;
 
   pointerMove(mapEditor, pointer) {
     this.pointerDownDistance.move(pointer);
@@ -79,6 +80,9 @@ export class Tool {
             mapEditor.moveCursor(mapEditor.currentPos);
           }
         }
+        if (this.shouldUsePointerCapture()) {
+          mapEditor.setPointerCapture();
+        }
       }
       if (this.pointerDownState === state && mapEditor.currentPos.valid) {
         handler(mapEditor, pointer);
@@ -108,6 +112,9 @@ export class Tool {
     const handleButtonUp = (state, down, handler) => {
       if (!down && this.updatePointerDownState(state, false)) {
         this.pointerDownDistance.up();
+        if (this.hasPointerCapture) {
+          mapEditor.releasePointerCapture();
+        }
         handler(mapEditor, pointer);
       }
     };
