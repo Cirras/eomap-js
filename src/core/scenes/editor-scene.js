@@ -266,15 +266,15 @@ export class EditorScene extends Phaser.Scene {
     this.updateOverrideTool(pointer);
     this.tool.pointerMove(this, pointer);
     this.updateIsToolBeingUsed();
-    if (this.tool.shouldUsePointerCapture()) {
-      this.setPointerCapture();
-    }
   }
 
   handlePointerDown(pointer) {
     this.updateOverrideTool(pointer);
     this.tool.pointerDown(this, pointer);
     this.updateIsToolBeingUsed();
+    if (this.tool.shouldUsePointerCapture()) {
+      this.setPointerCapture();
+    }
   }
 
   handlePointerUp(pointer) {
@@ -288,7 +288,10 @@ export class EditorScene extends Phaser.Scene {
     try {
       target.setPointerCapture(this.lastPointerDownId);
     } catch (e) {
-      console.error("Pointer capture failed: ", e);
+      console.error("Pointer capture failed", {
+        pointerId: this.lastPointerDownId,
+        error: e,
+      });
     }
   }
 
