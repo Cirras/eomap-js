@@ -481,15 +481,20 @@ export class Palette extends PhaserInstance {
 
     let onPointerUp = (_event) => {
       gutter.releasePointerCapture(event.pointerId);
+    };
+
+    let onLostPointerCapture = (_event) => {
       this.gutterActive = false;
       this.width = this.calcWidth();
       this.dispatchEvent(new CustomEvent("resize-end"));
-      window.removeEventListener("pointermove", onPointerMove);
-      window.removeEventListener("pointerup", onPointerUp);
+      gutter.removeEventListener("pointermove", onPointerMove);
+      gutter.removeEventListener("pointerup", onPointerUp);
+      gutter.removeEventListener("lostpointercapture", onLostPointerCapture);
     };
 
-    window.addEventListener("pointermove", onPointerMove);
-    window.addEventListener("pointerup", onPointerUp);
+    gutter.addEventListener("pointermove", onPointerMove);
+    gutter.addEventListener("pointerup", onPointerUp);
+    gutter.addEventListener("lostpointercapture", onLostPointerCapture);
 
     this.dispatchEvent(new CustomEvent("resize-start"));
   }
