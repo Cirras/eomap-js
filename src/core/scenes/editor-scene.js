@@ -147,21 +147,27 @@ export class EditorScene extends Phaser.Scene {
     this.lastPointerDownId = null;
     this.lastPointerUpId = null;
 
-    this.onPointerDown = (event) => {
+    const onPointerDown = (event) => {
       this.lastPointerDownId = event.pointerId;
     };
 
-    this.onPointerUp = (event) => {
+    const onPointerUp = (event) => {
       this.lastPointerUpId = event.pointerId;
     };
 
+    const onLostPointerCapture = (event) => {
+      this.handleLostPointerCapture(event);
+    };
+
     const target = this.input.manager.canvas;
-    target.addEventListener("pointerdown", this.onPointerDown);
-    target.addEventListener("pointerup", this.onPointerUp);
+    target.addEventListener("pointerdown", onPointerDown);
+    target.addEventListener("pointerup", onPointerUp);
+    target.addEventListener("lostpointercapture", onLostPointerCapture);
 
     this.sys.events.once("destroy", () => {
-      target.removeEventListener("pointerdown", this.onPointerDown);
-      target.removeEventListener("pointerup", this.onPointerUp);
+      target.removeEventListener("pointerdown", onPointerDown);
+      target.removeEventListener("pointerup", onPointerUp);
+      target.removeEventListener("lostpointercapture", onLostPointerCapture);
     });
   }
 
@@ -279,6 +285,10 @@ export class EditorScene extends Phaser.Scene {
     this.tool.pointerUp(this, pointer);
     this.updateOverrideTool(pointer);
     this.updateIsToolBeingUsed();
+  }
+
+  handleLostPointerCapture(_event) {
+    this.tool.lostPointerCapture(this);
   }
 
   setPointerCapture() {

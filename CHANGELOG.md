@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Draw operations can no longer begin outside of the editor viewport.
+- Graceful handling for cases where pointer capture is lost while using a tool.
 
 ### Fixed
 

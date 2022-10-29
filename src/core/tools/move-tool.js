@@ -51,6 +51,10 @@ export class MoveTool extends Tool {
     this.stopDragging(mapEditor);
   }
 
+  handleLostPointerCapture(mapEditor) {
+    this.stopDragging(mapEditor);
+  }
+
   shouldMoveCursor() {
     return !this.dragging;
   }

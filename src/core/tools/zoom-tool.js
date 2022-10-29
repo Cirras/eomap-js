@@ -93,6 +93,18 @@ export class ZoomTool extends Tool {
     this.originWorldPoint = null;
   }
 
+  handleLostPointerCapture(_mapEditor) {
+    if (!this.originWorldPoint) {
+      return;
+    }
+
+    if (this.dragging) {
+      this.dragging = false;
+    }
+
+    this.originWorldPoint = null;
+  }
+
   handleRightPointerUp(mapEditor, pointer) {
     const zoomAction = (getZoomLevel) => {
       return () => {

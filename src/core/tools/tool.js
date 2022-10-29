@@ -82,6 +82,7 @@ export class Tool {
         }
         if (this.shouldUsePointerCapture()) {
           mapEditor.setPointerCapture();
+          this.hasPointerCapture = true;
         }
       }
       if (this.pointerDownState === state && mapEditor.currentPos.valid) {
@@ -114,6 +115,7 @@ export class Tool {
         this.pointerDownDistance.up();
         if (this.hasPointerCapture) {
           mapEditor.releasePointerCapture();
+          this.hasPointerCapture = false;
         }
         handler(mapEditor, pointer);
       }
@@ -150,6 +152,15 @@ export class Tool {
     }
 
     return false;
+  }
+
+  lostPointerCapture(mapEditor) {
+    if (this.hasPointerCapture) {
+      this.hasPointerCapture = false;
+      this.handleLostPointerCapture(mapEditor);
+      this.pointerDownState = PointerDownState.None;
+      this.pointerDownDistance.up();
+    }
   }
 
   isLeftPointerDown() {
@@ -189,6 +200,10 @@ export class Tool {
   }
 
   handleRightPointerUp(_mapEditor) {
+    return;
+  }
+
+  handleLostPointerCapture(_mapEditor) {
     return;
   }
 
