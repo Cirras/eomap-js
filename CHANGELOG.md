@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Draw operations can no longer begin outside of the editor viewport.
+
 ### Fixed
 
 - Fix bug where menu items would be disabled unexpectedly if the window was maximized, minimized, and then restored.

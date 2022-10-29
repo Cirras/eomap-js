@@ -52,7 +52,10 @@ export class Tool {
         mapEditor.moveCursor(mapEditor.currentPos);
       }
 
-      if (this.shouldPointerDownOnMove() && pointer.isDown) {
+      if (
+        this.shouldPointerDownOnMove() &&
+        this.pointerDownState !== PointerDownState.None
+      ) {
         this.pointerDown(mapEditor, pointer, false);
         continue;
       }
