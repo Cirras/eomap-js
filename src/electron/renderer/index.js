@@ -115,6 +115,7 @@ bridge.receive("window:restored", () => {
 
 bridge.receive("window:maximized", () => {
   getTitlebar().maximized = true;
+  menubarController.minimized = false;
 });
 
 bridge.receive("window:unmaximized", () => {
