@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Fix bug where menu items would be disabled unexpectedly if the window was maximized, minimized, and then restored.
+- Fix bug where the wrong pointer button could trigger a tool in specific situations where multiple buttons were held down.
 
 ## [1.0.6] - 2022-10-28
 
