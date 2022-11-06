@@ -1,14 +1,14 @@
 export class Asset {
-  constructor(textureFrame, width, height, animation) {
+  constructor(textureFrame, width, height, animationFrames) {
     this.textureFrame = textureFrame;
     this.width = width;
     this.height = height;
-    this.animation = animation;
+    this.animationFrames = animationFrames;
   }
 
   getFrame(index) {
-    if (this.animation) {
-      return this.animation.frames[index].frame;
+    if (this.animationFrames.length > 0) {
+      return this.animationFrames[index];
     }
     return this.textureFrame;
   }
@@ -32,7 +32,7 @@ export class AssetFactory {
   getDefault() {
     if (!this.defaultAsset) {
       let frame = this.scene.textures.get().frames["__BASE"];
-      this.defaultAsset = new Asset(frame, frame.width, frame.height, null);
+      this.defaultAsset = new Asset(frame, frame.width, frame.height, []);
     }
     return this.defaultAsset;
   }
@@ -42,35 +42,22 @@ export class AssetFactory {
     let textureFrame = texture.get(frameKey);
     let width = textureFrame.realWidth;
     let height = textureFrame.realHeight;
-    let animation = null;
+    let animationFrames = [];
 
     if (this.isAnimated(fileID, width)) {
-      let animationKey = this.getAnimationKey(textureKey, frameKey);
-
-      let animationFrames = this.createAnimationFrames(
+      animationFrames = this.createAnimationFrames(
         texture,
         textureFrame,
         Math.floor(textureFrame.realWidth / 4),
         textureFrame.realHeight
       );
 
-      animation = this.scene.game.anims.create({
-        key: animationKey,
-        frames: animationFrames,
-        frameRate: 1.66,
-        repeat: -1,
-      });
-
-      let sizeFrame = this.scene.textures.getFrame(
-        animationFrames[0].key,
-        animationFrames[0].frame
-      );
-
+      let sizeFrame = animationFrames[0];
       width = sizeFrame.width;
       height = sizeFrame.height;
     }
 
-    return new Asset(textureFrame, width, height, animation);
+    return new Asset(textureFrame, width, height, animationFrames);
   }
 
   isAnimated(fileID, width) {
@@ -86,18 +73,12 @@ export class AssetFactory {
 
   createRaw(textureKey, frameKey) {
     let textureFrame = this.getTextureFrame(textureKey, frameKey);
-    return new Asset(
-      textureFrame,
-      textureFrame.width,
-      textureFrame.height,
-      null
-    );
+    return new Asset(textureFrame, textureFrame.width, textureFrame.height, []);
   }
 
   createCursor(textureKey, frameKey) {
     let texture = this.scene.textures.get(textureKey);
     let textureFrame = texture.get(frameKey);
-    let animationKey = this.getAnimationKey(textureKey, frameKey);
 
     let animationFrames = this.createAnimationFrames(
       texture,
@@ -106,22 +87,11 @@ export class AssetFactory {
       textureFrame.realHeight
     );
 
-    let animation = this.scene.game.anims.create({
-      key: animationKey,
-      frames: animationFrames,
-      frameRate: 60,
-      yoyo: true,
-    });
-
-    let sizeFrame = this.scene.textures.getFrame(
-      animationFrames[0].key,
-      animationFrames[0].frame
-    );
-
+    let sizeFrame = animationFrames[0];
     let width = sizeFrame.width;
     let height = sizeFrame.height;
 
-    return new Asset(textureFrame, width, height, animation);
+    return new Asset(textureFrame, width, height, animationFrames);
   }
 
   createAnimationFrames(texture, frame, frameWidth, frameHeight) {
@@ -159,13 +129,9 @@ export class AssetFactory {
       for (let sheetX = 0; sheetX < row; sheetX++) {
         let leftRow = sheetX === 0;
         let rightRow = sheetX === row - 1;
-        let animationFrameKey = this.getAnimationFrameKey(
-          frame.name,
-          frameIndex
-        );
 
         let sheetFrame = texture.add(
-          animationFrameKey,
+          frame.name + ".animationFrame." + frameIndex.toString(),
           frame.sourceIndex,
           x + frameX,
           y + frameY,
@@ -173,10 +139,7 @@ export class AssetFactory {
           frameHeight
         );
 
-        animationFrames.push({
-          key: texture.key,
-          frame: animationFrameKey,
-        });
+        animationFrames.push(sheetFrame);
 
         if (leftRow || topRow || rightRow || bottomRow) {
           let destX = leftRow ? leftPad : 0;
@@ -245,13 +208,5 @@ export class AssetFactory {
   getTextureFrame(textureKey, frameKey) {
     let texture = this.scene.textures.get(textureKey);
     return texture.get(frameKey);
-  }
-
-  getAnimationKey(fileKey, frameKey) {
-    return this.identifier + "." + fileKey + "." + frameKey;
-  }
-
-  getAnimationFrameKey(frameKey, index) {
-    return frameKey + ".animationFrame." + index.toString();
   }
 }
