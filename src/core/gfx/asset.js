@@ -44,10 +44,7 @@ export class AssetFactory {
     let height = textureFrame.realHeight;
     let animation = null;
 
-    let canBeAnimated = fileID === 3 || fileID === 6;
-    let isWideEnough = textureFrame.realWidth >= 32 * 4;
-
-    if (canBeAnimated && isWideEnough) {
+    if (this.isAnimated(fileID, width)) {
       let animationKey = this.getAnimationKey(textureKey, frameKey);
 
       let animationFrames = this.createAnimationFrames(
@@ -74,6 +71,17 @@ export class AssetFactory {
     }
 
     return new Asset(textureFrame, width, height, animation);
+  }
+
+  isAnimated(fileID, width) {
+    switch (fileID) {
+      case 3:
+        return width > 250;
+      case 6:
+        return width > 120;
+      default:
+        return false;
+    }
   }
 
   createRaw(textureKey, frameKey) {
