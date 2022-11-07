@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.8] - 2022-11-07
+
 ### Changed
 
 - Accurate detection of animated tiles. (>250 width)
@@ -111,7 +113,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Desktop app for Windows, Linux, and macOS.
 - Web app available at [https://eomap.dev](https://eomap.dev)
 
-[unreleased]: https://github.com/cirras/eomap-js/compare/v1.0.7...HEAD
+[unreleased]: https://github.com/cirras/eomap-js/compare/v1.0.8...HEAD
+[1.0.8]: https://github.com/cirras/eomap-js/compare/v1.0.7...v1.0.8
 [1.0.7]: https://github.com/cirras/eomap-js/compare/v1.0.6...v1.0.7
 [1.0.6]: https://github.com/cirras/eomap-js/compare/v1.0.5...v1.0.6
 [1.0.5]: https://github.com/cirras/eomap-js/compare/v1.0.4...v1.0.5
