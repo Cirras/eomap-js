@@ -6,19 +6,19 @@ export function encodeNumber(number) {
   let value = number;
 
   let d = 254;
-  if (number > THREE_MAX) {
+  if (number >= THREE_MAX) {
     d = Math.trunc(value / THREE_MAX) + 1;
     value %= THREE_MAX;
   }
 
   let c = 254;
-  if (number > SHORT_MAX) {
+  if (number >= SHORT_MAX) {
     c = Math.trunc(value / SHORT_MAX) + 1;
     value %= SHORT_MAX;
   }
 
   let b = 254;
-  if (number > CHAR_MAX) {
+  if (number >= CHAR_MAX) {
     b = Math.trunc(value / CHAR_MAX) + 1;
     value %= CHAR_MAX;
   }
