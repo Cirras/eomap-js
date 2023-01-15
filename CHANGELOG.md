@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Fix issue where numbers on EO integer size boundaries would not be encoded properly.
+- Fix bug where maps containing legacy "door key" entities could be opened, but not saved.
 
 ## [1.0.8] - 2022-11-07
 

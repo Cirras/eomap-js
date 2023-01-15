@@ -176,9 +176,9 @@ export class MapLegacyDoorKey {
   }
 
   write(builder) {
-    builder.addChar(x);
-    builder.addChar(y);
-    builder.addShort(key);
+    builder.addChar(this.x);
+    builder.addChar(this.y);
+    builder.addShort(this.key);
   }
 }
 
