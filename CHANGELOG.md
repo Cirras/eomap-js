@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.9] - 2023-01-15
+
 ### Fixed
 
 - Fix issue where numbers on EO integer size boundaries would not be encoded properly.
@@ -118,7 +120,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Desktop app for Windows, Linux, and macOS.
 - Web app available at [https://eomap.dev](https://eomap.dev)
 
-[unreleased]: https://github.com/cirras/eomap-js/compare/v1.0.8...HEAD
+[unreleased]: https://github.com/cirras/eomap-js/compare/v1.0.9...HEAD
+[1.0.9]: https://github.com/cirras/eomap-js/compare/v1.0.8...v1.0.9
 [1.0.8]: https://github.com/cirras/eomap-js/compare/v1.0.7...v1.0.8
 [1.0.7]: https://github.com/cirras/eomap-js/compare/v1.0.6...v1.0.7
 [1.0.6]: https://github.com/cirras/eomap-js/compare/v1.0.5...v1.0.6
