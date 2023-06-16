@@ -1,5 +1,6 @@
 import { arrayEquals, binaryInsert, removeFirst } from "../util/array-utils";
 import { TileSpec } from "../data/emf";
+import { GridType } from "../gfx/texture-cache";
 
 const SECTION_SIZE = 256;
 
@@ -23,6 +24,7 @@ const layerInfo = [
     { xoff: 0,  yoff: 0,  alpha: 0.50, centered: false, bottomOrigin: true,  depth: 4.0 + TDG * 2 }, // Sign
     { xoff: 0,  yoff: 0,  alpha: 0.50, centered: false, bottomOrigin: true,  depth: 4.0 + TDG * 3 }, // Item
     { xoff: 0,  yoff: 0,  alpha: 0.50, centered: false, bottomOrigin: true,  depth: 4.0 + TDG * 4 }, // NPC
+    { xoff: 0,  yoff: 0,  alpha: 1.00, centered: false, bottomOrigin: false, depth: 5.0 + TDG * 1 }, // Grid
 ];
 
 const layerFiles = [3, 4, 5, 6, 6, 7, 3, 22, 5];
@@ -194,6 +196,7 @@ export class EOMap extends Phaser.GameObjects.GameObject {
         this.setSign(x, y, tile.sign);
         this.setItems(x, y, this.items.get(x, y));
         this.setNPCs(x, y, this.npcs.get(x, y));
+        this.setGrid(x, y);
       }
     }
   }
@@ -432,6 +435,22 @@ export class EOMap extends Phaser.GameObjects.GameObject {
     }
 
     this.setTileGraphic(x, y, 14, cacheEntry);
+  }
+
+  setGrid(x, y) {
+    let isMaxX = x === this.emf.width - 1;
+    let isMaxY = y === this.emf.height - 1;
+
+    let gridType = GridType.Normal;
+    if (isMaxX && isMaxY) {
+      gridType = GridType.All;
+    } else if (isMaxX) {
+      gridType = GridType.Right;
+    } else if (isMaxY) {
+      gridType = GridType.Down;
+    }
+
+    this.setTileGraphic(x, y, 15, this.textureCache.getGridTile(gridType));
   }
 
   getTileGraphicIndex(x, y, layer) {

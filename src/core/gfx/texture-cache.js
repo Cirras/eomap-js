@@ -28,7 +28,7 @@ class TextureCacheEntry {
   }
 
   get loadingComplete() {
-    return this.loadingCompletePromise && this.loadingCompletePromise.promise;
+    return this.loadingCompletePromise?.promise ?? null;
   }
 }
 
@@ -111,6 +111,28 @@ class BlackTileTextureCacheEntry extends TextureCacheEntry {
   }
 }
 
+export const GridType = {
+  Normal: "grid",
+  Down: "grid-down",
+  Right: "grid-right",
+  All: "grid-all",
+};
+
+class GridTileTextureCacheEntry extends TextureCacheEntry {
+  constructor(key, defaultAsset, gridType) {
+    super(key, defaultAsset);
+    this.gridType = gridType;
+  }
+
+  createAsset(assetFactory, textureKey) {
+    return assetFactory.createRaw(textureKey, this.key);
+  }
+
+  async loadGFX(gfxLoader) {
+    return gfxLoader.loadRaw(`${this.gridType}.png`);
+  }
+}
+
 class JumboTextureCacheEntry {
   constructor(multiTexture, page, entry) {
     this.multiTexture = multiTexture;
@@ -175,6 +197,10 @@ export class TextureCache {
     return "entity." + entityType;
   }
 
+  makeGridKey(gridType) {
+    return "grid." + gridType;
+  }
+
   getEntry(key, createEntry) {
     let entry = this.entries.get(key);
     if (!entry) {
@@ -225,6 +251,17 @@ export class TextureCache {
       return new BlackTileTextureCacheEntry(
         key,
         this.assetFactory.getDefault()
+      );
+    });
+  }
+
+  getGridTile(gridType) {
+    let key = this.makeGridKey(gridType);
+    return this.getEntry(key, () => {
+      return new GridTileTextureCacheEntry(
+        key,
+        this.assetFactory.getDefault(),
+        gridType
       );
     });
   }
@@ -352,7 +389,9 @@ export class TextureCache {
     this.pending.sort((a, b) => b.refCount - a.refCount);
 
     for (let entry of this.pending) {
-      this.loadEntry(entry);
+      this.loadEntry(entry).catch((reason) => {
+        console.error(reason);
+      });
       ++loaded;
       elapsed = performance.now() - start;
       if (elapsed > loadTime) {
