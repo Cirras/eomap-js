@@ -12,6 +12,7 @@ export class LayerVisibilityState {
       /* [8]  Overlay 2  */ true,
       /* [9]  Tilespec   */ false,
       /* [10] Entity     */ true,
+      /* [11] Grid       */ false,
     ];
     this._selectedLayer = 0;
   }
@@ -54,6 +55,9 @@ export class LayerVisibilityState {
       case 14:
         // Visibility flag 10 covers all Entity layers
         return this._flags[10];
+      case 15:
+        // Visibility flag 11 (view grid) maps to layer 15 because of the above layer remapping
+        return this._flags[11];
       default:
         return this._flags[layer] || this._selectedLayer === layer;
     }

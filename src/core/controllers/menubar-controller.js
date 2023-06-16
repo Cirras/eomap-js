@@ -69,7 +69,9 @@ export class MenubarController extends EventEmitter {
           event.stopPropagation();
           this.handleMenuEvent(
             new CustomEvent(item.eventType, { detail: item.eventDetail })
-          );
+          ).catch((reason) => {
+            console.error(reason);
+          });
           this.emit("keybinding-handled");
         }
         break;
@@ -322,30 +324,35 @@ export class MenubarController extends EventEmitter {
   }
 
   generateViewMenu() {
+    const MENU_SEPARATOR = null;
     // prettier-ignore
     const MENU_ITEM_DATA = [
-      { label: "&Ground",     kbd: "CommandOrControl+1" },
-      { label: "&Objects",    kbd: "CommandOrControl+2" },
-      { label: "O&verlay",    kbd: "CommandOrControl+3" },
-      { label: "&Down Wall",  kbd: "CommandOrControl+4" },
-      { label: "&Right Wall", kbd: "CommandOrControl+5" },
-      { label: "Roo&f",       kbd: "CommandOrControl+6" },
-      { label: "&Top",        kbd: "CommandOrControl+7" },
-      { label: "&Shadow",     kbd: "CommandOrControl+8" },
-      { label: "Overlay &2",  kbd: "CommandOrControl+9" },
-      { label: "S&pecial",    kbd: "CommandOrControl+0" },
-      { label: "&Entities",   kbd: "CommandOrControl+E" },
+      { label: "&Ground",     kbd: "CommandOrControl+1", flag: 0 },
+      { label: "&Objects",    kbd: "CommandOrControl+2", flag: 1 },
+      { label: "O&verlay",    kbd: "CommandOrControl+3", flag: 2 },
+      { label: "&Down Wall",  kbd: "CommandOrControl+4", flag: 3 },
+      { label: "&Right Wall", kbd: "CommandOrControl+5", flag: 4 },
+      { label: "Roo&f",       kbd: "CommandOrControl+6", flag: 5 },
+      { label: "&Top",        kbd: "CommandOrControl+7", flag: 6 },
+      { label: "&Shadow",     kbd: "CommandOrControl+8", flag: 7 },
+      { label: "Overlay &2",  kbd: "CommandOrControl+9", flag: 8 },
+      { label: "S&pecial",    kbd: "CommandOrControl+0", flag: 9 },
+      { label: "&Entities",   kbd: "CommandOrControl+E", flag: 10 },
+      MENU_SEPARATOR,
+      { label: "Grid &Lines", kbd: "CommandOrControl+G", flag: 11 },
     ];
 
     return new MenuState(
-      MENU_ITEM_DATA.map((info, i) =>
-        new CheckboxMenuItemState()
-          .withLabel(info.label)
-          .withEventType(MenuEvent.VisibilityFlagToggle)
-          .withEventDetail(i)
-          .withKeybinding(info.kbd)
-          .withChecked(this.layerVisibility.isFlagActive(i))
-          .withEnabled(this.canToggleLayerVisibility(i))
+      MENU_ITEM_DATA.map((info) =>
+        info === MENU_SEPARATOR
+          ? new DividerMenuItemState()
+          : new CheckboxMenuItemState()
+              .withLabel(info.label)
+              .withEventType(MenuEvent.VisibilityFlagToggle)
+              .withEventDetail(info.flag)
+              .withKeybinding(info.kbd)
+              .withChecked(this.layerVisibility.isFlagActive(info.flag))
+              .withEnabled(this.canToggleLayerVisibility(info.flag))
       )
     );
   }
