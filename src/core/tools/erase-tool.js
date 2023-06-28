@@ -2,19 +2,19 @@ import { Tool } from "./tool";
 
 export class EraseTool extends Tool {
   handleLeftPointerDown(mapEditor) {
-    mapEditor.doEraseCommand(mapEditor.currentPos.x, mapEditor.currentPos.y);
+    mapEditor.doEraseCommand();
   }
 
   handleRightPointerDown(mapEditor) {
-    mapEditor.doEraseCommand(mapEditor.currentPos.x, mapEditor.currentPos.y);
+    mapEditor.doEraseCommand();
   }
 
   handleLeftPointerUp(mapEditor) {
-    mapEditor.commandInvoker.finalizeAggregate();
+    mapEditor.finalizeDraw();
   }
 
   handleRightPointerUp(mapEditor) {
-    mapEditor.commandInvoker.finalizeAggregate();
+    mapEditor.finalizeDraw();
   }
 
   shouldPointerDownOnMove() {

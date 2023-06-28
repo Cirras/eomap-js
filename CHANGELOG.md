@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - `Grid Lines` layer. (Thanks [@ethanmoffat](https://github.com/ethanmoffat))
+- Shift+Click to draw straight lines.
 
 ## [1.0.9] - 2023-01-15
 

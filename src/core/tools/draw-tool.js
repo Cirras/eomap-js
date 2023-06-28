@@ -2,23 +2,19 @@ import { Tool } from "./tool";
 
 export class DrawTool extends Tool {
   handleLeftPointerDown(mapEditor) {
-    mapEditor.doDrawCommand(
-      mapEditor.currentPos.x,
-      mapEditor.currentPos.y,
-      mapEditor.selectedDrawID
-    );
+    mapEditor.doDrawCommand(mapEditor.selectedDrawID);
   }
 
   handleRightPointerDown(mapEditor) {
-    mapEditor.doEraseCommand(mapEditor.currentPos.x, mapEditor.currentPos.y);
+    mapEditor.doEraseCommand();
   }
 
   handleLeftPointerUp(mapEditor) {
-    mapEditor.commandInvoker.finalizeAggregate();
+    mapEditor.finalizeDraw();
   }
 
   handleRightPointerUp(mapEditor) {
-    mapEditor.commandInvoker.finalizeAggregate();
+    mapEditor.finalizeDraw();
   }
 
   shouldPointerDownOnMove() {

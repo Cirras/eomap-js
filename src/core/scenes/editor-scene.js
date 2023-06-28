@@ -20,6 +20,18 @@ import { MapPropertiesState } from "../state/map-properties-state";
 import { PropertiesCommand } from "../command/properties-command";
 import { isMac } from "../util/platform-utils";
 
+const Axis = {
+  X: 0,
+  Y: 1,
+};
+
+class AxisLock {
+  constructor(x, y) {
+    this.origin = { x, y };
+    this.axis = null;
+  }
+}
+
 export class EditorScene extends Phaser.Scene {
   constructor() {
     super("editor");
@@ -36,6 +48,8 @@ export class EditorScene extends Phaser.Scene {
     this.yKey = null;
     this.zKey = null;
     this.cameraControls = null;
+    this.shiftKey = null;
+    this.axisLock = null;
 
     this._tempMatrix1 = new Phaser.GameObjects.Components.TransformMatrix();
     this._tempMatrix2 = new Phaser.GameObjects.Components.TransformMatrix();
@@ -76,6 +90,15 @@ export class EditorScene extends Phaser.Scene {
       up: cursorKeys.up,
       down: cursorKeys.down,
       speed: 1,
+    });
+
+    this.shiftKey = this.input.keyboard.addKey(
+      Phaser.Input.Keyboard.KeyCodes.SHIFT,
+      false
+    );
+
+    this.shiftKey.on("up", (_event) => {
+      this.axisLock = null;
     });
 
     this.input.on("pointermove", (pointer) => this.handlePointerMove(pointer));
@@ -322,12 +345,43 @@ export class EditorScene extends Phaser.Scene {
     return drawID !== null;
   }
 
-  doDrawCommand(x, y, drawID) {
+  getDrawPos() {
+    let x = this.currentPos.x;
+    let y = this.currentPos.y;
+
+    if (this.shiftKey.isDown) {
+      if (this.axisLock === null) {
+        this.axisLock = new AxisLock(x, y);
+      }
+
+      let origin = this.axisLock.origin;
+
+      if (this.axisLock.axis === null && !(origin.x === x && origin.y === y)) {
+        this.axisLock.axis = x === origin.x ? Axis.Y : Axis.X;
+      }
+
+      switch (this.axisLock.axis) {
+        case Axis.X:
+          y = origin.y;
+          break;
+        case Axis.Y:
+          x = origin.x;
+          break;
+        default:
+        // do nothing
+      }
+    }
+
+    return { x, y };
+  }
+
+  doDrawCommand(drawID) {
     if (!this.canDraw(drawID)) {
       return;
     }
 
-    let oldDrawID = this.map.getDrawID(x, y, this.selectedLayer);
+    let pos = this.getDrawPos();
+    let oldDrawID = this.map.getDrawID(pos.x, pos.y, this.selectedLayer);
 
     if (drawID === oldDrawID) {
       return;
@@ -336,8 +390,8 @@ export class EditorScene extends Phaser.Scene {
     this.commandInvoker.add(
       new DrawCommand(
         this.mapState,
-        x,
-        y,
+        pos.x,
+        pos.y,
         this.selectedLayer,
         oldDrawID,
         drawID
@@ -346,12 +400,13 @@ export class EditorScene extends Phaser.Scene {
     );
   }
 
-  doFillCommand(x, y, drawID) {
+  doFillCommand(drawID) {
     if (!this.canDraw(drawID)) {
       return;
     }
 
-    let oldDrawID = this.map.getDrawID(x, y, this.selectedLayer);
+    let pos = this.currentPos;
+    let oldDrawID = this.map.getDrawID(pos.x, pos.y, this.selectedLayer);
 
     if (drawID === oldDrawID) {
       return;
@@ -360,8 +415,8 @@ export class EditorScene extends Phaser.Scene {
     this.commandInvoker.add(
       new FillCommand(
         this.mapState,
-        x,
-        y,
+        pos.x,
+        pos.y,
         this.selectedLayer,
         oldDrawID,
         drawID
@@ -369,9 +424,10 @@ export class EditorScene extends Phaser.Scene {
     );
   }
 
-  doEraseCommand(x, y) {
+  doEraseCommand() {
+    let pos = this.getDrawPos();
     let drawID = this.selectedLayer === 0 ? 0 : null;
-    let oldDrawID = this.map.getDrawID(x, y, this.selectedLayer);
+    let oldDrawID = this.map.getDrawID(pos.x, pos.y, this.selectedLayer);
 
     if (drawID === oldDrawID) {
       return;
@@ -380,14 +436,19 @@ export class EditorScene extends Phaser.Scene {
     this.commandInvoker.add(
       new DrawCommand(
         this.mapState,
-        x,
-        y,
+        pos.x,
+        pos.y,
         this.selectedLayer,
         oldDrawID,
         drawID
       ),
       true
     );
+  }
+
+  finalizeDraw() {
+    this.commandInvoker.finalizeAggregate();
+    this.axisLock = null;
   }
 
   updateOverrideTool(pointer) {
