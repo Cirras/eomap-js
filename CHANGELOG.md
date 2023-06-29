@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `Grid Lines` layer. (Thanks [@ethanmoffat](https://github.com/ethanmoffat))
+
 ## [1.0.9] - 2023-01-15
 
 ### Fixed
