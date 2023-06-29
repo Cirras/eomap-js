@@ -20,10 +20,10 @@ const layerInfo = [
     { xoff:-2,  yoff:-2,  alpha: 1.00, centered: true,  bottomOrigin: true,  depth: 1.0 + TDG * 1 }, // Overlay 2
     { xoff: 0,  yoff: 0,  alpha: 0.25, centered: false, bottomOrigin: false, depth:-2.0 + TDG * 1 }, // TileSpec
     { xoff: 0,  yoff: 0,  alpha: 0.25, centered: false, bottomOrigin: false, depth: 3.0 + TDG * 1 }, // TileSpec overlay
-    { xoff: 0,  yoff: 0,  alpha: 0.50, centered: false, bottomOrigin: true,  depth: 4.0 + TDG * 1 }, // Warp
-    { xoff: 0,  yoff: 0,  alpha: 0.50, centered: false, bottomOrigin: true,  depth: 4.0 + TDG * 2 }, // Sign
-    { xoff: 0,  yoff: 0,  alpha: 0.50, centered: false, bottomOrigin: true,  depth: 4.0 + TDG * 3 }, // Item
-    { xoff: 0,  yoff: 0,  alpha: 0.50, centered: false, bottomOrigin: true,  depth: 4.0 + TDG * 4 }, // NPC
+    { xoff:-1,  yoff: 0,  alpha: 0.50, centered: false, bottomOrigin: true,  depth: 4.0 + TDG * 1 }, // Warp
+    { xoff:-1,  yoff: 0,  alpha: 0.50, centered: false, bottomOrigin: true,  depth: 4.0 + TDG * 2 }, // Sign
+    { xoff:-1,  yoff: 0,  alpha: 0.50, centered: false, bottomOrigin: true,  depth: 4.0 + TDG * 3 }, // Item
+    { xoff:-1,  yoff: 0,  alpha: 0.50, centered: false, bottomOrigin: true,  depth: 4.0 + TDG * 4 }, // NPC
     { xoff: 0,  yoff: 0,  alpha: 1.00, centered: false, bottomOrigin: false, depth: 5.0 + TDG * 1 }, // Grid
 ];
 
