@@ -44,9 +44,6 @@ export class EditorScene extends Phaser.Scene {
     this.tools = null;
     this.overrideTool = null;
     this.cursor = null;
-    this.cursors = null;
-    this.yKey = null;
-    this.zKey = null;
     this.cameraControls = null;
     this.shiftKey = null;
     this.axisLock = null;
