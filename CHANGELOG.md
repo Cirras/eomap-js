@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Fix bug where fill tool would use the wrong map graphic.
+
 ## [1.1.0] - 2023-06-29
 
 ### Added
