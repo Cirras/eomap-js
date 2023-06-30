@@ -282,7 +282,7 @@ export class DIBReader {
     if (!this.hasBitMasks || this.headerType === HeaderType.V2) {
       return 0;
     } else {
-      this.readUint32(52);
+      return this.readUint32(52);
     }
   }
 
