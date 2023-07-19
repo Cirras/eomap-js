@@ -283,16 +283,19 @@ export class EMF {
   }
 
   static read(reader) {
-    let emf = new EMF();
-
     let magic = windows1252.decode(reader.getFixedString(3));
     if (magic !== "EMF") {
       throw new Error("Invalid EMF file signature");
     }
 
+    if (EMF.looksLike04xFormat(reader)) {
+      throw new Error("0.4.x EMFs are unsupported");
+    }
+
     // skip the hash
     reader.skip(4);
 
+    let emf = new EMF();
     emf.name = bytesToString(reader.getFixedString(24));
     emf.type = reader.getChar();
     emf.effect = reader.getChar();
@@ -548,6 +551,76 @@ export class EMF {
         }
       }
     }
+  }
+
+  static looksLike04xFormat(reader) {
+    let score = 0.0;
+
+    let originalPosition = reader.position;
+    try {
+      // In the classic format, 0x1f is the `type` char field.
+      // An out-of-bounds value indicates this is a byte in a 0.4.x map name.
+      //
+      // Many classic EMFs in the wild have been observed to have out-of-bounds values,
+      // presumably due to broken serializers in early EO community developer tools.
+      reader.seek(0x1f);
+      const type = reader.getChar();
+      if (type > MapType.PK) {
+        score += 0.2;
+      }
+
+      // In the classic format, 0x20 is the `effect` char field.
+      // An out-of-bounds value indicates this is a byte in a 0.4.x map name.
+      const effect = reader.getChar();
+      if (effect > MapEffect.Quake4) {
+        score += 0.4;
+      }
+
+      // In the classic format, 0x22 is the `musicControl` char field.
+      // An out-of-bounds value indicates this is a byte in a 0.4.x map name.
+      reader.seek(0x22);
+      const musicControlField = reader.getChar();
+      if (musicControlField > MusicControl.InterruptPlayNothing) {
+        score += 0.4;
+      }
+
+      // In the classic format, 0x24 is the second byte of the `ambientSoundId` char field.
+      // It's extremely rare for this value to exceed the size of a short, so the second byte is
+      // practically always 0xFE.
+      // A non-0xFE value indicates this is a byte in a 0.4.x map name.
+      //
+      // Some classic EMFs in the wild have been observed to have a value of 0x01,
+      // presumably due to broken serializers in early EO community developer tools.
+      reader.seek(0x24);
+      const secondByteOfAmbientSoundID = reader.getByte();
+      if (secondByteOfAmbientSoundID != 0xfe) {
+        score += secondByteOfAmbientSoundID == 0x01 ? 0.5 : 0.9;
+      }
+
+      // In the classic format, 0x26 is the `height` char field.
+      // A value > 252 indicates this is a padding byte in a 0.4.x map name.
+      reader.seek(0x26);
+      const heightField = reader.getByte();
+      if (heightField > 252) {
+        score += 1.0;
+      }
+
+      // In the classic format, 0x2d is a char field which is always zero.
+      // Any other value indicates this is the second byte of a 0.4.x short
+      // field.
+      //
+      // Some classic EMFs in the wild have been observed to have non-standard (char) values,
+      // presumably due to broken serializers in early EO community developer tools.
+      reader.seek(0x2d);
+      const zeroField = reader.getByte();
+      if (zeroField != 1) {
+        score += zeroField > 252 ? 1.0 : 0.5;
+      }
+    } finally {
+      reader.seek(originalPosition);
+    }
+
+    return score >= 1.0;
   }
 
   getTile(x, y) {

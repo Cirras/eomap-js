@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Detection of unsupported 0.4.x EMFs.
+
 ## [1.1.1] - 2023-06-30
 
 ### Fixed
