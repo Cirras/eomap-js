@@ -239,7 +239,7 @@ export class DIBReader {
     return ((this.width * this.depth + 31) & ~31) >> 3;
   }
 
-  get hasBitMasks() {
+  get hasRgbBitMasks() {
     switch (this.headerType) {
       case HeaderType.Core:
       case HeaderType.Core2:
@@ -254,8 +254,21 @@ export class DIBReader {
     }
   }
 
+  get hasAlphaBitMask() {
+    switch (this.headerType) {
+      case HeaderType.Core:
+      case HeaderType.Core2:
+      case HeaderType.V2:
+        return false;
+      case HeaderType.Info:
+        return this.compression === Compression.AlphaBitfields;
+      default:
+        return true;
+    }
+  }
+
   get redMask() {
-    if (!this.hasBitMasks) {
+    if (!this.hasRgbBitMasks) {
       return 0;
     } else {
       return this.readUint32(40);
@@ -263,7 +276,7 @@ export class DIBReader {
   }
 
   get greenMask() {
-    if (!this.hasBitMasks) {
+    if (!this.hasRgbBitMasks) {
       return 0;
     } else {
       return this.readUint32(44);
@@ -271,7 +284,7 @@ export class DIBReader {
   }
 
   get blueMask() {
-    if (!this.hasBitMasks) {
+    if (!this.hasRgbBitMasks) {
       return 0;
     } else {
       return this.readUint32(48);
@@ -279,7 +292,7 @@ export class DIBReader {
   }
 
   get alphaMask() {
-    if (!this.hasBitMasks || this.headerType === HeaderType.V2) {
+    if (!this.hasAlphaBitMask) {
       return 0;
     } else {
       return this.readUint32(52);
