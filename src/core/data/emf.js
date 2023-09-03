@@ -564,14 +564,14 @@ export class EMF {
       // Many classic EMFs in the wild have been observed to have out-of-bounds values,
       // presumably due to broken serializers in early EO community developer tools.
       reader.seek(0x1f);
-      const type = reader.getChar();
+      const type = reader.getByte() - 1;
       if (type > MapType.PK) {
         score += 0.2;
       }
 
       // In the classic format, 0x20 is the `effect` char field.
       // An out-of-bounds value indicates this is a byte in a 0.4.x map name.
-      const effect = reader.getChar();
+      const effect = reader.getByte() - 1;
       if (effect > MapEffect.Quake4) {
         score += 0.4;
       }
@@ -579,7 +579,7 @@ export class EMF {
       // In the classic format, 0x22 is the `musicControl` char field.
       // An out-of-bounds value indicates this is a byte in a 0.4.x map name.
       reader.seek(0x22);
-      const musicControlField = reader.getChar();
+      const musicControlField = reader.getByte() - 1;
       if (musicControlField > MusicControl.InterruptPlayNothing) {
         score += 0.4;
       }
@@ -606,8 +606,6 @@ export class EMF {
       }
 
       // In the classic format, 0x2d is a char field which is always zero.
-      // Any other value indicates this is the second byte of a 0.4.x short
-      // field.
       //
       // Some classic EMFs in the wild have been observed to have non-standard (char) values,
       // presumably due to broken serializers in early EO community developer tools.
