@@ -108,11 +108,11 @@
     "@vscode/codicons": "^0.0.29",
     "crc-32": "^1.2.1",
     "electron-log": "^4.4.8",
-    "electron-updater": "^5.0.5",
+    "electron-updater": "^6.1.4",
     "eventemitter3": "^4.0.7",
-    "idb-keyval": "^6.1.0",
+    "idb-keyval": "^6.2.1",
     "phaser": "^3.55.2",
     "windows-1252": "^3.0.4",
-    "yargs": "^17.5.1"
+    "yargs": "^17.7.2"
   }
 }
