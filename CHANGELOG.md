@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.2] - 2023-11-08
+
 ### Added
 
 - Detection of unsupported 0.4.x EMFs.
@@ -137,7 +139,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Desktop app for Windows, Linux, and macOS.
 - Web app available at [https://eomap.dev](https://eomap.dev)
 
-[unreleased]: https://github.com/cirras/eomap-js/compare/v1.1.1...HEAD
+[unreleased]: https://github.com/cirras/eomap-js/compare/v1.1.2...HEAD
+[1.1.2]: https://github.com/cirras/eomap-js/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/cirras/eomap-js/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/cirras/eomap-js/compare/v1.0.9...v1.1.0
 [1.0.9]: https://github.com/cirras/eomap-js/compare/v1.0.8...v1.0.9
