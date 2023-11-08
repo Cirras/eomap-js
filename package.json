@@ -9,7 +9,7 @@
     "start:electron": "cross-env NODE_ENV=development node scripts/start.js",
     "start:web": "webpack-dev-server --config webpack/web/web.js --open",
     "dist": "npm run dist:web && npm run dist:electron",
-    "dist:electron": "npm run build && electron-builder --publish never",
+    "dist:electron": "npm run build && electron-builder --config electron-builder-config.js --publish never",
     "dist:web": "cross-env NODE_ENV=production webpack --config webpack/web/web.js",
     "build": "cross-env NODE_ENV=production node scripts/build.js",
     "format": "pretty-quick",
@@ -29,51 +29,6 @@
   },
   "homepage": "https://github.com/Cirras/eomap-js#readme",
   "releaseNotesUrl": "https://github.com/Cirras/eomap-js/releases/tag/v${version}",
-  "build": {
-    "appId": "dev.eomap.app",
-    "directories": {
-      "output": "dist/electron"
-    },
-    "files": [
-      "dist/electron/**/*"
-    ],
-    "fileAssociations": [
-      {
-        "ext": "emf",
-        "name": "Endless Map File",
-        "description": "Endless Map File"
-      }
-    ],
-    "publish": [
-      {
-        "provider": "github",
-        "owner": "cirras",
-        "repo": "eomap-js",
-        "releaseType": "release"
-      }
-    ],
-    "snap": {
-      "publish": {
-        "provider": "snapStore",
-        "repo": "eomap-js",
-        "channels": [
-          "stable"
-        ]
-      }
-    },
-    "win": {
-      "executableName": "eomap-js"
-    },
-    "mac": {
-      "category": "public.app-category.developer-tools",
-      "hardenedRuntime": true
-    },
-    "nsis": {
-      "oneClick": false,
-      "shortcutName": "Endless Map Editor",
-      "uninstallDisplayName": "Endless Map Editor"
-    }
-  },
   "devDependencies": {
     "@babel/core": "^7.23.2",
     "@babel/plugin-proposal-class-properties": "^7.18.6",
