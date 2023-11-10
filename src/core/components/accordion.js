@@ -28,7 +28,7 @@ export class Accordion extends Focusable {
 
   get focusElement() {
     const items = this.items;
-    if (items && items.length) {
+    if (items?.length) {
       let index = 0;
       while (index < items.length && items[index].disabled) {
         index += 1;
@@ -42,7 +42,7 @@ export class Accordion extends Focusable {
 
   startListeningToKeyboard() {
     const items = this.items;
-    if (items && items.length) {
+    if (items?.length) {
       this.addEventListener("keydown", this.handleKeyDown);
     }
   }

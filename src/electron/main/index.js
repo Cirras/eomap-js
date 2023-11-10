@@ -506,7 +506,7 @@ function newWindow() {
     state = WindowState.read(getWindowStateFilePath());
   }
 
-  if (state && state.isVisibleOnAnyDisplay()) {
+  if (state?.isVisibleOnAnyDisplay()) {
     options.x = state.x;
     options.y = state.y;
     options.width = state.width;

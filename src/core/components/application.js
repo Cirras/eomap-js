@@ -1024,7 +1024,7 @@ export class Application extends LitElement {
   }
 
   modalOpen(modal) {
-    return !!(modal && modal.open);
+    return !!modal?.open;
   }
 
   emitHasOpenPromptChanged() {
@@ -1100,16 +1100,14 @@ export class Application extends LitElement {
 
   async needGFXDirectoryPermission() {
     return (
-      this.settingsState &&
-      this.settingsState.gfxDirectory &&
+      this.settingsState?.gfxDirectory &&
       (await this.settingsState.gfxDirectory.queryPermission()) !== "granted"
     );
   }
 
   async needAssetsDirectoryPermission() {
     return (
-      this.settingsState &&
-      this.settingsState.customAssetsDirectory &&
+      this.settingsState?.customAssetsDirectory &&
       (await this.settingsState.customAssetsDirectory.queryPermission()) !==
         "granted"
     );

@@ -131,7 +131,7 @@ export class Menu extends SpectrumElement {
     return (
       this === element ||
       this.menuItems.includes(element) ||
-      (this.submenu && this.submenu.menu.isDescendant(element))
+      this.submenu?.menu.isDescendant(element)
     );
   }
 
