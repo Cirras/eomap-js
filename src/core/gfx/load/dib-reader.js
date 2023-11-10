@@ -968,10 +968,11 @@ class RLEReadStrategy extends ReadStrategy {
         break;
 
       // Absolute
-      default:
+      default: {
         const length = instruction;
         this.readAbsoluteMode(length, outBuffer);
         break;
+      }
     }
 
     return true;
