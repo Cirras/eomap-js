@@ -2,10 +2,6 @@ import { ElectronFileSystemHandle } from "./file-system-handle";
 import { readFile, writeFile } from "./fs";
 
 export class ElectronFileSystemFileHandle extends ElectronFileSystemHandle {
-  constructor(name, path) {
-    super(name, path);
-  }
-
   get kind() {
     return "file";
   }

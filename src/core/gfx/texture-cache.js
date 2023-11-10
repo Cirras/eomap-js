@@ -84,10 +84,6 @@ class EntityTextureCacheEntry extends TextureCacheEntry {
 }
 
 class CursorTextureCacheEntry extends TextureCacheEntry {
-  constructor(key, defaultAsset) {
-    super(key, defaultAsset);
-  }
-
   createAsset(assetFactory, textureKey) {
     return assetFactory.createCursor(textureKey, this.key);
   }
@@ -98,10 +94,6 @@ class CursorTextureCacheEntry extends TextureCacheEntry {
 }
 
 class BlackTileTextureCacheEntry extends TextureCacheEntry {
-  constructor(key, defaultAsset) {
-    super(key, defaultAsset);
-  }
-
   createAsset(assetFactory, textureKey) {
     return assetFactory.createRaw(textureKey, this.key);
   }

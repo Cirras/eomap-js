@@ -1,10 +1,6 @@
 import { WebFileSystemHandle } from "./file-system-handle";
 
 export class WebFileSystemFileHandle extends WebFileSystemHandle {
-  constructor(handle) {
-    super(handle);
-  }
-
   async getFile() {
     return this._handle.getFile();
   }

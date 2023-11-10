@@ -3,10 +3,6 @@ import { ElectronFileSystemHandle } from "./file-system-handle";
 import { getDirectoryHandleData, getFileHandleData } from "./fs";
 
 export class ElectronFileSystemDirectoryHandle extends ElectronFileSystemHandle {
-  constructor(name, path) {
-    super(name, path);
-  }
-
   get kind() {
     return "directory";
   }
