@@ -285,7 +285,7 @@ export class TextureCache {
 
       if (this.pages[i].empty) {
         console.error(
-          `Failed to find space in the texture cache for \"${entry.key}\"`
+          `Failed to find space in the texture cache for "${entry.key}"`
         );
         return false;
       }
@@ -362,7 +362,7 @@ export class TextureCache {
     if (!bin) {
       multiTexture.destroy();
       throw new Error(
-        `Failed to find space in the texture cache for jumbo entry \"${entry.key}\"`
+        `Failed to find space in the texture cache for jumbo entry "${entry.key}"`
       );
     }
 
