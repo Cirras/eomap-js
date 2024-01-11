@@ -1,3 +1,5 @@
+import { MapItem, MapNPC } from "../data/emf";
+
 export class EntityState {
   constructor(x, y, warp, sign, npcs, items) {
     this.x = x;
@@ -14,9 +16,42 @@ export class EntityState {
       this.y,
       this.warp,
       this.sign,
-      [...this.npcs],
-      [...this.items]
+      this.npcs.map(
+        (npc) =>
+          new MapNPC(
+            npc.x,
+            npc.y,
+            npc.id,
+            npc.spawnType,
+            npc.spawnTime,
+            npc.amount
+          )
+      ),
+      this.items.map(
+        (item) =>
+          new MapItem(
+            item.x,
+            item.y,
+            item.key,
+            item.chestSlot,
+            item.id,
+            item.spawnTime,
+            item.amount
+          )
+      )
     );
+  }
+
+  withX(x) {
+    let copy = this.copy();
+    copy.x = x;
+    return copy;
+  }
+
+  withY(y) {
+    let copy = this.copy();
+    copy.y = y;
+    return copy;
   }
 
   withWarp(warp) {

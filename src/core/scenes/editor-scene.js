@@ -47,6 +47,7 @@ export class EditorScene extends Phaser.Scene {
     this.cameraControls = null;
     this.shiftKey = null;
     this.axisLock = null;
+    this.copiedEntities = null;
 
     this._tempMatrix1 = new Phaser.GameObjects.Components.TransformMatrix();
     this._tempMatrix2 = new Phaser.GameObjects.Components.TransformMatrix();
@@ -484,8 +485,11 @@ export class EditorScene extends Phaser.Scene {
     this.map.setSelectedLayer(this.selectedLayer);
   }
 
-  updateEntityState() {
-    let newEntityState = this.data.get("entityState");
+  updateEntityState(newEntityState) {
+    if (newEntityState === undefined) {
+      newEntityState = this.data.get("entityState");
+    }
+
     let x = newEntityState.x;
     let y = newEntityState.y;
 

@@ -108,7 +108,11 @@ export class ContextMenu extends SpectrumElement {
     return this.state.items.map((item) => {
       if (item instanceof ContextMenuActionItem) {
         return html`
-          <eomap-menu-item .label=${item.label} @menu-item-press=${item.action}>
+          <eomap-menu-item
+            .label=${item.label}
+            ?disabled=${item.disabled}
+            @menu-item-press=${item.action}
+          >
           </eomap-menu-item>
         `;
       } else if (item instanceof ContextMenuDividerItem) {

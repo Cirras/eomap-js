@@ -1,7 +1,11 @@
 export class ContextMenuActionItem {
-  constructor(label, action) {
+  constructor(label, action, disabled) {
+    if (disabled === undefined) {
+      disabled = false;
+    }
     this.label = label;
     this.action = action;
+    this.disabled = disabled;
   }
 }
 
