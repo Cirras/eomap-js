@@ -45,12 +45,24 @@ export class EntityState {
   withX(x) {
     let copy = this.copy();
     copy.x = x;
+    for (let npc of copy.npcs) {
+      npc.x = x;
+    }
+    for (let item of copy.items) {
+      item.x = x;
+    }
     return copy;
   }
 
   withY(y) {
     let copy = this.copy();
     copy.y = y;
+    for (let npc of copy.npcs) {
+      npc.y = y;
+    }
+    for (let item of copy.items) {
+      item.y = y;
+    }
     return copy;
   }
 
