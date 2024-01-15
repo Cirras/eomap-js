@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.1] - 2024-01-15
+
 ### Fixed
 
 - Copy-pasted NPC and item spawns had incorrect map coordinates.
@@ -149,7 +151,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Desktop app for Windows, Linux, and macOS.
 - Web app available at [https://eomap.dev](https://eomap.dev)
 
-[unreleased]: https://github.com/cirras/eomap-js/compare/v1.2.0...HEAD
+[unreleased]: https://github.com/cirras/eomap-js/compare/v1.2.1...HEAD
+[1.2.1]: https://github.com/cirras/eomap-js/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/cirras/eomap-js/compare/v1.1.2...v1.2.0
 [1.1.2]: https://github.com/cirras/eomap-js/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/cirras/eomap-js/compare/v1.1.0...v1.1.1
