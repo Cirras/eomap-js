@@ -486,6 +486,8 @@ function newWindow() {
   const options = {
     width: 1024,
     height: 768,
+    minWidth: 400,
+    minHeight: 270,
     backgroundColor: "#1a1a1a",
     show: false,
     frame: isMac(),
