@@ -140,7 +140,7 @@ export class PaletteScene extends Phaser.Scene {
         height = 32;
       }
 
-      if (fileID === 6 && width >= 32 * 4) {
+      if (fileID === 6 && width > 120) {
         width = Math.floor(width / 4);
       }
 

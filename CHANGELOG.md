@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Application window's minimum size is now 400x270.
+- Better placement of unusually-sized animated walls in the palette.
 
 ## [1.2.1] - 2024-01-15
 
