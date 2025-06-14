@@ -32,9 +32,6 @@ module.exports = {
   mac: {
     category: "public.app-category.developer-tools",
     hardenedRuntime: true,
-    notarize: {
-      teamId: process.env.APPLE_TEAM_ID,
-    },
   },
   nsis: {
     oneClick: false,
