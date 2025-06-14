@@ -36,7 +36,7 @@ jobs:
 
       - name: Create Release Draft
         id: create-release-draft
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           draft: true
           name: eomap-js v${{steps.changelog.outputs.version}}
@@ -71,7 +71,7 @@ jobs:
           npm run build
 
       - name: Prepare code signing for macOS
-        uses: allenevans/set-env@v3.0.0
+        uses: allenevans/set-env@v4.0.0
         if: startsWith(matrix.os, 'macos')
         with:
           CSC_LINK: ${{ secrets.mac_certs }}
