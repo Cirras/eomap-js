@@ -68,7 +68,7 @@ export class MenubarController extends EventEmitter {
           event.preventDefault();
           event.stopPropagation();
           this.handleMenuEvent(
-            new CustomEvent(item.eventType, { detail: item.eventDetail })
+            new CustomEvent(item.eventType, { detail: item.eventDetail }),
           ).catch((reason) => {
             console.error(reason);
           });
@@ -114,7 +114,7 @@ export class MenubarController extends EventEmitter {
       items.push(
         new SubmenuMenuItemState()
           .withLabel("App")
-          .withMenu(this.generateAppMenu())
+          .withMenu(this.generateAppMenu()),
       );
     }
 
@@ -127,7 +127,7 @@ export class MenubarController extends EventEmitter {
         .withMenu(this.generateEditMenu()),
       new SubmenuMenuItemState()
         .withLabel("&View")
-        .withMenu(this.generateViewMenu())
+        .withMenu(this.generateViewMenu()),
     );
 
     if (isElectron() && isMac()) {
@@ -137,7 +137,7 @@ export class MenubarController extends EventEmitter {
     items.push(
       new SubmenuMenuItemState()
         .withLabel("&Help")
-        .withMenu(this.generateHelpMenu())
+        .withMenu(this.generateHelpMenu()),
     );
 
     return new MenubarState(items);
@@ -187,7 +187,7 @@ export class MenubarController extends EventEmitter {
         new MenuItemState()
           .withLabel("New &Window")
           .withEventType(MenuEvent.NewWindow)
-          .withKeybinding("CommandOrControl+Shift+N")
+          .withKeybinding("CommandOrControl+Shift+N"),
       );
     }
 
@@ -217,7 +217,7 @@ export class MenubarController extends EventEmitter {
       new MenuItemState()
         .withLabel("Map &Properties")
         .withEventType(MenuEvent.MapProperties)
-        .withEnabled(this.canAccessMapProperties)
+        .withEnabled(this.canAccessMapProperties),
     );
 
     items.push(new DividerMenuItemState());
@@ -228,7 +228,7 @@ export class MenubarController extends EventEmitter {
           .withLabel("Close Window")
           .withEventType(MenuEvent.CloseWindow)
           .withKeybinding("Command+W")
-          .withEnabled(this.canCloseWindow)
+          .withEnabled(this.canCloseWindow),
       );
     } else {
       items.push(
@@ -241,7 +241,7 @@ export class MenubarController extends EventEmitter {
         new MenuItemState()
           .withLabel("Reload &Graphics")
           .withEventType(MenuEvent.ReloadGraphics)
-          .withEnabled(this.canReloadGraphics)
+          .withEnabled(this.canReloadGraphics),
       );
     }
 
@@ -252,7 +252,7 @@ export class MenubarController extends EventEmitter {
           new MenuItemState()
             .withLabel("E&xit")
             .withEventType(MenuEvent.CloseWindow)
-            .withEnabled(this.canCloseWindow)
+            .withEnabled(this.canCloseWindow),
         );
       } else if (isLinux()) {
         items.push(
@@ -266,7 +266,7 @@ export class MenubarController extends EventEmitter {
             .withLabel("&Quit")
             .withEventType(MenuEvent.Quit)
             .withKeybinding("Ctrl+Q")
-            .withEnabled(this.canCloseWindow)
+            .withEnabled(this.canCloseWindow),
         );
       }
     }
@@ -282,7 +282,7 @@ export class MenubarController extends EventEmitter {
           .withLabel(escapeMnemonics(handle.path))
           .withEventType(MenuEvent.OpenRecent)
           .withEventDetail(index)
-          .withEnabled(this.canOpenMaps)
+          .withEnabled(this.canOpenMaps),
       );
 
     if (items.length > 0) {
@@ -294,7 +294,7 @@ export class MenubarController extends EventEmitter {
         new MenuItemState()
           .withLabel(isMac() ? "Clear Menu" : "&Clear Recently Opened")
           .withEventType(MenuEvent.ClearRecent)
-          .withEnabled(items.length > 0)
+          .withEnabled(items.length > 0),
       );
     }
     return new MenuState(items);
@@ -352,8 +352,8 @@ export class MenubarController extends EventEmitter {
               .withEventDetail(info.flag)
               .withKeybinding(info.kbd)
               .withChecked(this.layerVisibility.isFlagActive(info.flag))
-              .withEnabled(this.canToggleLayerVisibility(info.flag))
-      )
+              .withEnabled(this.canToggleLayerVisibility(info.flag)),
+      ),
     );
   }
 
@@ -372,7 +372,7 @@ export class MenubarController extends EventEmitter {
           .withEventType(MenuEvent.DevTools)
           .withKeybinding(isMac() ? "Alt+Command+I" : "Ctrl+Shift+I")
           .withEnabled(this.canToggleDevTools),
-        new DividerMenuItemState()
+        new DividerMenuItemState(),
       );
     }
 
@@ -381,7 +381,7 @@ export class MenubarController extends EventEmitter {
         new MenuItemState()
           .withLabel("&About")
           .withEventType(MenuEvent.About)
-          .withEnabled(this.canShowAbout)
+          .withEnabled(this.canShowAbout),
       );
     }
 
@@ -391,7 +391,7 @@ export class MenubarController extends EventEmitter {
   collectKeybindings() {
     this.keybindingMap.clear();
     this.state.items.forEach((item) =>
-      this.collectKeybindingsFromMenuItem(item)
+      this.collectKeybindingsFromMenuItem(item),
     );
   }
 
@@ -407,7 +407,7 @@ export class MenubarController extends EventEmitter {
 
     if (item.type === "submenu" && item.menu) {
       item.menu.items.forEach((subItem) =>
-        this.collectKeybindingsFromMenuItem(subItem)
+        this.collectKeybindingsFromMenuItem(subItem),
       );
     }
   }

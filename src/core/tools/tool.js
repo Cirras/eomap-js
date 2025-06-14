@@ -93,19 +93,19 @@ export class Tool {
     handleButtonDown(
       PointerDownState.Left,
       pointer.button === 0,
-      this.handleLeftPointerDown.bind(this)
+      this.handleLeftPointerDown.bind(this),
     );
 
     handleButtonDown(
       PointerDownState.Middle,
       pointer.button === 1,
-      this.handleMiddlePointerDown.bind(this)
+      this.handleMiddlePointerDown.bind(this),
     );
 
     handleButtonDown(
       PointerDownState.Right,
       pointer.button === 2,
-      this.handleRightPointerDown.bind(this)
+      this.handleRightPointerDown.bind(this),
     );
   }
 
@@ -124,19 +124,19 @@ export class Tool {
     handleButtonUp(
       PointerDownState.Left,
       pointer.leftButtonDown(),
-      this.handleLeftPointerUp.bind(this)
+      this.handleLeftPointerUp.bind(this),
     );
 
     handleButtonUp(
       PointerDownState.Middle,
       pointer.middleButtonDown(),
-      this.handleMiddlePointerUp.bind(this)
+      this.handleMiddlePointerUp.bind(this),
     );
 
     handleButtonUp(
       PointerDownState.Right,
       pointer.rightButtonDown(),
-      this.handleRightPointerUp.bind(this)
+      this.handleRightPointerUp.bind(this),
     );
   }
 

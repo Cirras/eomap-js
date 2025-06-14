@@ -90,7 +90,7 @@ export class PhaserInstance extends LitElement {
     this.devicePixelRatioObserver.on(
       "change",
       this.updateDevicePixelRatio,
-      this
+      this,
     );
   }
 
@@ -188,7 +188,7 @@ export class PhaserInstance extends LitElement {
       if (window) {
         window.removeEventListener(
           "touchcancel",
-          this.game.input.touch.onTouchCancelWindow
+          this.game.input.touch.onTouchCancelWindow,
         );
       }
       this.game.destroy(true);

@@ -38,8 +38,9 @@ export class FolderTextfield extends Textfield {
           cursor: pointer;
           font-family: var(--spectrum-global-font-family-code);
           font-size: 12px;
-          transition: background
-              var(--spectrum-global-animation-duration-100, 0.13s) ease-out,
+          transition:
+            background var(--spectrum-global-animation-duration-100, 0.13s)
+              ease-out,
             border-color var(--spectrum-global-animation-duration-100, 0.13s)
               ease-out;
         }
@@ -154,8 +155,8 @@ export class Folderfield extends LitElement {
   render() {
     return html`
       <sp-field-label for="textfield" @click=${this.labelClick}>${
-      this.label
-    }</sp-field-label>
+        this.label
+      }</sp-field-label>
       <div class="container">
         <eomap-folder-textfield
           id="textfield"

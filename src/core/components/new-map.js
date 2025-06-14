@@ -109,7 +109,7 @@ export class NewMap extends LitElement {
             height: this.height.value,
             name: this.name.value,
           },
-        })
+        }),
       );
     }
   }

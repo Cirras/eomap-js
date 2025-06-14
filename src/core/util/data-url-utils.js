@@ -11,7 +11,7 @@ export async function dataURLToImage(dataURL) {
   image.src = dataURL;
 
   await new Promise((resolve) =>
-    image.addEventListener("load", () => resolve())
+    image.addEventListener("load", () => resolve()),
   );
 
   return image;

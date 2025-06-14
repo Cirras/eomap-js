@@ -52,7 +52,7 @@ function createMenuItemClick(state) {
     }
     window.webContents.executeJavaScript(
       `emitNativeMenuEvent(${eventType}, ${eventDetail});`,
-      true
+      true,
     );
     if (window.isMinimized()) {
       window.restore();
@@ -259,7 +259,7 @@ function setupIPC() {
     } else {
       try {
         returnValue = await asyncMap(dialogResult.filePaths, async (fsPath) =>
-          pathToHandleData(fsPath)
+          pathToHandleData(fsPath),
         );
       } catch (e) {
         error = e.code;
@@ -344,7 +344,7 @@ function setupIPC() {
       }
 
       return { error, returnValue };
-    }
+    },
   );
 
   ipcMain.handle("fs:read-file", async (_event, fsPath) => {
@@ -659,7 +659,7 @@ function main() {
       if (!openFilesFromCommandLine(additionalData.argv)) {
         newWindow();
       }
-    }
+    },
   );
 
   // Quit when all windows are closed, except on macOS. There, it's common

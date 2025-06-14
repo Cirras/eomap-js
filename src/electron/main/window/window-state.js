@@ -17,7 +17,7 @@ export class WindowState {
       bounds.y,
       bounds.width,
       bounds.height,
-      window.isMaximized()
+      window.isMaximized(),
     );
   }
 
@@ -32,7 +32,7 @@ export class WindowState {
         json.y,
         json.width,
         json.height,
-        json.maximized
+        json.maximized,
       );
     } catch (e) {
       console.error("Failed to read window state", e);

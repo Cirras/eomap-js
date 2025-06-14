@@ -163,7 +163,7 @@ export class Picker extends Dropdown {
       Picker.overlayEscapeHacked = true;
       overlayStack.document.removeEventListener(
         "keyup",
-        overlayStack.handleKeyUp
+        overlayStack.handleKeyUp,
       );
     }
   }
@@ -200,7 +200,7 @@ export class Picker extends Dropdown {
     super.updated(changedProperties);
     if (changedProperties.has("value")) {
       this.select(
-        this.menu.menuItems.find((m) => m.value === this.value) || null
+        this.menu.menuItems.find((m) => m.value === this.value) || null,
       );
     }
     if (changedProperties.has("open")) {

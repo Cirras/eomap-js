@@ -61,7 +61,7 @@ export class EditorScene extends Phaser.Scene {
       this,
       this.data.values.gfxLoader,
       1024,
-      1024
+      1024,
     );
 
     this.cursor = this.add.cursor(this, this.textureCache).setDepth(1.0);
@@ -73,7 +73,7 @@ export class EditorScene extends Phaser.Scene {
       this,
       this.textureCache,
       this.emf,
-      this.layerVisibility
+      this.layerVisibility,
     );
 
     this.mapState.gameObject = this.map;
@@ -92,7 +92,7 @@ export class EditorScene extends Phaser.Scene {
 
     this.shiftKey = this.input.keyboard.addKey(
       Phaser.Input.Keyboard.KeyCodes.SHIFT,
-      false
+      false,
     );
 
     this.shiftKey.on("up", (_event) => {
@@ -103,7 +103,7 @@ export class EditorScene extends Phaser.Scene {
     this.input.on("pointerdown", (pointer) => this.handlePointerDown(pointer));
     this.input.on("pointerup", (pointer) => this.handlePointerUp(pointer));
     this.input.on("pointerupoutside", (pointer) =>
-      this.handlePointerUp(pointer)
+      this.handlePointerUp(pointer),
     );
 
     this.setupWorkaroundPointerEvents();
@@ -130,7 +130,7 @@ export class EditorScene extends Phaser.Scene {
     this.data.events.on("changedata-updateZoom", () => {
       this.map.zoom = Math.min(
         ZoomTool.MAX_ZOOM,
-        Math.max(ZoomTool.MIN_ZOOM, this.data.values.updateZoom)
+        Math.max(ZoomTool.MIN_ZOOM, this.data.values.updateZoom),
       );
     });
 
@@ -392,9 +392,9 @@ export class EditorScene extends Phaser.Scene {
         pos.y,
         this.selectedLayer,
         oldDrawID,
-        drawID
+        drawID,
       ),
-      true
+      true,
     );
   }
 
@@ -417,8 +417,8 @@ export class EditorScene extends Phaser.Scene {
         pos.y,
         this.selectedLayer,
         oldDrawID,
-        drawID
-      )
+        drawID,
+      ),
     );
   }
 
@@ -438,9 +438,9 @@ export class EditorScene extends Phaser.Scene {
         pos.y,
         this.selectedLayer,
         oldDrawID,
-        drawID
+        drawID,
       ),
-      true
+      true,
     );
   }
 
@@ -499,11 +499,11 @@ export class EditorScene extends Phaser.Scene {
       this.map.getWarp(x, y),
       this.map.getSign(x, y),
       this.map.getNPCs(x, y),
-      this.map.getItems(x, y)
+      this.map.getItems(x, y),
     );
 
     this.commandInvoker.add(
-      new EntityCommand(this.mapState, x, y, oldEntityState, newEntityState)
+      new EntityCommand(this.mapState, x, y, oldEntityState, newEntityState),
     );
   }
 
@@ -522,15 +522,15 @@ export class EditorScene extends Phaser.Scene {
       this.emf.ambientSoundID,
       this.emf.musicControl,
       this.emf.relogX,
-      this.emf.relogY
+      this.emf.relogY,
     );
 
     this.commandInvoker.add(
       new PropertiesCommand(
         this.mapState,
         oldMapPropertiesState,
-        newMapPropertiesState
-      )
+        newMapPropertiesState,
+      ),
     );
   }
 

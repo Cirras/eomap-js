@@ -30,7 +30,7 @@ const distPath = path.join(__dirname, "../dist/electron");
       process.cwd(),
       "node_modules",
       ".bin",
-      process.platform === "win32" ? "electron.cmd" : "electron"
+      process.platform === "win32" ? "electron.cmd" : "electron",
     );
     const electron = spawn(electronPath, [path.join(distPath, "main.js")], {
       stdio: "inherit",

@@ -52,7 +52,7 @@ export class PaletteScene extends Phaser.Scene {
       this,
       this.data.values.gfxLoader,
       2048,
-      2048
+      2048,
     );
 
     this.layers = this.createLayers();
@@ -62,7 +62,7 @@ export class PaletteScene extends Phaser.Scene {
       "changedata-selectedLayer",
       (_parent, value, _previousValue) => {
         this.selectLayer(value);
-      }
+      },
     );
 
     this.data.events.on(
@@ -75,7 +75,7 @@ export class PaletteScene extends Phaser.Scene {
           this.emitScrollChangedEvent();
         }
         this.updateSelectedDrawID();
-      }
+      },
     );
 
     this.data.events.on(
@@ -83,14 +83,14 @@ export class PaletteScene extends Phaser.Scene {
       (_parent, value, _previousValue) => {
         this.cameras.main.scrollY = value;
         this.selectedLayer.scroll = value;
-      }
+      },
     );
 
     this.input.on("pointerup", (pointer) => {
       if (pointer.leftButtonReleased() && pointer.getDistance() < 16) {
         let entry = this.selectedLayer.getEntryAtPosition(
           pointer.x,
-          pointer.y + this.cameras.main.scrollY
+          pointer.y + this.cameras.main.scrollY,
         );
         if (entry) {
           this.selectEntry(entry.id);
@@ -149,7 +149,7 @@ export class PaletteScene extends Phaser.Scene {
         width,
         height,
         fileID,
-        resourceID
+        resourceID,
       );
 
       layer.addEntry(resource);
@@ -300,7 +300,7 @@ export class PaletteScene extends Phaser.Scene {
     this.events.emit(
       "scroll-changed",
       this.selectedLayer.scroll,
-      this.data.values.contentScroll
+      this.data.values.contentScroll,
     );
   }
 

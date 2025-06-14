@@ -65,7 +65,7 @@ class WebGLTexturePage extends TexturePage {
       this.texture,
       this.glTexture,
       this.width,
-      this.height
+      this.height,
     );
 
     let sourceIndex = this.texture.source.length;
@@ -76,7 +76,7 @@ class WebGLTexturePage extends TexturePage {
       0,
       0,
       width,
-      height
+      height,
     );
   }
 
@@ -113,7 +113,7 @@ class WebGLTexturePage extends TexturePage {
       height,
       true,
       false,
-      false
+      false,
     );
   }
 
@@ -138,7 +138,7 @@ class WebGLTexturePage extends TexturePage {
         y,
         gl.RGBA,
         gl.UNSIGNED_BYTE,
-        imageData
+        imageData,
       );
 
       if (currentTexture) {
@@ -167,14 +167,14 @@ class CanvasTexturePage extends TexturePage {
       this.width,
       this.height,
       Phaser.CANVAS,
-      true
+      true,
     );
 
     this.source = new TextureSource(
       this.texture,
       this.canvas,
       this.width,
-      this.height
+      this.height,
     );
 
     this.context = this.canvas.getContext("2d");
@@ -187,7 +187,7 @@ class CanvasTexturePage extends TexturePage {
       0,
       0,
       width,
-      height
+      height,
     );
   }
 
@@ -203,7 +203,7 @@ class CanvasTexturePage extends TexturePage {
       0,
       0,
       imageData.width,
-      imageData.height
+      imageData.height,
     );
 
     this.source.update();

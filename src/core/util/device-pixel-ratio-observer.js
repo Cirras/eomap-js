@@ -16,7 +16,7 @@ export class DevicePixelRatioObserver extends EventEmitter {
 
   _observe() {
     this._mediaQueryList = matchMedia(
-      `(resolution: ${window.devicePixelRatio}dppx)`
+      `(resolution: ${window.devicePixelRatio}dppx)`,
     );
     this._mediaQueryList.addEventListener("change", this._onChange, {
       once: true,

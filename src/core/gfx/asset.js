@@ -49,7 +49,7 @@ export class AssetFactory {
         texture,
         textureFrame,
         Math.floor(textureFrame.realWidth / 4),
-        textureFrame.realHeight
+        textureFrame.realHeight,
       );
 
       let sizeFrame = animationFrames[0];
@@ -84,7 +84,7 @@ export class AssetFactory {
       texture,
       textureFrame,
       Math.floor(textureFrame.realWidth / 5),
-      textureFrame.realHeight
+      textureFrame.realHeight,
     );
 
     let sizeFrame = animationFrames[0];
@@ -136,7 +136,7 @@ export class AssetFactory {
           x + frameX,
           y + frameY,
           frameWidth,
-          frameHeight
+          frameHeight,
         );
 
         animationFrames.push(sheetFrame);
@@ -176,7 +176,7 @@ export class AssetFactory {
             destX,
             destY,
             destWidth,
-            destHeight
+            destHeight,
           );
         }
 

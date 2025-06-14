@@ -9,7 +9,7 @@ export class ElectronFileSystemProvider {
     openOptions.properties.push("openFile");
 
     return (await showOpenDialog(openOptions)).map((data) =>
-      this._dataToHandle(data)
+      this._dataToHandle(data),
     );
   }
 

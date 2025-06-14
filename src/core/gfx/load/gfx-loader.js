@@ -51,7 +51,7 @@ export class GFXLoader {
         let imageData = new ImageData(
           new Uint8ClampedArray(data.pixels),
           info.width,
-          info.height
+          info.height,
         );
         pending.resolve(imageData);
       }
@@ -90,7 +90,7 @@ export class GFXLoader {
           buffer: buffer,
           fileID: fileID,
         },
-        [buffer]
+        [buffer],
       );
 
       let resourceInfo = await pending.promise;
@@ -162,7 +162,7 @@ export class GFXLoader {
           "Failed to read resource %d from file %d: %s",
           resourceID,
           fileID,
-          e
+          e,
         );
       }
     }

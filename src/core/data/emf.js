@@ -538,7 +538,7 @@ export class EMF {
     if (!signRows.empty) {
       let signCount = signRows.reduce(
         (accumulator, row) => accumulator + row.length,
-        0
+        0,
       );
       builder.addChar(signCount);
       for (let row of signRows) {

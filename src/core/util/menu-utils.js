@@ -63,7 +63,7 @@ function getOnMenuItemPress(item) {
           detail: item.eventDetail,
           bubbles: true,
           composed: true,
-        })
+        }),
       );
     }
   };

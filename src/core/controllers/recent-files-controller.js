@@ -43,7 +43,7 @@ export class RecentFilesController {
 
   async _restoreRecentFiles(serializedRecentFiles) {
     this.recentFiles = serializedRecentFiles.map((handle) =>
-      this.fileSystemProvider.deserializeHandle(handle)
+      this.fileSystemProvider.deserializeHandle(handle),
     );
   }
 
@@ -54,14 +54,14 @@ export class RecentFilesController {
   _updateRecentDocuments() {
     if (isElectron()) {
       window.bridge.setRecentDocuments(
-        this.recentFiles.map((handle) => handle.path)
+        this.recentFiles.map((handle) => handle.path),
       );
     }
   }
 
   async _saveRecentFiles() {
     let serializedRecentFiles = this.recentFiles.map((handle) =>
-      this.fileSystemProvider.serializeHandle(handle)
+      this.fileSystemProvider.serializeHandle(handle),
     );
 
     try {
@@ -79,7 +79,7 @@ export class RecentFilesController {
   async _doRemoveRecentFile(handle) {
     this.recentFiles = await asyncFilter(
       this.recentFiles,
-      async (recent) => !(await recent.isSameEntry(handle))
+      async (recent) => !(await recent.isSameEntry(handle)),
     );
   }
 
@@ -109,7 +109,7 @@ export class RecentFilesController {
 
   async hasRecentFile(handle) {
     let matched = await asyncFilter(this.recentFiles, async (recent) =>
-      recent.isSameEntry(handle)
+      recent.isSameEntry(handle),
     );
     return matched.length > 0;
   }

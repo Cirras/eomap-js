@@ -58,7 +58,7 @@ export class Editor extends PhaserInstance {
   setupEntityToolEvents(scene) {
     scene.events.on("request-entity-editor", (entityState) => {
       this.dispatchEvent(
-        new CustomEvent("request-entity-editor", { detail: entityState })
+        new CustomEvent("request-entity-editor", { detail: entityState }),
       );
     });
   }

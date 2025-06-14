@@ -84,7 +84,7 @@ export class PEReader {
   readString(length) {
     let decoder = new TextDecoder("utf-8");
     let result = decoder.decode(
-      new Uint8Array(this.file.slice(this.position, this.position + length))
+      new Uint8Array(this.file.slice(this.position, this.position + length)),
     );
     this.position += length;
     return result;
@@ -198,7 +198,7 @@ export class PEReader {
 
       this.resourceInfo.set(
         entry.resourceType,
-        new ResourceInfo(start, size, width, height)
+        new ResourceInfo(start, size, width, height),
       );
     }
   }

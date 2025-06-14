@@ -47,8 +47,8 @@ export class Application extends LitElement {
     return css`
       :host {
         --spectrum-divider-size: 1px;
-        --spectrum-global-font-family-code: "Source Code Pro", Monaco_, Consolas,
-          monospace;
+        --spectrum-global-font-family-code:
+          "Source Code Pro", Monaco_, Consolas, monospace;
         background-color: var(--spectrum-global-color-gray-200);
         color: var(--spectrum-global-color-gray-800);
         width: 100%;
@@ -257,7 +257,7 @@ export class Application extends LitElement {
     this.hasUndoCommands = this.mapState.commandInvoker.hasUndoCommands;
     this.hasRedoCommands = this.mapState.commandInvoker.hasRedoCommands;
     this.dispatchEvent(
-      new CustomEvent("map-state-changed", { detail: this.mapState })
+      new CustomEvent("map-state-changed", { detail: this.mapState }),
     );
   };
 
@@ -311,12 +311,12 @@ export class Application extends LitElement {
 
     if (this.isConnectedMode()) {
       loadingStrategy = new RemoteLoadingStrategy(
-        FORCE_CONNECTED_MODE_URL || this.settingsState.connectedModeURL
+        FORCE_CONNECTED_MODE_URL || this.settingsState.connectedModeURL,
       );
     } else {
       loadingStrategy = new LocalLoadingStrategy(
         this.settingsState.gfxDirectory,
-        this.settingsState.customAssetsDirectory
+        this.settingsState.customAssetsDirectory,
       );
     }
 
@@ -330,7 +330,7 @@ export class Application extends LitElement {
           ++this.gfxErrors;
           console.error("Failed to load EGF %d: %s", fileID, e);
         }
-      })
+      }),
     );
 
     // Preload the cursor
@@ -433,11 +433,11 @@ export class Application extends LitElement {
         return (
           (await this.isDifferentHandle(
             previous.gfxDirectory,
-            this.settingsState.gfxDirectory
+            this.settingsState.gfxDirectory,
           )) ||
           this.isDifferentHandle(
             previous.customAssetsDirectory,
-            this.settingsState.customAssetsDirectory
+            this.settingsState.customAssetsDirectory,
           )
         );
     }
@@ -456,7 +456,7 @@ export class Application extends LitElement {
   calculateMaxPaletteWidth() {
     this.maxPaletteWidth = Math.max(
       Palette.MIN_WIDTH,
-      this.clientWidth - this.sidebar.offsetWidth
+      this.clientWidth - this.sidebar.offsetWidth,
     );
   }
 
@@ -660,8 +660,8 @@ export class Application extends LitElement {
           `Do you want to save the changes you made to ${this.mapState.filename}?`,
           "Your changes will be lost if you don't save them.",
           ["Save", "Don't Save", "Cancel"],
-          onButtonPress
-        )
+          onButtonPress,
+        ),
       );
     } else {
       callback();
@@ -672,7 +672,7 @@ export class Application extends LitElement {
     let fileHandle;
     try {
       [fileHandle] = await this.fileSystemProvider.showOpenFilePicker(
-        this.emfPickerOptions()
+        this.emfPickerOptions(),
       );
     } catch (e) {
       if (e.name === "AbortError") {
@@ -764,8 +764,8 @@ export class Application extends LitElement {
             `Failed to save ${this.mapState.filename}`,
             e.message,
             ["Retry", "Save As", "Cancel"],
-            onButtonPress
-          )
+            onButtonPress,
+          ),
         );
 
         console.error(`Failed to save '${this.mapState.filename}'`, e);
@@ -781,7 +781,7 @@ export class Application extends LitElement {
     try {
       this.mapState.fileHandle =
         await this.fileSystemProvider.showSaveFilePicker(
-          this.emfPickerOptions()
+          this.emfPickerOptions(),
         );
       this.onMapStateChange();
     } catch (e) {
@@ -849,7 +849,7 @@ export class Application extends LitElement {
     let dataTransfer = event.detail.dataTransfer;
     if (this.isValidDataTransfer(dataTransfer)) {
       let fileHandle = await this.fileSystemProvider.dataTransferItemToHandle(
-        dataTransfer.items[0]
+        dataTransfer.items[0],
       );
       if (fileHandle.kind === "file") {
         await this.openFile(fileHandle);
@@ -880,7 +880,7 @@ export class Application extends LitElement {
   onSelectedLayerChanged(event) {
     this.selectedLayer = event.detail;
     this.layerVisibility = this.layerVisibility.withSelectedLayer(
-      this.selectedLayer
+      this.selectedLayer,
     );
     document.activeElement.blur();
   }
@@ -961,8 +961,8 @@ export class Application extends LitElement {
         PromptType.Error,
         `Entity limit exceeded`,
         `Only ${limit} ${entityType}s are allowed. (${count}/${limit})`,
-        ["OK"]
-      )
+        ["OK"],
+      ),
     );
   }
 
@@ -970,7 +970,7 @@ export class Application extends LitElement {
     const emf = EMF.new(
       event.detail.width,
       event.detail.height,
-      event.detail.name
+      event.detail.name,
     );
     const pending = !this.validGfx();
     this.mapState = MapState.fromEMF(emf).withPending(pending);
@@ -1029,7 +1029,9 @@ export class Application extends LitElement {
 
   emitHasOpenPromptChanged() {
     this.dispatchEvent(
-      new CustomEvent("has-open-prompt-changed", { detail: this.hasOpenPrompt })
+      new CustomEvent("has-open-prompt-changed", {
+        detail: this.hasOpenPrompt,
+      }),
     );
   }
 

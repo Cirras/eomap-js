@@ -173,7 +173,7 @@ export class EntityWarp extends LitElement {
             level: this.level.value,
             door: this.isDoor ? this.key.value + 1 : 0,
           },
-        })
+        }),
       );
     }
   }

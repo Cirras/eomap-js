@@ -332,7 +332,7 @@ export class PaletteLayer extends Phaser.GameObjects.GameObject {
         camera,
         null,
         true,
-        textureUnit
+        textureUnit,
       );
     }
 
@@ -376,7 +376,7 @@ export class PaletteLayer extends Phaser.GameObjects.GameObject {
         entry.x,
         entry.y,
         frameWidth / res,
-        frameHeight / res
+        frameHeight / res,
       );
 
       ctx.restore();

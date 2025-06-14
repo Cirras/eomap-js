@@ -145,7 +145,7 @@ export class EntityItem extends LitElement {
             chestSlot: this.chestSlot.value,
             key: this.key.value,
           },
-        })
+        }),
       );
     }
   }

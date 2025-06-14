@@ -550,7 +550,7 @@ export class Palette extends PhaserInstance {
     this.dispatchEvent(
       new CustomEvent("layer-selected", {
         detail: parseInt(event.target.value),
-      })
+      }),
     );
   }
 

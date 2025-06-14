@@ -162,7 +162,7 @@ export class ContextMenu extends SpectrumElement {
       new CustomEvent(eventName, {
         bubbles: true,
         composed: true,
-      })
+      }),
     );
   }
 

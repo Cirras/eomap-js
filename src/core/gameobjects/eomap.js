@@ -48,7 +48,7 @@ class TileGraphic {
       this.y,
       this.layer,
       this.depth,
-      this.alpha
+      this.alpha,
     );
   }
 
@@ -496,7 +496,7 @@ export class EOMap extends Phaser.GameObjects.GameObject {
         0,
         layer,
         this.calcDepth(x, y, layer),
-        0.0
+        0.0,
       );
     }
 
@@ -723,7 +723,7 @@ export class EOMap extends Phaser.GameObjects.GameObject {
         frame,
         tileGraphic.x - drawOffsetX,
         tileGraphic.y - drawOffsetY,
-        tileGraphic.alpha
+        tileGraphic.alpha,
       );
     }
 
@@ -761,7 +761,7 @@ export class EOMap extends Phaser.GameObjects.GameObject {
         tint,
         alpha,
         matrix,
-        null
+        null,
       );
     } else {
       this.batchTextureFrameCanvas(renderTexture, textureFrame, matrix, alpha);
@@ -797,7 +797,7 @@ export class EOMap extends Phaser.GameObjects.GameObject {
         0,
         0,
         frameWidth,
-        frameHeight
+        frameHeight,
       );
 
       ctx.restore();
@@ -939,5 +939,5 @@ Phaser.GameObjects.GameObjectFactory.register(
     const map = new EOMap(scene, textureCache, emf, layerVisibility);
     this.displayList.add(map);
     return map;
-  }
+  },
 );

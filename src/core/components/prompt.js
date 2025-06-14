@@ -134,7 +134,7 @@ export class Prompt extends LitElement {
         >
           ${label}
         </sp-button>
-      `
+      `,
     );
   }
 

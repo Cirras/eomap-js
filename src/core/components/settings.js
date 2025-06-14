@@ -185,9 +185,9 @@ export class Settings extends LitElement {
             this.gfx.selected,
             this.assets.selected,
             this.connectedModeEnabledState,
-            this.connectedModeURLState
+            this.connectedModeURLState,
           ),
-        })
+        }),
       );
     }
   }

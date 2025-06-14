@@ -340,9 +340,9 @@ export class Properties extends LitElement {
             this.ambientSound.value,
             Number.parseInt(this.musicControl.value),
             this.respawnX.value,
-            this.respawnY.value
+            this.respawnY.value,
           ),
-        })
+        }),
       );
     }
   }

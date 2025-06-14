@@ -44,7 +44,7 @@ class ResourceTextureCacheEntry extends TextureCacheEntry {
       textureKey,
       this.key,
       this.fileID,
-      this.resourceID
+      this.resourceID,
     );
   }
 
@@ -170,7 +170,7 @@ export class TextureCache {
       this.scene.textures,
       this.identifier,
       width,
-      height
+      height,
     );
 
     let firstPage = new TextureCachePage(this.multiTexture.pages[0]);
@@ -210,7 +210,7 @@ export class TextureCache {
         key,
         this.assetFactory.getDefault(),
         fileID,
-        resourceID
+        resourceID,
       );
     });
   }
@@ -221,7 +221,7 @@ export class TextureCache {
       return new SpecTextureCacheEntry(
         key,
         this.assetFactory.getDefault(),
-        tileSpec
+        tileSpec,
       );
     });
   }
@@ -232,7 +232,7 @@ export class TextureCache {
       return new EntityTextureCacheEntry(
         key,
         this.assetFactory.getDefault(),
-        entityType
+        entityType,
       );
     });
   }
@@ -242,7 +242,7 @@ export class TextureCache {
     return this.getEntry(key, () => {
       return new BlackTileTextureCacheEntry(
         key,
-        this.assetFactory.getDefault()
+        this.assetFactory.getDefault(),
       );
     });
   }
@@ -253,7 +253,7 @@ export class TextureCache {
       return new GridTileTextureCacheEntry(
         key,
         this.assetFactory.getDefault(),
-        gridType
+        gridType,
       );
     });
   }
@@ -277,7 +277,7 @@ export class TextureCache {
 
       if (this.pages[i].empty) {
         console.error(
-          `Failed to find space in the texture cache for "${entry.key}"`
+          `Failed to find space in the texture cache for "${entry.key}"`,
         );
         return false;
       }
@@ -345,7 +345,7 @@ export class TextureCache {
       this.scene.textures,
       Phaser.Utils.String.UUID(),
       pixels.width,
-      pixels.height
+      pixels.height,
     );
 
     const page = new TextureCachePage(multiTexture.pages[0]);
@@ -354,7 +354,7 @@ export class TextureCache {
     if (!bin) {
       multiTexture.destroy();
       throw new Error(
-        `Failed to find space in the texture cache for jumbo entry "${entry.key}"`
+        `Failed to find space in the texture cache for jumbo entry "${entry.key}"`,
       );
     }
 
@@ -366,7 +366,7 @@ export class TextureCache {
     entry.asset = entry.createAsset(this.assetFactory, multiTexture.key);
 
     this.jumboEntries.push(
-      new JumboTextureCacheEntry(multiTexture, page, entry)
+      new JumboTextureCacheEntry(multiTexture, page, entry),
     );
 
     return true;
@@ -452,7 +452,7 @@ export class EvictingTextureCache extends TextureCache {
       if (page.empty) {
         page.shelfPacker = new ShelfPack(
           page.texturePage.width,
-          page.texturePage.height
+          page.texturePage.height,
         );
       }
     }

@@ -42,11 +42,9 @@ export class MnemonicLabel extends LitElement {
         result.push(html`<span>${string.substring(0, index)}</span>`);
       }
 
-      result.push(
-        html`
-          <span class="mnemonic" aria-hidden="true">${this.data.mnemonic}</span>
-        `
-      );
+      result.push(html`
+        <span class="mnemonic" aria-hidden="true">${this.data.mnemonic}</span>
+      `);
 
       if (index < string.length - 1) {
         result.push(html`<span>${string.substring(index + 1)}</span>`);

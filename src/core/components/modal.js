@@ -108,25 +108,25 @@ export class Modal extends SpectrumElement {
             element.focused = false;
           }
         };
-      }
+      },
     );
 
     this.openStatePromise = new Promise(
-      (res) => (this.openStateResolver = res)
+      (res) => (this.openStateResolver = res),
     );
     this.addEventListener(
       "sp-opened",
       () => {
         this.openStateResolver();
       },
-      { once: true }
+      { once: true },
     );
 
     this.closeOverlayCallback = await Overlay.open(
       this,
       "modal",
       this.dialogWrapper,
-      this.overlayOptions
+      this.overlayOptions,
     );
   }
 

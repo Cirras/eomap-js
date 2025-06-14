@@ -20,7 +20,7 @@ self.loadDIB = function (data) {
             resourceID: data.resourceID,
             pixels: pixels.buffer,
           },
-          [pixels.buffer]
+          [pixels.buffer],
         );
       }
     }

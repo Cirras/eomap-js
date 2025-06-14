@@ -38,9 +38,8 @@ export class LocalLoadingStrategy extends LoadingStrategy {
       let fileName = directoryNames.pop();
 
       for (let directoryName of directoryNames) {
-        directoryHandle = await directoryHandle.getDirectoryHandle(
-          directoryName
-        );
+        directoryHandle =
+          await directoryHandle.getDirectoryHandle(directoryName);
       }
 
       let fileHandle = await directoryHandle.getFileHandle(fileName);

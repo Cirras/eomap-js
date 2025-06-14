@@ -142,7 +142,7 @@ export class Dropdown extends SizedMixin(Focusable) {
       this.updateDirection(
         menuHeight,
         this.buttonRect.top,
-        this.buttonRect.height + this.menuTopOffset
+        this.buttonRect.height + this.menuTopOffset,
       );
 
       let menuHolderRect = this.menuHolder.getBoundingClientRect();

@@ -24,8 +24,8 @@ export class EntityState {
             npc.id,
             npc.spawnType,
             npc.spawnTime,
-            npc.amount
-          )
+            npc.amount,
+          ),
       ),
       this.items.map(
         (item) =>
@@ -36,9 +36,9 @@ export class EntityState {
             item.chestSlot,
             item.id,
             item.spawnTime,
-            item.amount
-          )
-      )
+            item.amount,
+          ),
+      ),
     );
   }
 

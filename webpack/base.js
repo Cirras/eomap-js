@@ -12,7 +12,7 @@ function getVersion() {
 function getReleaseNotesUrl() {
   return require("../package.json").releaseNotesUrl.replace(
     "${version}",
-    getVersion()
+    getVersion(),
   );
 }
 
@@ -53,7 +53,7 @@ module.exports = (env) => {
         CANVAS_RENDERER: JSON.stringify(true),
         WEBGL_RENDERER: JSON.stringify(true),
         FORCE_CONNECTED_MODE_URL: JSON.stringify(
-          env?.FORCE_CONNECTED_MODE_URL || ""
+          env?.FORCE_CONNECTED_MODE_URL || "",
         ),
         NPM_VERSION: JSON.stringify(getVersion()),
         RELEASE_NOTES_URL: JSON.stringify(getReleaseNotesUrl()),

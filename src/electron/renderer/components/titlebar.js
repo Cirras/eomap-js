@@ -276,7 +276,7 @@ export class Titlebar extends LitElement {
       event.stopPropagation();
       window.bridge.showTitleContextMenu(
         Math.round(event.pageX),
-        Math.round(event.pageY)
+        Math.round(event.pageY),
       );
     }
   }

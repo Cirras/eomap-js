@@ -25,7 +25,7 @@ function setupControllers() {
   application.menubarController = new MenubarController(application);
 
   application.menubarController.addEventSource(
-    new DOMMenuEventSource(application)
+    new DOMMenuEventSource(application),
   );
 }
 

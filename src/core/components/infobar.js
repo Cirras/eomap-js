@@ -161,7 +161,7 @@ export class InfoBar extends LitElement {
     }
     if (this.zoomField.value !== this.zoom) {
       this.dispatchEvent(
-        new CustomEvent("zoom-changed", { detail: this.zoomField.value })
+        new CustomEvent("zoom-changed", { detail: this.zoomField.value }),
       );
     }
   }

@@ -154,6 +154,6 @@ window.addEventListener("DOMContentLoaded", async (_event) => {
 
 window.emitNativeMenuEvent = function (eventType, eventDetail) {
   nativeMenuEventSource.emit(
-    new CustomEvent(eventType, { detail: eventDetail })
+    new CustomEvent(eventType, { detail: eventDetail }),
   );
 };

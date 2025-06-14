@@ -80,17 +80,16 @@ export class Sidebar extends LitElement {
 
   renderToolButtons() {
     return TOOLS.map(
-      (tool) =>
-        html`
-          <eomap-sidebar-button
-            .value=${tool.key}
-            .label=${`${tool.label} (${tool.kbd})`}
-            .icon=${tool.icon}
-            ?selected=${tool.key === this.selectedTool}
-            @click=${this.onToolClick}
-          >
-          </eomap-sidebar-button>
-        `
+      (tool) => html`
+        <eomap-sidebar-button
+          .value=${tool.key}
+          .label=${`${tool.label} (${tool.kbd})`}
+          .icon=${tool.icon}
+          ?selected=${tool.key === this.selectedTool}
+          @click=${this.onToolClick}
+        >
+        </eomap-sidebar-button>
+      `,
     );
   }
 

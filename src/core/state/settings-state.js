@@ -10,7 +10,7 @@ export class SettingsState {
     gfxDirectory,
     customAssetsDirectory,
     connectedModeEnabled,
-    connectedModeURL
+    connectedModeURL,
   ) {
     let result = new SettingsState();
     result.gfxDirectory = gfxDirectory;
@@ -29,7 +29,7 @@ export class SettingsState {
       settings.gfxDirectory ?? null,
       settings.customAssetsDirectory ?? null,
       settings.connectedModeEnabled ?? false,
-      settings.connectedModeURL ?? ""
+      settings.connectedModeURL ?? "",
     );
   }
 }

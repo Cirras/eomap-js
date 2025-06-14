@@ -91,7 +91,7 @@ export class Cursor extends Phaser.GameObjects.GameObject {
       0,
       0,
       64 * this._drawScale,
-      32 * this._drawScale
+      32 * this._drawScale,
     );
     this._needsRedraw = true;
   }
@@ -287,5 +287,5 @@ Phaser.GameObjects.GameObjectFactory.register(
     const cursor = new Cursor(scene, textureCache, x, y);
     this.displayList.add(cursor);
     return cursor;
-  }
+  },
 );

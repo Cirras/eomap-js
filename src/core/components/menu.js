@@ -411,7 +411,7 @@ export class Menu extends SpectrumElement {
         new CustomEvent("menu-item-press", {
           bubbles: true,
           composed: true,
-        })
+        }),
       );
     }
   }
@@ -438,7 +438,7 @@ export class Menu extends SpectrumElement {
     for (const menuItem of this.menuItems) {
       menuItem.removeEventListener(
         "pointermove",
-        this.handleMenuItemPointerMove
+        this.handleMenuItemPointerMove,
       );
       menuItem.removeEventListener("pointerup", this.handleMenuItemPointerUp);
     }

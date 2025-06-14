@@ -64,7 +64,7 @@ export class EntitySign extends LitElement {
           title: this.title.displayValue,
           message: this.message.displayValue,
         },
-      })
+      }),
     );
   }
 

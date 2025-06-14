@@ -72,7 +72,7 @@ export class Keybindings extends LitElement {
           <div class="keybinding">
             ${this.renderKeybindingParts(
               binding.uiLabel.parts,
-              binding.uiLabel.separator
+              binding.uiLabel.separator,
             )}
           </div>
         </div>

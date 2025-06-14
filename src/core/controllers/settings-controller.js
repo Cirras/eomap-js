@@ -56,7 +56,7 @@ export class SettingsController {
       this._deserializeHandle(serializedSettings.gfxDirectory),
       this._deserializeHandle(serializedSettings.customAssetsDirectory),
       serializedSettings.connectedModeEnabled ?? false,
-      serializedSettings.connectedModeURL ?? ""
+      serializedSettings.connectedModeURL ?? "",
     );
   }
 
@@ -64,7 +64,7 @@ export class SettingsController {
     return {
       gfxDirectory: this._serializeHandle(this.settingsState.gfxDirectory),
       customAssetsDirectory: this._serializeHandle(
-        this.settingsState.customAssetsDirectory
+        this.settingsState.customAssetsDirectory,
       ),
       connectedModeEnabled: this.settingsState.connectedModeEnabled,
       connectedModeURL: this.settingsState.connectedModeURL,

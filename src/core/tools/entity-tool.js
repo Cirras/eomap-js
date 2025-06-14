@@ -23,8 +23,8 @@ export class EntityTool extends Tool {
         map.getWarp(x, y),
         map.getSign(x, y),
         map.getNPCs(x, y),
-        map.getItems(x, y)
-      )
+        map.getItems(x, y),
+      ),
     );
   }
 
@@ -43,7 +43,7 @@ export class EntityTool extends Tool {
       map.getWarp(x, y),
       map.getSign(x, y),
       map.getNPCs(x, y),
-      map.getItems(x, y)
+      map.getItems(x, y),
     );
 
     const entitiesEmpty = !(
@@ -57,7 +57,7 @@ export class EntityTool extends Tool {
       new ContextMenuActionItem(
         "Copy Entities",
         () => (mapEditor.copiedEntities = entities),
-        entitiesEmpty
+        entitiesEmpty,
       ),
       new ContextMenuActionItem(
         "Paste Entities",
@@ -65,7 +65,7 @@ export class EntityTool extends Tool {
           const newEntityState = mapEditor.copiedEntities.withX(x).withY(y);
           mapEditor.updateEntityState(newEntityState);
         },
-        !mapEditor.copiedEntities
+        !mapEditor.copiedEntities,
       ),
       new ContextMenuActionItem(
         "Clear Entities",
@@ -73,7 +73,7 @@ export class EntityTool extends Tool {
           const newEntityState = new EntityState(x, y, null, null, [], []);
           mapEditor.updateEntityState(newEntityState);
         },
-        entitiesEmpty
+        entitiesEmpty,
       ),
     ];
 

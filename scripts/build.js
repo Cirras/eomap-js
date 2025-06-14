@@ -23,7 +23,7 @@ const compilerRenderer = webpack(configRenderer);
     compilerRenderer.run(
       webpackCallback(() => {
         process.exitCode = 0;
-      })
+      }),
     );
   };
 

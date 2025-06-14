@@ -56,7 +56,7 @@ export class DialogWrapper extends FocusVisiblePolyfillMixin(SpectrumElement) {
   focus() {
     if (this.shadowRoot) {
       const firstFocusable = this.shadowRoot.querySelector(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"]), [focusable]'
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"]), [focusable]',
       );
       if (firstFocusable) {
         if (firstFocusable.updateComplete) {
@@ -77,7 +77,7 @@ export class DialogWrapper extends FocusVisiblePolyfillMixin(SpectrumElement) {
     this.dispatchEvent(
       new Event("confirm", {
         bubbles: true,
-      })
+      }),
     );
   }
 
@@ -85,7 +85,7 @@ export class DialogWrapper extends FocusVisiblePolyfillMixin(SpectrumElement) {
     this.dispatchEvent(
       new Event("cancel", {
         bubbles: true,
-      })
+      }),
     );
   }
 

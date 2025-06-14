@@ -124,7 +124,7 @@ class Bitfields {
       Bitfield.fromMask(redMask, maxLength),
       Bitfield.fromMask(greenMask, maxLength),
       Bitfield.fromMask(blueMask, maxLength),
-      Bitfield.fromMask(alphaMask, maxLength)
+      Bitfield.fromMask(alphaMask, maxLength),
     );
   }
 }
@@ -363,7 +363,7 @@ export class DIBReader {
           Compression.RLE8,
           Compression.RLE4,
           Compression.Huffman1D,
-          Compression.RLE24
+          Compression.RLE24,
         );
         break;
       default:
@@ -375,7 +375,7 @@ export class DIBReader {
           Compression.Bitfields,
           Compression.JPEG,
           Compression.PNG,
-          Compression.AlphaBitfields
+          Compression.AlphaBitfields,
         );
     }
 
@@ -411,7 +411,7 @@ export class DIBReader {
 
     if (this.colorsUsed > 1 << this.depth) {
       throw new Error(
-        `Palette size ${this.paletteColorCount} exceeds maximum value for ${this.depth}-bit image`
+        `Palette size ${this.paletteColorCount} exceeds maximum value for ${this.depth}-bit image`,
       );
     }
   }
@@ -419,7 +419,7 @@ export class DIBReader {
   validateHeaderTypeDepth(...allowedDepths) {
     if (!allowedDepths.includes(this.depth)) {
       throw new Error(
-        `Invalid bit depth for ${this.headerType} (${this.depth})`
+        `Invalid bit depth for ${this.headerType} (${this.depth})`,
       );
     }
   }
@@ -427,7 +427,7 @@ export class DIBReader {
   validateHeaderTypeCompression(...allowedCompressions) {
     if (!allowedCompressions.includes(this.compression)) {
       throw new Error(
-        `Invalid compression for ${this.headerType} (${this.compression})`
+        `Invalid compression for ${this.headerType} (${this.compression})`,
       );
     }
   }
@@ -435,7 +435,7 @@ export class DIBReader {
   validateCompressionDepth(...allowedDepths) {
     if (!allowedDepths.includes(this.depth)) {
       throw new Error(
-        `Invalid bit depth for ${this.compression} (${this.depth})`
+        `Invalid bit depth for ${this.compression} (${this.depth})`,
       );
     }
   }
@@ -589,7 +589,7 @@ export class DIBReader {
   decodeBitfields() {
     if (
       [Compression.Bitfields, Compression.AlphaBitfields].includes(
-        this.compression
+        this.compression,
       )
     ) {
       this.bitFields = Bitfields.fromMask(
@@ -597,7 +597,7 @@ export class DIBReader {
         this.greenMask,
         this.blueMask,
         this.alphaMask,
-        this.depth
+        this.depth,
       );
     } else {
       switch (this.depth) {
@@ -607,7 +607,7 @@ export class DIBReader {
             0x000003e0,
             0x0000001f,
             0x00000000,
-            this.depth
+            this.depth,
           );
           break;
 
@@ -618,7 +618,7 @@ export class DIBReader {
             0x0000ff00,
             0x000000ff,
             0x00000000,
-            this.depth
+            this.depth,
           );
           break;
       }
@@ -637,7 +637,7 @@ export class DIBReader {
       this.paletteColors[i] = new PaletteColor(
         this.readUint8(pos++),
         this.readUint8(pos++),
-        this.readUint8(pos++)
+        this.readUint8(pos++),
       );
 
       if (this.headerType !== HeaderType.Core) {
@@ -846,7 +846,7 @@ class RLEReadStrategy extends ReadStrategy {
     super(reader);
     this.compression = reader.compression;
     this.setPixelGenerator = RLEReadStrategy.createSetPixelGeneratorFunction(
-      this.compression
+      this.compression,
     );
     this.dataPos = null;
     this.x = null;

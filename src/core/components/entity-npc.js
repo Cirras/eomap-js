@@ -130,7 +130,7 @@ export class EntityNPC extends LitElement {
             speed: this.speed.value,
             spawnTime: this.spawnTime.value,
           },
-        })
+        }),
       );
     }
   }

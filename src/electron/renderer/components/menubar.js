@@ -196,7 +196,7 @@ export class Menubar extends LitElement {
 
   getVisibleMenus() {
     return this.shadowRoot.querySelectorAll(
-      "eomap-menubar-button:not([hidden]), eomap-more-button:not([hidden])"
+      "eomap-menubar-button:not([hidden]), eomap-more-button:not([hidden])",
     );
   }
 
@@ -332,7 +332,7 @@ export class Menubar extends LitElement {
     for (let i = visibleButtonCount; i < this.state.items.length; ++i) {
       let { label, menu } = this.state.items[i];
       let submenu = renderMenuItem(
-        new SubmenuMenuItemState().withLabel(label).withMenu(menu)
+        new SubmenuMenuItemState().withLabel(label).withMenu(menu),
       );
       overflowMenus.push(submenu);
     }

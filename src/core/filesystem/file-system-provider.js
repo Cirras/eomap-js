@@ -1,25 +1,25 @@
 export class FileSystemProvider {
   async showOpenFilePicker(_options) {
     throw new Error(
-      "FileSystemProvider.showOpenFilePicker() must be implemented"
+      "FileSystemProvider.showOpenFilePicker() must be implemented",
     );
   }
 
   async showSaveFilePicker(_options) {
     throw new Error(
-      "FileSystemProvider.showSaveFilePicker() must be implemented"
+      "FileSystemProvider.showSaveFilePicker() must be implemented",
     );
   }
 
   async showDirectoryPicker(_options) {
     throw new Error(
-      "FileSystemProvider.showDirectoryPicker() must be implemented"
+      "FileSystemProvider.showDirectoryPicker() must be implemented",
     );
   }
 
   async dataTransferItemToHandle(_dataTransferItem) {
     throw new Error(
-      "FileSystemProvider.dataTransferItemToHandle() must be implemented"
+      "FileSystemProvider.dataTransferItemToHandle() must be implemented",
     );
   }
 
@@ -29,7 +29,7 @@ export class FileSystemProvider {
 
   deserializeHandle(_serialized) {
     throw new Error(
-      "FileSystemProvider.deserializeHandle() must be implemented"
+      "FileSystemProvider.deserializeHandle() must be implemented",
     );
   }
 

@@ -37,24 +37,24 @@ async function unwrap(promise) {
     case "ENOENT":
       throw new DOMException(
         "A requested file or directory could not be found at the time an operation was processed.",
-        "NotFoundError"
+        "NotFoundError",
       );
     case "ENOTEMPTY":
       throw new DOMException(
         "The object can not be modified in this way.",
-        "InvalidModificationError"
+        "InvalidModificationError",
       );
     case "EMISMATCH":
       throw new DOMException(
         "The path supplied exists, but was not an entry of requested type.",
-        "TypeMismatchError"
+        "TypeMismatchError",
       );
     case "EABORTED":
       throw new DOMException("The user aborted a request.", "AbortError");
     default:
       throw new DOMException(
         `Unknown error. (${result.error})`,
-        "UnknownError"
+        "UnknownError",
       );
   }
 }

@@ -58,7 +58,7 @@ export class ZoomTool extends Tool {
       let rawZoom = this.startZoom + distance / 50;
       let zoomLevel = Math.min(
         Math.max(rawZoom, ZoomTool.MIN_ZOOM),
-        ZoomTool.MAX_ZOOM
+        ZoomTool.MAX_ZOOM,
       );
 
       if (rawZoom !== zoomLevel) {
@@ -116,20 +116,20 @@ export class ZoomTool extends Tool {
     let items = [
       new ContextMenuActionItem(
         "100%",
-        zoomAction(() => 1.0)
+        zoomAction(() => 1.0),
       ),
       new ContextMenuActionItem(
         "200%",
-        zoomAction(() => 2.0)
+        zoomAction(() => 2.0),
       ),
       new ContextMenuDividerItem(),
       new ContextMenuActionItem(
         "Zoom In",
-        zoomAction(() => this.nextZoomLevel(mapEditor.map.camera.zoom))
+        zoomAction(() => this.nextZoomLevel(mapEditor.map.camera.zoom)),
       ),
       new ContextMenuActionItem(
         "Zoom Out",
-        zoomAction(() => this.previousZoomLevel(mapEditor.map.camera.zoom))
+        zoomAction(() => this.previousZoomLevel(mapEditor.map.camera.zoom)),
       ),
     ];
 

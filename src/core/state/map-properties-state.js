@@ -11,7 +11,7 @@ export class MapPropertiesState {
     ambientSound,
     musicControl,
     respawnX,
-    respawnY
+    respawnY,
   ) {
     this.name = name;
     this.width = width;

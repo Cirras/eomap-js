@@ -54,15 +54,15 @@ export class EntityEditor extends LitElement {
         event.detail.x,
         event.detail.y,
         event.detail.level,
-        event.detail.door
-      )
+        event.detail.door,
+      ),
     );
   };
 
   @state({ type: Function })
   onSignSave = (event) => {
     this.entityState = this.entityState.withSign(
-      new MapSign(event.detail.title, event.detail.message)
+      new MapSign(event.detail.title, event.detail.message),
     );
   };
 
@@ -233,7 +233,7 @@ export class EntityEditor extends LitElement {
                     event.detail.id,
                     event.detail.speed,
                     event.detail.spawnTime,
-                    event.detail.amount
+                    event.detail.amount,
                   );
                   this.entityState = this.entityState.withNpcs(npcs);
                 };
@@ -291,7 +291,7 @@ export class EntityEditor extends LitElement {
               event.detail.id,
               event.detail.speed,
               event.detail.spawnTime,
-              event.detail.amount
+              event.detail.amount,
             );
             let npcs = [...this.entityState.npcs, newNpc];
             this.entityState = this.entityState.withNpcs(npcs);
@@ -323,7 +323,7 @@ export class EntityEditor extends LitElement {
                     event.detail.chestSlot,
                     event.detail.id,
                     event.detail.spawnTime,
-                    event.detail.amount
+                    event.detail.amount,
                   );
                   this.entityState = this.entityState.withItems(items);
                 };
@@ -386,7 +386,7 @@ export class EntityEditor extends LitElement {
               event.detail.chestSlot,
               event.detail.id,
               event.detail.spawnTime,
-              event.detail.amount
+              event.detail.amount,
             );
             let items = [...this.entityState.items, newItem];
             this.entityState = this.entityState.withItems(items);
