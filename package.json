@@ -12,9 +12,9 @@
     "dist:electron": "npm run build && electron-builder --config electron-builder-config.js --publish never",
     "dist:web": "cross-env NODE_ENV=production webpack --config webpack/web/web.js",
     "build": "cross-env NODE_ENV=production node scripts/build.js",
-    "format": "pretty-quick",
+    "format": "prettier --cache --write **/*.{js,md}",
     "prepare": "husky",
-    "pre-commit": "pretty-quick --staged",
+    "pre-commit": "lint-staged",
     "version": "node scripts/bump-changelog-version.js && git add CHANGELOG.md"
   },
   "repository": {
@@ -44,9 +44,9 @@
     "html-webpack-plugin": "^5.6.3",
     "husky": "^9.1.7",
     "keep-a-changelog": "^2.6.2",
+    "lint-staged": "^16.1.1",
     "mini-css-extract-plugin": "^2.9.2",
     "prettier": "^3.5.3",
-    "pretty-quick": "^4.2.2",
     "supports-color": "^8.1.1",
     "terser-webpack-plugin": "^5.3.14",
     "webpack": "^5.99.9",
