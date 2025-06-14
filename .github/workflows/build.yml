@@ -8,7 +8,11 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-latest, windows-latest]
+
+    runs-on: ${{ matrix.os }}
 
     steps:
       - name: Checkout
@@ -20,7 +24,18 @@ jobs:
           node-version: 22
           cache: npm
 
+      - name: Prepare code signing for macOS
+        uses: allenevans/set-env@v3.0.0
+        if: startsWith(matrix.os, 'macos')
+        with:
+          CSC_LINK: ${{ secrets.mac_certs }}
+          CSC_KEY_PASSWORD: ${{ secrets.mac_certs_password }}
+
       - name: Build
         run: |
           npm ci
           npm run dist
+        env:
+          APPLE_ID: ${{ secrets.apple_id }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.apple_app_specific_password }}
+          APPLE_TEAM_ID: ${{ secrets.apple_team_id }}
